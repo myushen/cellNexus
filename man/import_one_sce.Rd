@@ -9,6 +9,8 @@
 \usage{
 import_one_sce(
   sce_obj,
+  atlas_name,
+  import_date,
   cache_dir = get_default_cache_dir(),
   pseudobulk = FALSE
 )
@@ -16,6 +18,11 @@ import_one_sce(
 \arguments{
 \item{sce_obj}{A SingleCellExperiment object from RDS, the metadata slot of which
 must contain \code{cell_} and \code{dataset_id}}
+
+\item{atlas_name}{A character string specifying the name of the atlas to import.}
+
+\item{import_date}{A character vector that specifies the date of the import.
+The date should be in the international format 'YYYY-MM-DD' for clarity and consistency.}
 
 \item{cache_dir}{Optional character vector of length 1. A file path on
 your local system to a directory (not a file) that will be used to store
@@ -25,8 +32,9 @@ your local system to a directory (not a file) that will be used to store
 the metadata slot of which must contain \code{file_id}, \code{cell_type_harmonised} and \code{sample_}}
 }
 \value{
-A metadata.parquet strip from the SingleCellExperiment object.
-Directories store counts and counts per million in the provided cache directory.
+An user-defined atlas metadata.parquet from the SingleCellExperiment object.
+Directories store counts and/or counts per million and/or quantile_normalised
+in the provided cache directory.
 }
 \description{
 Import and process metadata and counts for a SingleCellExperiment object
@@ -34,6 +42,8 @@ Import and process metadata and counts for a SingleCellExperiment object
 \examples{
 data(sample_sce_obj)
 import_one_sce(sample_sce_obj,
+               atlas_name = "sample_atlas",
+               import_date = "9999-99-99",
                cache_dir = get_default_cache_dir())
 }
 \references{

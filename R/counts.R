@@ -152,7 +152,7 @@ get_data_container <- function(
     all() |>
     assert_that(
       msg = 'assays must be a character vector containing "counts" and/or
-            "cpm"'
+            "cpm" and/or "quantile_normalised"'
     )
   assert_that(
     !anyDuplicated(assays),
