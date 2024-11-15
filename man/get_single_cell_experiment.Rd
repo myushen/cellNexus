@@ -10,7 +10,7 @@
 get_single_cell_experiment(data, ...)
 }
 \arguments{
-\item{data}{A data frame containing, at minimum, \code{cell_}, \code{file_id_db} columns,
+\item{data}{A data frame containing, at minimum, \code{cell_}, \code{file_id_cellNexus} columns,
 which correspond to a single cell ID, file subdivision for internal use.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 
@@ -21,12 +21,16 @@ They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} functi
 and/or "cpm" and/or "quantile_normalised", representing the corresponding assay(s) you want to request.
 By default only the count assay is downloaded. If you are interested in
 comparing a limited amount of genes, the "cpm" assay is more appropriate.}
+    \item{\code{atlas_name}}{A character string specifying the name of the atlas to import.}
+    \item{\code{cell_aggregation}}{A character vector that specifies which cell aggregation strategy
+should be applied. This will create  a corresponding subdirectory in the atlas cache.
+Choose one of the following: single_cell, pseudobulk}
     \item{\code{cache_directory}}{An optional character vector of length one. If
 provided, it should indicate a local file path where any remotely accessed
 files should be copied.}
     \item{\code{repository}}{A character vector of length one. If provided, it should be
 an HTTP URL pointing to the location where the single cell data is stored.}
-    \item{\code{grouping_column}}{A character vector of metadata column for grouping. "file_id_db" for
+    \item{\code{grouping_column}}{A character vector of metadata column for grouping. "file_id_cellNexus" for
 for Single Cell Experiment, "file_id" for pseudobulk.}
     \item{\code{features}}{An optional character vector of features (ie genes) to return
 the counts for. By default counts for all features will be returned.}
