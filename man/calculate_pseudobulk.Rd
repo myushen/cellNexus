@@ -8,17 +8,22 @@ calculate_pseudobulk(
   sce_data,
   atlas_name,
   import_date,
+  cell_aggregation,
   cache_dir = get_default_cache_dir()
 )
 }
 \arguments{
-\item{sce_data}{A SingleCellExperiment object from RDS, the metadata slot of which
+\item{sce_data}{A SingleCellExperiment object, the metadata slot of which
 must contain \code{cell_} and \code{dataset_id}}
 
 \item{atlas_name}{A character string specifying the name of the atlas to import.}
 
 \item{import_date}{A character vector that specifies the date of the import.
 The date should be in the international format 'YYYY-MM-DD' for clarity and consistency.}
+
+\item{cell_aggregation}{A character vector that specifies which cell aggregation strategy
+should be applied. This will create  a corresponding subdirectory in the atlas cache.
+Choose one of the following: single_cell, pseudobulk.}
 
 \item{cache_dir}{Optional character vector of length 1. A file path on
 your local system to a directory (not a file) that will be used to store pseudobulk counts}

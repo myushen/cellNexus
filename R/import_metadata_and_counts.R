@@ -8,56 +8,11 @@ assay_map <- c(
 # File extension
 extension <- ".h5ad"
 
-#' Import and process metadata and counts for a SingleCellExperiment object
-#'
-#' @param sce_obj A SingleCellExperiment object, the metadata slot of which
-#' must contain `cell_` and `dataset_id`
-#' @param atlas_name A character string specifying the name of the atlas to import.
-#' @param import_date A character vector that specifies the date of the import.
-#' The date should be in the international format 'YYYY-MM-DD' for clarity and consistency.
-#' @param cache_dir Optional character vector of length 1. A file path on
-#'   your local system to a directory (not a file) that will be used to store
-#'   `metadata.parquet`
-#' @param pseudobulk Optional character. Set to TRUE for generating and importing pseudobulk,
-#' the metadata slot of which must contain `file_id`, `cell_type_harmonised` and `sample_`
-#' 
-#' @export
-#' @return 
-#' An user-defined atlas metadata.parquet from the SingleCellExperiment object. 
-#' Directories store counts and/or counts per million and/or quantile_normalised 
-#' in the provided cache directory.
-#' @importFrom checkmate check_true check_character check_subset assert
-#' @importFrom dplyr select distinct pull
-#' @importFrom cli cli_alert_info cli_alert_warning
-#' @importFrom rlang .data
-#' @importFrom SingleCellExperiment reducedDims rowData reducedDims<-
-#' @importFrom S4Vectors metadata metadata<-
-#' @importFrom SummarizedExperiment assay assay<-
-#' @importFrom stringr str_detect
-#' @importFrom zellkonverter writeH5AD
-#' @examples
-#' data(sample_sce_obj)
-#' import_one_sce(sample_sce_obj,
-#'                atlas_name = "sample_atlas",
-#'                import_date = "9999-99-99",
-#'                cache_dir = get_default_cache_dir())
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-import_one_sce <- function(
-    sce_obj,  
-    atlas_name,
-    import_date,
-    cache_dir = get_default_cache_dir(),
-    pseudobulk = FALSE
-  ) {
-  # Create a new hierarchy for the imported metadata
-  atlas_directory = file.path(cache_dir, atlas_name, import_date, "single_cell")
-  
-  # Identify metadata and counts matrix
-  metadata_tbl <- metadata(sce_obj)$data
+# Assertion of metadata
+assert_single_cell_metadata <- function(sce_obj,
+                                        cache_dir = get_default_cache_dir()
+                                        ) {
+  metadata_tbl <- metadata(sce_obj)$data_to_import 
   counts_matrix <- assay(sce_obj)
   
   # Check if the input contains only one dataset_id
@@ -68,51 +23,13 @@ import_one_sce <- function(
   # Identify whether genes in SingleCellxExperiment object are in ensembl nomenclature
   genes <- rowData(sce_obj) |> rownames()
   assert(sce_obj |> inherits( "SingleCellExperiment"),
-              "sce_obj is not identified as SingleCellExperiment object.")
+         "sce_obj is not identified as SingleCellExperiment object.")
   assert(!grepl("^ENSG\\d+$", genes) |> all(), 
-              "Genes in SingleCellExperiment object must be Ensembl gene ids.")
+         "Genes in SingleCellExperiment object must be Ensembl gene ids.")
   assert(all(counts_matrix >= 0),
-              "Counts for SingleCellExperiment cannot be negative.")
+         "Counts for SingleCellExperiment cannot be negative.")
   
-  # Convert to tibble if not provided
-  metadata_tbl <- metadata_tbl |> as_tibble()
   
-  # Create file_id_cellNexus from dataset_id
-  file_id_cellNexus <- metadata_tbl$dataset_id |> unique() |> openssl::md5() |> as.character()
-  metadata_tbl <-
-    metadata_tbl |> mutate(file_id_cellNexus = paste0(file_id_cellNexus, extension))
-  metadata(sce_obj)$data <- metadata_tbl
-  
-  # Remove existing reducedDim slot to enable get_SCE API functionality 
-  reducedDims(sce_obj) <- NULL
-  
-    # Pseudobulk checkpoint 
-  pseudobulk_sample <- c("sample_", "cell_type_harmonised")
-  if (isTRUE(pseudobulk)) {
-    assert(
-      all(pseudobulk_sample %in% (colData(sce_obj) |> colnames()) ),
-      "Sample_ and cell_type_harmonised columns must be in the SingleCellExperiment colData")
-    
-    assert(c(pseudobulk_sample, "file_id") %in% (names(metadata_tbl)) |> all() ,
-           "SingleCellExperiment metadata must at least contain sample_, cell_type_harmonised,
-           file_id for pseudobulk generation"
-    ) }
-  
-  original_dir <- file.path(atlas_directory, assay_map["counts"])
-  cpm_dir <- file.path(atlas_directory, assay_map["cpm"])
-  
-  if (!dir.exists(original_dir)) dir.create(original_dir, recursive = TRUE)
-  if (!dir.exists(cpm_dir)) dir.create(cpm_dir, recursive = TRUE)
-  
-  # Check whether count H5 directory has been generated
-  if (any(file_id_cellNexus %in% dir(original_dir))) {
-    cli_alert_warning(
-      single_line_str(
-        "Import API says: The filename for count assay (file_id_cellNexus) already exists in the cache directory. "
-      )
-    )
-  }
-
   # Check the metadata contains cell_, file_id_cellNexus, sample_ with correct types
   check_true("cell_" %in% colnames(metadata_tbl))
   check_true("file_id_cellNexus" %in% names(metadata_tbl)) 
@@ -137,10 +54,116 @@ import_one_sce <- function(
     metadata_tbl <- metadata_tbl |> mutate(sex = tolower(.data$sex))
     distinct(metadata_tbl, .data$sex) |> pull(.data$sex) |> check_subset(c("female","male","unknown"))
   }
+}
+
+# Assert pseudobulk metadata
+assert_pseudobulk_metadata <- function(sce_obj,
+                                       pseudobulk = FALSE) {
+  metadata_tbl <- metadata(sce_obj)$data
+  # Pseudobulk checkpoint 
+  pseudobulk_sample <- c("sample_", "cell_type_harmonised")
+  if (isTRUE(pseudobulk)) {
+    assert(
+      all(pseudobulk_sample %in% (colData(sce_obj) |> colnames()) ),
+      "Sample_ and cell_type_harmonised columns must be in the SingleCellExperiment colData")
+    
+    assert(c(pseudobulk_sample, "file_id") %in% (names(metadata_tbl)) |> all() ,
+           "SingleCellExperiment metadata must at least contain sample_, cell_type_harmonised,
+           file_id for pseudobulk generation"
+    ) }
+}
+
+#' Import and process metadata and counts for a SingleCellExperiment object
+#'
+#' @param sce_obj A SingleCellExperiment object, the metadata slot of which
+#' must contain `cell_` and `dataset_id`
+#' @param atlas_name A character string specifying the name of the atlas to import.
+#' @param import_date A character vector that specifies the date of the import.
+#' The date should be in the international format 'YYYY-MM-DD' for clarity and consistency.
+#' @param cell_aggregation A character vector that specifies which cell aggregation strategy
+#' should be applied. This will create  a corresponding subdirectory in the atlas cache.
+#' Choose one of the following: single_cell, pseudobulk
+#' @param cache_dir Optional character vector of length 1. A file path on
+#'   your local system to a directory (not a file) that will be used to store
+#'   `atlas_metadata.parquet`
+#' @param pseudobulk Optional character. Set to TRUE for generating and importing pseudobulk,
+#' the metadata slot of which must contain `file_id`, `cell_type_harmonised` and `sample_`
+#' @export
+#' @return 
+#' An user-defined atlas metadata.parquet from the SingleCellExperiment object. 
+#' Directories store counts and/or counts per million and/or quantile_normalised 
+#' in the provided cache directory.
+#' @importFrom checkmate check_true check_character check_subset assert
+#' @importFrom dplyr select distinct pull
+#' @importFrom cli cli_alert_info cli_alert_warning
+#' @importFrom rlang .data
+#' @importFrom SingleCellExperiment reducedDims rowData reducedDims<-
+#' @importFrom S4Vectors metadata metadata<-
+#' @importFrom SummarizedExperiment assay assay<-
+#' @importFrom stringr str_detect
+#' @importFrom zellkonverter writeH5AD
+#' @examples
+#' data(sample_sce_obj)
+#' import_one_sce(sample_sce_obj,
+#'                atlas_name = "sample_atlas",
+#'                import_date = "9999-99-99",
+#'                cell_aggregation = "single_cell",
+#'                cache_dir = get_default_cache_dir())
+#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
+#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
+#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
+#'   doi:10.1101/2023.06.08.542671.
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+import_one_sce <- function(
+    sce_obj,  
+    atlas_name,
+    import_date,
+    cell_aggregation,
+    cache_dir = get_default_cache_dir(),
+    pseudobulk = FALSE
+  ) {
+  # Create a new hierarchy for the imported metadata
+  atlas_directory = file.path(cache_dir, atlas_name, import_date, cell_aggregation)
   
+  # Identify metadata and counts matrix
+  metadata_tbl <- metadata(sce_obj)$data
+  counts_matrix <- assay(sce_obj)
+  
+  # Convert to tibble if not provided
+  metadata_tbl <- metadata_tbl |> as_tibble()
+  
+  # Create file_id_cellNexus from dataset_id
+  file_id_cellNexus <- metadata_tbl$dataset_id |> unique() |> openssl::md5() |> as.character()
+  metadata_tbl <-
+    metadata_tbl |> mutate(file_id_cellNexus = paste0(file_id_cellNexus, extension))
+  metadata(sce_obj)$data_to_import <- metadata_tbl
+  
+  # Remove existing reducedDim slot to enable get_SCE API functionality 
+  reducedDims(sce_obj) <- NULL
+  
+  # Check if metadata pass pseudobulk checkpoint if pseudobulk is TRUE
+  sce_obj |> assert_pseudobulk_metadata(pseudobulk)
+  
+  # Check if metadata pass single cell checkpoint
+  sce_obj |> assert_single_cell_metadata(cache_dir)
+
+  # Create counts file directories
   original_dir <- file.path(atlas_directory, assay_map["counts"])
   cpm_dir <- file.path(atlas_directory, assay_map["cpm"])
   
+  if (!dir.exists(original_dir)) dir.create(original_dir, recursive = TRUE)
+  if (!dir.exists(cpm_dir)) dir.create(cpm_dir, recursive = TRUE)
+  
+  # Check whether count H5 directory has been generated
+  if (any(file_id_cellNexus %in% dir(original_dir))) {
+    cli_alert_warning(
+      single_line_str(
+        "Import API says: The file you are trying to import is already present in the cache directory. "
+      )
+    )
+  }
+  
+  # Create counts file name
   counts_file_path <- file.path(original_dir, basename(file_id_cellNexus)) |> paste0(extension)
   cpm_file_path <- file.path(cpm_dir, basename(file_id_cellNexus)) |> paste0(extension)
 
@@ -152,17 +175,13 @@ import_one_sce <- function(
   
   cli_alert_info("cpm are generated in {.path {cpm_dir}}. ")
   
-  # check metadata sample file ID match the count file ID in cache directory
-  all(metadata_tbl |> pull(.data$file_id_cellNexus) %in% dir(cpm_dir)) |> 
-    assert("The filename for count assay, which matches the file_id_cellNexus column in 
-           the metadata, already exists in the cache directory.")
-  
   # convert metadata_tbl to parquet if above checkpoints pass
   arrow::write_parquet(metadata_tbl, file.path(cache_dir, glue("{atlas_name}_metadata.parquet")))
   
   # Generate pseudobulk
   if (isTRUE(pseudobulk)) sce_obj |> calculate_pseudobulk(atlas_name = atlas_name,
                                                           import_date = import_date,
+                                                          cell_aggregation = "pseudobulk",
                                                           cache_dir = cache_dir)
 }
 
@@ -173,6 +192,9 @@ import_one_sce <- function(
 #' @param atlas_name A character string specifying the name of the atlas to import.
 #' @param import_date A character vector that specifies the date of the import.
 #' The date should be in the international format 'YYYY-MM-DD' for clarity and consistency.
+#' @param cell_aggregation A character vector that specifies which cell aggregation strategy
+#' should be applied. This will create  a corresponding subdirectory in the atlas cache.
+#' Choose one of the following: single_cell, pseudobulk.
 #' @param cache_dir Optional character vector of length 1. A file path on
 #'   your local system to a directory (not a file) that will be used to store pseudobulk counts
 #' @return Pseudobulk counts in `Anndata` format stored in the cache directory
@@ -186,9 +208,10 @@ import_one_sce <- function(
 calculate_pseudobulk <- function(sce_data,
                                  atlas_name,
                                  import_date,
+                                 cell_aggregation,
                                  cache_dir = get_default_cache_dir()) {
   # Create a new pseudobulk hierarchy
-  pseudobulk_directory = file.path(cache_dir, atlas_name, import_date, "pseudobulk")
+  pseudobulk_directory = file.path(cache_dir, atlas_name, import_date, cell_aggregation)
   
   metadata_tbl <- metadata(sce_data)$data
   file_id <- metadata_tbl$file_id |> unique() |> as.character()

@@ -1,6 +1,6 @@
 #' Generating counts per million from a SingleCellExperiment object
 #'
-#' @param sce A SingleCellExperiment object read from RDS
+#' @param sce A SingleCellExperiment object
 #' @param input_file A character vector of counts Anndata file path
 #' @param output_file A character vector of CPM Anndata file path
 #' @return A directory stores counts per million Anndata
