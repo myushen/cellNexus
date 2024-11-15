@@ -108,7 +108,8 @@ assert_pseudobulk_metadata <- function(sce_obj,
 #'                atlas_name = "sample_atlas",
 #'                import_date = "9999-99-99",
 #'                cell_aggregation = "single_cell",
-#'                cache_dir = get_default_cache_dir())
+#'                cache_dir = get_default_cache_dir(),
+#'                pseudobulk = FALSE)
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
@@ -222,31 +223,41 @@ calculate_pseudobulk <- function(sce_data,
   if (!dir.exists(original_dir)) dir.create(original_dir, recursive = TRUE)
   if (!dir.exists(quantile_normalised_dir)) dir.create(quantile_normalised_dir, recursive = TRUE)
   
-  cli_alert_info("Generating pseudobulk counts from {file_id}. ")
+  cli_alert_info("Generating pseudobulk from {file_id}. ")
   
-  pseudobulk_counts <- scuttle::aggregateAcrossCells(
+  pseudobulk <- scuttle::aggregateAcrossCells(
     sce_data, 
-    colData(sce_data)[,c("sample_", "cell_type_harmonised")], 
+    colData(sce_data)[,c("sample_","cell_type_harmonised")] |>
+      as_tibble(rownames = ".cell") |> 
+      mutate(aggregated_cells = paste(sample_, cell_type_harmonised, sep = "___")) |> 
+      pull(aggregated_cells), 
     BPPARAM = BiocParallel::MulticoreParam(workers = 10)
-  )
+  ) |> 
+    # Handle column type cast correctly: https://github.com/scverse/anndata/issues/311
+    mutate(across(everything(), as.character))
   
-  assay_name <- pseudobulk_counts |> assays() |> names()
-  normalised_counts_best_distribution <- assay(pseudobulk_counts, assay_name) |> as.matrix() |>
+  colData(pseudobulk) <- NULL
+  
+  assay_name <- pseudobulk |> assays() |> names()
+  normalised_counts_best_distribution <- assay(pseudobulk, assay_name) |>
     preprocessCore::normalize.quantiles.determine.target()
   
-  normalised_counts <- pseudobulk_counts |> quantile_normalise_abundance(
+  normalised_pseudobulk <- pseudobulk |> quantile_normalise_abundance(
     method="preprocesscore_normalize_quantiles_use_target",
     target_distribution = normalised_counts_best_distribution
-  )
+  ) |> 
+    mutate(across(everything(), as.character))
   
-  assay(normalised_counts, assay_name) <- NULL
-  names(assays(normalised_counts)) <- "quantile_normalised"
+  # Keep quantile_normalised counts
+  assay(normalised_pseudobulk, assay_name) <- NULL
+  names(assays(normalised_pseudobulk)) <- "quantile_normalised"
 
   counts_file_path <- file.path(original_dir, basename(file_id)) |> paste0(extension)
   qnorm_file_path <- file.path(quantile_normalised_dir, basename(file_id)) |> paste0(extension)
   
-  writeH5AD(pseudobulk_counts, counts_file_path, compression = "gzip")
-  writeH5AD(normalised_counts, qnorm_file_path, compression = "gzip")
+  # Save pseudobulk counts
+  writeH5AD(pseudobulk, counts_file_path, compression = "gzip")
+  writeH5AD(normalised_pseudobulk, qnorm_file_path, compression = "gzip")
   
   cli_alert_info("pseudobulk are generated in {.path {pseudobulk_directory}}. ")
 }

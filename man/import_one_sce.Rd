@@ -50,7 +50,8 @@ import_one_sce(sample_sce_obj,
                atlas_name = "sample_atlas",
                import_date = "9999-99-99",
                cell_aggregation = "single_cell",
-               cache_dir = get_default_cache_dir())
+               cache_dir = get_default_cache_dir(),
+               pseudobulk = FALSE)
 }
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
