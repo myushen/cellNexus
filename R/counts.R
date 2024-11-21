@@ -52,7 +52,7 @@ get_SingleCellExperiment <- function(...){
 
 #' Gets a SingleCellExperiment from curated metadata
 #' 
-#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus` columns, 
+#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus_single_cell` columns, 
 #'   which correspond to a single cell ID, file subdivision for internal use.
 #'   They can be obtained from the [get_metadata()] function.
 #' @inheritDotParams get_data_container
@@ -69,9 +69,9 @@ get_single_cell_experiment <- function(data, ...){
   raw_data <- collect(data)
   assert_that(
     inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_", "file_id_cellNexus"))
+    has_name(raw_data, c("cell_", "file_id_cellNexus_single_cell"))
   )
-  get_data_container(data, ..., repository = COUNTS_URL, grouping_column = "file_id_cellNexus")
+  get_data_container(data, ..., repository = COUNTS_URL, grouping_column = "file_id_cellNexus_single_cell")
 }
 
 #' Gets a Pseudobulk from curated metadata
@@ -106,7 +106,7 @@ get_pseudobulk <- function(data, ...) {
 #' Given a data frame of Curated Atlas metadata obtained from [get_metadata()],
 #' returns a [`SummarizedExperiment::SummarizedExperiment-class`] object
 #' corresponding to the samples in that data frame
-#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus`, `file_id` column, which
+#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus_single_cell`, `file_id` column, which
 #'   correspond to a single cell ID, file subdivision for internal use, and a single cell sample ID. 
 #'   They can be obtained from the [get_metadata()] function.
 #' @param assays A character vector whose elements must be either "counts"
@@ -118,7 +118,7 @@ get_pseudobulk <- function(data, ...) {
 #'   files should be copied.
 #' @param repository A character vector of length one. If provided, it should be
 #'   an HTTP URL pointing to the location where the single cell data is stored.
-#' @param grouping_column A character vector of metadata column for grouping. "file_id_cellNexus" for
+#' @param grouping_column A character vector of metadata column for grouping. "file_id_cellNexus_single_cell" for
 #'   for Single Cell Experiment, "file_id" for pseudobulk.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
@@ -147,13 +147,15 @@ get_data_container <- function(
     features = NULL
     
 ) {
-  # Parameter validation
-  assays %in% names(assay_map) |>
-    all() |>
-    assert_that(
-      msg = 'assays must be a character vector containing "counts" and/or
-            "cpm"'
-    )
+  
+  # # Parameter validation
+  # assays %in% names(assay_map) |>
+  #   all() |>
+  #   assert_that(
+  #     msg = 'assays must be a character vector containing "counts" and/or
+  #           "cpm"'
+  #   )
+  # 
   assert_that(
     !anyDuplicated(assays),
     inherits(cache_directory, "character"),
@@ -174,7 +176,7 @@ get_data_container <- function(
     recursive = TRUE
   )
   
-  subdirs <- assay_map[assays]
+  subdirs <- assays
   
   # The repository is optional. If not provided we load only from the cache
   if (!is.null(repository)) {
@@ -283,7 +285,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   # Fix for https://github.com/tidyverse/dplyr/issues/6746
   force(i)
   
-  if (grouping_column == "file_id_cellNexus") {
+  if (grouping_column == "file_id_cellNexus_single_cell") {
     # Process specific to SCE
     cells <- colnames(experiment) |> intersect(df$cell_)
     
@@ -320,7 +322,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   else if (grouping_column == "file_id") {
     # Process specific to Pseudobulk
     # remove cell-level annotations
-    cell_level_anno <- c("cell_", "cell_type", "confidence_class", "file_id_cellNexus",
+    cell_level_anno <- c("cell_", "cell_type", "confidence_class", "file_id_cellNexus_single_cell",
                          "cell_annotation_blueprint_singler",
                          "cell_annotation_monaco_singler", 
                          "cell_annotation_azimuth_l2",
@@ -376,7 +378,7 @@ file_ids <- c(
 #'   synchronise files to.
 #' @param subdirs A character vector of subdirectories within the root URL to
 #'   sync. These correspond to assays.
-#' @param files A character vector containing one or more file_id_cellNexus entries
+#' @param files A character vector containing one or more file_id_cellNexus_single_cell entries
 #' @returns A character vector consisting of file paths to all the newly
 #'   downloaded files
 #' @return A character vector of files that have been downloaded
