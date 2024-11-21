@@ -17,7 +17,7 @@ get_data_container(
 )
 }
 \arguments{
-\item{data}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus}, \code{file_id} column, which
+\item{data}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus_single_cell}, \code{file_id} column, which
 correspond to a single cell ID, file subdivision for internal use, and a single cell sample ID.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 
@@ -33,7 +33,7 @@ files should be copied.}
 \item{repository}{A character vector of length one. If provided, it should be
 an HTTP URL pointing to the location where the single cell data is stored.}
 
-\item{grouping_column}{A character vector of metadata column for grouping. "file_id_cellNexus" for
+\item{grouping_column}{A character vector of metadata column for grouping. "file_id_cellNexus_single_cell" for
 for Single Cell Experiment, "file_id" for pseudobulk.}
 
 \item{features}{An optional character vector of features (ie genes) to return

@@ -229,12 +229,15 @@ get_data_container <- function(
     })
   
   cli_alert_info("Compiling Experiment.")
+  
   # Combine all the assays
+  # Get a donor SCE
   experiment <- experiments[[1]]
   
   SummarizedExperiment::assays(experiment) <- map(experiments, function(exp) {
-    SummarizedExperiment::assays(exp)[[1]]
-  })
+    SummarizedExperiment::assays(exp)[1]
+  }) |> 
+    do.call(c, args = _)
   
   experiment
 }
