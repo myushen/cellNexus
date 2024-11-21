@@ -10,8 +10,8 @@
 get_pseudobulk(data, ...)
 }
 \arguments{
-\item{data}{A data frame containing, at minimum, \code{cell_}, \code{file_id},
-\code{sample_}, \code{cell_type_harmonised} columns, which correspond to a single cell ID,
+\item{data}{A data frame containing, at minimum, \code{cell_id}, \code{file_id},
+\code{sample_id}, \code{cell_type_harmonised} columns, which correspond to a single cell ID,
 file subdivision for internal use, a singlel cell sample ID and harmonised cell type.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 

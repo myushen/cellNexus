@@ -12,7 +12,7 @@ data_tbl <- tbl(con, sql(paste0("SELECT * FROM read_parquet('", parquet_file, "'
 # annotation_combination = 
 #   data_tbl |> 
 #   #select(azimuth_predicted.celltype.l2, monaco_first.labels.fine, blueprint_first.labels.fine) |> 
-#   select(cell_, dataset_id, cell_type, cell_type_ontology_term_id, azimuth_predicted.celltype.l2, monaco_first.labels.fine, blueprint_first.labels.fine)  
+#   select(cell_id, dataset_id, cell_type, cell_type_ontology_term_id, azimuth_predicted.celltype.l2, monaco_first.labels.fine, blueprint_first.labels.fine)  
 #   #arrange(desc(n)) |> 
 
 annotation_consensus  = 

@@ -50,7 +50,7 @@ print(common_colnames)
 #     file,
 #     ~ .x %>%
 #       readRDS() |>
-#       select(-one_of(common_colnames), cell_ = .cell, file_id) |> select(cell_, file_id, everything()) |>
+#       select(-one_of(common_colnames), cell_id = .cell, file_id) |> select(cell_id, file_id, everything()) |>
 #       mutate(file_id = file_id |> as.character())
 #   )) |>
 #   mutate(file_id = map_chr(metadata_not_harmonised, ~ .x |> distinct(file_id) |> pull(file_id))) |>

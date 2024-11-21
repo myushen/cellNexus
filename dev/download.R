@@ -232,10 +232,10 @@ tar_script(
         
         
         #parquet does not like . prefix
-        rename(cell_ = .cell) |> 
+        rename(cell_id = .cell) |> 
         
         # Add sample hash
-        mutate(sample_ = getVDigest(algo="md5")(glue("{sample_heuristic}{dataset_id}"))) |>
+        mutate(sample_id = getVDigest(algo="md5")(glue("{sample_heuristic}{dataset_id}"))) |>
         
         # make lighter
         mutate_if(is.character, as.factor)
@@ -288,13 +288,13 @@ tar_script(
       # sample_column_to_preserve = 
       #   metadata |> 
       #   slice_sample(n = 500, by = donor_id) |> 
-      #   tidybulk::pivot_sample(.sample = sample_) |> 
+      #   tidybulk::pivot_sample(.sample = sample_id) |> 
       #   colnames()
       
-      # # Select only sample_ columns
+      # # Select only sample_id columns
       # metadata = 
       #   metadata |> 
-      #   select(sample_, any_of(sample_column_to_preserve)) |> 
+      #   select(sample_id, any_of(sample_column_to_preserve)) |> 
       #   distinct()
       
 
@@ -308,12 +308,12 @@ tar_script(
       sample_column_to_preserve =
         metadata |>
         slice_sample(n = 500, by = donor_id) |>
-        tidybulk::pivot_sample(.sample = sample_) |>
+        tidybulk::pivot_sample(.sample = sample_id) |>
         colnames()
       
-      # Select only sample_ columns
+      # Select only sample_id columns
         metadata |>
-        select(sample_, any_of(sample_column_to_preserve)) |>
+        select(sample_id, any_of(sample_column_to_preserve)) |>
         distinct()
       
     }
@@ -365,7 +365,7 @@ tar_script(
       tar_target(
         metadata_dataset_id_common_sample_columns,
         metadata_dataset_id |> 
-          mutate(cell_ =  as.character(cell_)) |> 
+          mutate(cell_id =  as.character(cell_id)) |> 
           select(any_of(common_columns)) |> 
           select_sample_columns(),
         pattern = map(metadata_dataset_id),
@@ -375,8 +375,8 @@ tar_script(
       tar_target(
         metadata_dataset_id_cell_to_sample_mapping,
         metadata_dataset_id |> 
-          mutate(cell_ =  as.character(cell_)) |> 
-          select(cell_, sample_, donor_id),
+          mutate(cell_id =  as.character(cell_id)) |> 
+          select(cell_id, sample_id, donor_id),
         pattern = map(metadata_dataset_id),
         resources = tar_resources(crew = tar_resources_crew("slurm_1_20"))
       )

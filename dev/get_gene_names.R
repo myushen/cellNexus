@@ -21,11 +21,11 @@ samples =
   duckdb() |>
   dbConnect(drv = _, read_only = TRUE) |>
   tbl(metadata_DB) |>
-	distinct(file_id, sample_) |>
+	distinct(file_id, sample_id) |>
   as_tibble() |> 
 	group_by(file_id) |>
 	slice(1) |>
-	pull(sample_)
+	pull(sample_id)
 
 # Read gene names
 dir(raw_data_directory, full.names = TRUE) |>

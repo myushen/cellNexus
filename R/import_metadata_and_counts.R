@@ -1,7 +1,7 @@
 #' Import and process metadata and counts for a SingleCellExperiment object
 #'
 #' @param sce_obj A SingleCellExperiment object from RDS, the metadata slot of which
-#' must contain `cell_` and `dataset_id`
+#' must contain `cell_id` and `dataset_id`
 #' @param cache_dir Optional character vector of length 1. A file path on
 #'   your local system to a directory (not a file) that will be used to store
 #'   `metadata.parquet`
@@ -77,19 +77,19 @@ import_one_sce <- function(
     check_true() |>
     assert("The filename for count assay (file_id_db) already exists in the cache directory.")
   
-  # Check the metadata contains cell_, file_id_db, sample_ with correct types
-  check_true("cell_" %in% colnames(metadata_tbl))
+  # Check the metadata contains cell_id, file_id_db, sample_id with correct types
+  check_true("cell_id" %in% colnames(metadata_tbl))
   check_true("file_id_db" %in% names(metadata_tbl)) 
-  pull(metadata_tbl, .data$cell_) |> class() |> check_character()
+  pull(metadata_tbl, .data$cell_id) |> class() |> check_character()
   select(metadata_tbl, .data$file_id_db) |> class() |> check_character()
   
-  # Check cell_ values in metadata_tbl is unique
-  (anyDuplicated(metadata_tbl$cell_) == 0 ) |> assert("Cell names (cell_) in the metadata must be unique.")
+  # Check cell_id values in metadata_tbl is unique
+  (anyDuplicated(metadata_tbl$cell_id) == 0 ) |> assert("Cell names (cell_id) in the metadata must be unique.")
   
-  # Check cell_ values are not duplicated when join with parquet
-  cells <- select(get_metadata(cache_directory = cache_dir), .data$cell_) |> as_tibble()
-  (!any(metadata_tbl$cell_ %in% cells$cell_)) |> 
-    assert("Cell names (cell_) should not clash with cells that already exist in the atlas.")
+  # Check cell_id values are not duplicated when join with parquet
+  cells <- select(get_metadata(cache_directory = cache_dir), .data$cell_id) |> as_tibble()
+  (!any(metadata_tbl$cell_id %in% cells$cell_id)) |> 
+    assert("Cell names (cell_id) should not clash with cells that already exist in the atlas.")
   
   # Check age_days is either -99 or greater than 365
   if (any(colnames(metadata_tbl) == "age_days")) {

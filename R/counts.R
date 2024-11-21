@@ -52,7 +52,7 @@ get_SingleCellExperiment <- function(...){
 
 #' Gets a SingleCellExperiment from curated metadata
 #' 
-#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus_single_cell` columns, 
+#' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_single_cell` columns, 
 #'   which correspond to a single cell ID, file subdivision for internal use.
 #'   They can be obtained from the [get_metadata()] function.
 #' @inheritDotParams get_data_container
@@ -69,15 +69,15 @@ get_single_cell_experiment <- function(data, ...){
   raw_data <- collect(data)
   assert_that(
     inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_", "file_id_cellNexus_single_cell"))
+    has_name(raw_data, c("cell_id", "file_id_cellNexus_single_cell"))
   )
   get_data_container(data, ..., repository = COUNTS_URL, grouping_column = "file_id_cellNexus_single_cell")
 }
 
 #' Gets a Pseudobulk from curated metadata
 #' 
-#' @param data A data frame containing, at minimum, `cell_`, `file_id`, 
-#'   `sample_`, `cell_type_harmonised` columns, which correspond to a single cell ID,
+#' @param data A data frame containing, at minimum, `cell_id`, `file_id`, 
+#'   `sample_id`, `cell_type_harmonised` columns, which correspond to a single cell ID,
 #'   file subdivision for internal use, a singlel cell sample ID and harmonised cell type. 
 #'   They can be obtained from the [get_metadata()] function.
 #' @inheritDotParams get_data_container
@@ -96,7 +96,7 @@ get_pseudobulk <- function(data, ...) {
   raw_data <- collect(data)
   assert_that(
     inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_", "file_id", "sample_", "cell_type_harmonised"))
+    has_name(raw_data, c("cell_id", "file_id", "sample_id", "cell_type_harmonised"))
   )
   get_data_container(data, ..., repository = pseudobulk_url, grouping_column = "file_id")
 }
@@ -106,7 +106,7 @@ get_pseudobulk <- function(data, ...) {
 #' Given a data frame of Curated Atlas metadata obtained from [get_metadata()],
 #' returns a [`SummarizedExperiment::SummarizedExperiment-class`] object
 #' corresponding to the samples in that data frame
-#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus_single_cell`, `file_id` column, which
+#' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_single_cell`, `file_id` column, which
 #'   correspond to a single cell ID, file subdivision for internal use, and a single cell sample ID. 
 #'   They can be obtained from the [get_metadata()] function.
 #' @param assays A character vector whose elements must be either "counts"
@@ -287,7 +287,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   
   if (grouping_column == "file_id_cellNexus_single_cell") {
     # Process specific to SCE
-    cells <- colnames(experiment) |> intersect(df$cell_)
+    cells <- colnames(experiment) |> intersect(df$cell_id)
     
     if (length(cells) < nrow(df)){
       single_line_str(
@@ -296,15 +296,15 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
                 Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
                 "
       ) |> cli_alert_warning()
-      df <- filter(df, .data$cell_ %in% cells)
+      df <- filter(df, .data$cell_id %in% cells)
     }
     else if (length(cells) > nrow(df)){
       cli_abort("This should never happen")
     }
     
     new_coldata <- df |>
-      mutate(original_cell_id = .data$cell_, cell_ = glue("{cell_}_{i}")) |>
-      column_to_rownames("cell_") |>
+      mutate(original_cell_id = .data$cell_id, cell_id = glue("{cell_id}_{i}")) |>
+      column_to_rownames("cell_id") |>
       as("DataFrame")
     
     experiment <- `if`(
@@ -316,13 +316,13 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         experiment[genes, new_coldata$original_cell_id]
       }
     ) |>
-      `colnames<-`(new_coldata$cell_) |>
+      `colnames<-`(new_coldata$cell_id) |>
       `colData<-`(value = new_coldata)
   }
   else if (grouping_column == "file_id") {
     # Process specific to Pseudobulk
     # remove cell-level annotations
-    cell_level_anno <- c("cell_", "cell_type", "confidence_class", "file_id_cellNexus_single_cell",
+    cell_level_anno <- c("cell_id", "cell_type", "confidence_class", "file_id_cellNexus_single_cell",
                          "cell_annotation_blueprint_singler",
                          "cell_annotation_monaco_singler", 
                          "cell_annotation_azimuth_l2",
@@ -334,8 +334,8 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
       distinct() |>
       mutate(
         sample_identifier = ifelse(file_id %in% file_ids,
-                                   glue("{sample_}___{cell_type_harmonised}___{disease}___{is_primary_data_x}"),
-                                   glue("{sample_}___{cell_type_harmonised}")),
+                                   glue("{sample_id}___{cell_type_harmonised}___{disease}___{is_primary_data_x}"),
+                                   glue("{sample_id}___{cell_type_harmonised}")),
         original_sample_id = .data$sample_identifier
       ) |>
       column_to_rownames("original_sample_id")
@@ -355,7 +355,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
 }
 
 #' A temporary solution for get_pseudobulk duplicated rownames due to column
-#' `disease` and `is_primary_data` columns are not included in `sample_` in the metadata.
+#' `disease` and `is_primary_data` columns are not included in `sample_id` in the metadata.
 #' @noRd
 # file_ids that are corrupted
 file_ids <- c(

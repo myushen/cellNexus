@@ -10,7 +10,7 @@
 get_single_cell_experiment(data, ...)
 }
 \arguments{
-\item{data}{A data frame containing, at minimum, \code{cell_}, \code{file_id_cellNexus} columns,
+\item{data}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus} columns,
 which correspond to a single cell ID, file subdivision for internal use.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 

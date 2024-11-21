@@ -17,7 +17,7 @@ get_data_container(
 )
 }
 \arguments{
-\item{data}{A data frame containing, at minimum, \code{cell_}, \code{file_id_cellNexus}, \code{file_id} column, which
+\item{data}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus}, \code{file_id} column, which
 correspond to a single cell ID, file subdivision for internal use, and a single cell sample ID.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 

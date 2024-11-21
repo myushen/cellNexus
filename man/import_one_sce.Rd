@@ -11,7 +11,7 @@ import_one_sce(sce_obj, cache_dir = get_default_cache_dir())
 }
 \arguments{
 \item{sce_obj}{A SingleCellExperiment object from RDS, the metadata slot of which
-must contain \code{cell_} and \code{dataset_id}}
+must contain \code{cell_id} and \code{dataset_id}}
 
 \item{cache_dir}{Optional character vector of length 1. A file path on
 your local system to a directory (not a file) that will be used to store

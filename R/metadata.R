@@ -105,7 +105,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' `user_submitted`, `x_normalization`
 #'
 #' Sample-specific columns (definitions available at cellxgene.cziscience.com):
-#' `sample_`, `.sample_name`, `age_days`, `assay`, `assay_ontology_term_id`,
+#' `sample_id`, `.sample_name`, `age_days`, `assay`, `assay_ontology_term_id`,
 #' `development_stage`, `development_stage_ontology_term_id`, `ethnicity`,
 #' `ethnicity_ontology_term_id`, `experiment___`, `organism`,
 #' `organism_ontology_term_id`, `sample_placeholder`, `sex`,
@@ -114,7 +114,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' `is_primary_data.x`
 #'
 #' Cell-specific columns (definitions available at cellxgene.cziscience.com):
-#' `cell_`, `cell_type`, `cell_type_ontology_term_idm`, `cell_type_harmonised`,
+#' `cell_id`, `cell_type`, `cell_type_ontology_term_idm`, `cell_type_harmonised`,
 #' `confidence_class`, `cell_annotation_azimuth_l2`,
 #' `cell_annotation_blueprint_singler`
 #'
@@ -136,7 +136,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #'   reference
 #' - `sample_id_db`: Sample subdivision for internal use
 #' - `file_id_db`: File subdivision for internal use
-#' - `sample_`: Sample ID
+#' - `sample_id`: Sample ID
 #' - `.sample_name`: How samples were defined
 #'
 #' **Possible cache path issues**

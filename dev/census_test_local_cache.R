@@ -20,8 +20,8 @@ my_consensus =
     dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
     sql("SELECT * FROM read_parquet('/vast/projects/cellxgene_curated/metadata_cellxgenedp_Apr_2024/consensus_output_new_plus_non_immune_harmonisation.parquet')")
   ) |> 
-  mutate(cell_ = paste(cell_, dataset_id, sep="___")) |>  # Concatenate cell ID with dataset ID
-  select(cell_, dataset_id, cell_type_immune_consensus = reannotation_consensus)  # Select and rename columns for clarity
+  mutate(cell_id = paste(cell_id, dataset_id, sep="___")) |>  # Concatenate cell ID with dataset ID
+  select(cell_id, dataset_id, cell_type_immune_consensus = reannotation_consensus)  # Select and rename columns for clarity
 
 # Add a file ID column for database use and convert the modified consensus data into a tibble
 my_consensus_tbl <- my_consensus |> 
@@ -62,7 +62,7 @@ result_tbl |>
 # Demonstrate loading metadata from cache and retrieving specific columns
 get_metadata(cache_directory = "/vast/projects/cellxgene_curated/",
              remote_url = get_database_url("metadata.0.2.3.parquet")) |> 
-  select(cell_, file_id_cellNexus) |>
+  select(cell_id, file_id_cellNexus) |>
   head(1000) |>
   get_data_container(repository = NULL,
                      cache_directory = "/vast/projects/cellxgene_curated/cellxgene_temp/29_10_2024/", 

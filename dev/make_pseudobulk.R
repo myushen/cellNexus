@@ -113,9 +113,9 @@ tar_script(
       
         # this, because for curated Atlas, query, I don't need of the other meta data, 
         # I can add it later from the full meta data 
-        select(file_id, sample_, cell_, file_id_db, cell_type_harmonised) |>
+        select(file_id, sample_id, cell_id, file_id_db, cell_type_harmonised) |>
         as_tibble() |> 
-        mutate(chunk = sample_) |> 
+        mutate(chunk = sample_id) |> 
         nest(data = -c(chunk, file_id)) |> 
         mutate(number_of_cells = map_int(data, nrow)) 
       
@@ -126,9 +126,9 @@ tar_script(
         
         # DROP FETAL SCI-SEQ FOR THE MOMENT
         filter(collection_id == "c114c20f-1ef4-49a5-9c2e-d965787fb90c") |> 
-        select(file_id, sample_, cell_, file_id_db, cell_type_harmonised) |>
+        select(file_id, sample_id, cell_id, file_id_db, cell_type_harmonised) |>
         as_tibble() |> 
-        nest(data = -c(file_id, sample_, cell_type_harmonised)) |> 
+        nest(data = -c(file_id, sample_id, cell_type_harmonised)) |> 
         mutate(n = map_int(data, nrow)) |> 
         mutate(data = map2(
           data, n,
@@ -136,7 +136,7 @@ tar_script(
         )) |> 
         unnest(data) |> 
         select(-n) |> 
-        mutate(chunk = sample_) |> 
+        mutate(chunk = sample_id) |> 
         nest(data = -c(chunk, file_id)) |> 
         mutate(number_of_cells = map_int(data, nrow)) 
     
@@ -168,7 +168,7 @@ tar_script(
           # 				 	# I need to fix Curated CellAtlas with disease sample, duplication for 
           # 				 	# file_id=="cc3ff54f-7587-49ea-b197-1515b6d98c4c", cell_type_harmonised=="stromal_cell"
           # 				 	# for lung
-          # 				 	glue("{sample_}___{disease}") |>
+          # 				 	glue("{sample_id}___{disease}") |>
           # 				 	str_replace_all(" ", "_") |>
           # 				 	str_replace_all("/", "__")
           # 	) 
@@ -182,7 +182,7 @@ tar_script(
         mutate(data = map(
           data, 
           ~ {
-            .x = tidySingleCellExperiment::aggregate_cells(.x, .sample = c(sample_, cell_type_harmonised)	)
+            .x = tidySingleCellExperiment::aggregate_cells(.x, .sample = c(sample_id, cell_type_harmonised)	)
             
             # Decrease size
             # We will reattach rowames later
