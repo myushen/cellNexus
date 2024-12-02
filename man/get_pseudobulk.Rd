@@ -10,8 +10,8 @@
 get_pseudobulk(data, ...)
 }
 \arguments{
-\item{data}{A data frame containing, at minimum, \code{cell_}, \code{file_id},
-\code{sample_}, \code{cell_type_harmonised} columns, which correspond to a single cell ID,
+\item{data}{A data frame containing, at minimum, \code{cell_id}, \code{file_id},
+\code{sample_id}, \code{cell_type_harmonised} columns, which correspond to a single cell ID,
 file subdivision for internal use, a singlel cell sample ID and harmonised cell type.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 
@@ -27,7 +27,7 @@ provided, it should indicate a local file path where any remotely accessed
 files should be copied.}
     \item{\code{repository}}{A character vector of length one. If provided, it should be
 an HTTP URL pointing to the location where the single cell data is stored.}
-    \item{\code{grouping_column}}{A character vector of metadata column for grouping. "file_id_cellNexus" for
+    \item{\code{grouping_column}}{A character vector of metadata column for grouping. "file_id_cellNexus_single_cell" for
 for Single Cell Experiment, "file_id" for pseudobulk.}
     \item{\code{features}}{An optional character vector of features (ie genes) to return
 the counts for. By default counts for all features will be returned.}

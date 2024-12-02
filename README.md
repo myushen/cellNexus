@@ -49,7 +49,7 @@ metadata <- get_metadata(remote_url = METADATA_URL)
 metadata
 #> # Source:   table</vast/scratch/users/milton.m/cache/R/CuratedAtlasQueryR/metadata.0.2.3.parquet> [?? x 56]
 #> # Database: DuckDB 0.7.1 [unknown@Linux 3.10.0-1160.88.1.el7.x86_64:R 4.2.1/:memory:]
-#>    cell_ sample_ cell_…¹ cell_…² confi…³ cell_…⁴ cell_…⁵ cell_…⁶ sampl…⁷ _samp…⁸
+#>    cell_id sample_id cell_id…¹ cell_id…² confi…³ cell_id…⁴ cell_id…⁵ cell_id…⁶ sampl…⁷ _samp…⁸
 #>    <chr> <chr>   <chr>   <chr>     <dbl> <chr>   <chr>   <chr>   <chr>   <chr>  
 #>  1 8387… 7bd7b8… natura… immune…       5 cd8 tem gmp     natura… 842ce7… Q59___…
 #>  2 1768… 7bd7b8… natura… immune…       5 cd8 tem cd8 tcm natura… 842ce7… Q59___…
@@ -116,7 +116,7 @@ single_cell_counts =
 single_cell_counts
 #> # A SingleCellExperiment-tibble abstraction: 1,571 × 57
 #> # [90mFeatures=36229 | Cells=1571 | Assays=counts[0m
-#>    .cell sample_ cell_…¹ cell_…² confi…³ cell_…⁴ cell_…⁵ cell_…⁶ sampl…⁷ X_sam…⁸
+#>    .cell sample_id cell_id…¹ cell_id…² confi…³ cell_id…⁴ cell_id…⁵ cell_id…⁶ sampl…⁷ X_sam…⁸
 #>    <chr> <chr>   <chr>   <chr>     <dbl> <chr>   <chr>   <chr>   <chr>   <chr>  
 #>  1 AGCG… 11a7dc… CD4-po… cd4 th1       3 cd4 tcm cd8 t   th1     10b339… Donor_…
 #>  2 TCAG… 11a7dc… CD4-po… cd4 th…       3 cd4 tcm cd4 tem th1/th… 10b339… Donor_…
@@ -161,7 +161,7 @@ single_cell_counts =
 single_cell_counts
 #> # A SingleCellExperiment-tibble abstraction: 1,571 × 57
 #> # [90mFeatures=36229 | Cells=1571 | Assays=cpm[0m
-#>    .cell sample_ cell_…¹ cell_…² confi…³ cell_…⁴ cell_…⁵ cell_…⁶ sampl…⁷ X_sam…⁸
+#>    .cell sample_id cell_id…¹ cell_id…² confi…³ cell_id…⁴ cell_id…⁵ cell_id…⁶ sampl…⁷ X_sam…⁸
 #>    <chr> <chr>   <chr>   <chr>     <dbl> <chr>   <chr>   <chr>   <chr>   <chr>  
 #>  1 AGCG… 11a7dc… CD4-po… cd4 th1       3 cd4 tcm cd8 t   th1     10b339… Donor_…
 #>  2 TCAG… 11a7dc… CD4-po… cd4 th…       3 cd4 tcm cd4 tem th1/th… 10b339… Donor_…
@@ -203,7 +203,7 @@ single_cell_counts =
 single_cell_counts
 #> # A SingleCellExperiment-tibble abstraction: 1,571 × 57
 #> # [90mFeatures=1 | Cells=1571 | Assays=cpm[0m
-#>    .cell sample_ cell_…¹ cell_…² confi…³ cell_…⁴ cell_…⁵ cell_…⁶ sampl…⁷ X_sam…⁸
+#>    .cell sample_id cell_id…¹ cell_id…² confi…³ cell_id…⁴ cell_id…⁵ cell_id…⁶ sampl…⁷ X_sam…⁸
 #>    <chr> <chr>   <chr>   <chr>     <dbl> <chr>   <chr>   <chr>   <chr>   <chr>  
 #>  1 AGCG… 11a7dc… CD4-po… cd4 th1       3 cd4 tcm cd8 t   th1     10b339… Donor_…
 #>  2 TCAG… 11a7dc… CD4-po… cd4 th…       3 cd4 tcm cd4 tem th1/th… 10b339… Donor_…
@@ -360,7 +360,7 @@ dplyr::pull(unharmonised) |> head(2)
 #> [[1]]
 #> # Source:   SQL [?? x 14]
 #> # Database: DuckDB 0.7.1 [unknown@Linux 3.10.0-1160.88.1.el7.x86_64:R 4.2.1/:memory:]
-#>    cell_ file_id donor…¹ donor…² libra…³ mappe…⁴ sampl…⁵ suspe…⁶ suspe…⁷ autho…⁸
+#>    cell_id file_id donor…¹ donor…² libra…³ mappe…⁴ sampl…⁵ suspe…⁶ suspe…⁷ autho…⁸
 #>    <chr> <chr>   <chr>   <chr>   <chr>   <chr>   <chr>   <chr>   <chr>   <chr>  
 #>  1 4602… dc9d8c… 27 mon… a8536b… 5ddaea… GENCOD… 61bf84… cell    d8a44f… Pelvic…
 #>  2 4602… dc9d8c… 27 mon… a8536b… 5ddaea… GENCOD… 61bf84… cell    d8a44f… Pelvic…
@@ -394,7 +394,7 @@ cellxgene.cziscience.com)
 Sample-specific columns (definitions available at
 cellxgene.cziscience.com)
 
-`sample_`, `sample_name`, `age_days`, `assay`, `assay_ontology_term_id`,
+`sample_id`, `sample_name`, `age_days`, `assay`, `assay_ontology_term_id`,
 `development_stage`, `development_stage_ontology_term_id`, `ethnicity`,
 `ethnicity_ontology_term_id`, `experiment___`, `organism`,
 `organism_ontology_term_id`, `sample_placeholder`, `sex`,
@@ -405,7 +405,7 @@ cellxgene.cziscience.com)
 Cell-specific columns (definitions available at
 cellxgene.cziscience.com)
 
-`cell_`, `cell_type`, `cell_type_ontology_term_idm`,
+`cell_id`, `cell_type`, `cell_type_ontology_term_idm`,
 `cell_type_harmonised`, `confidence_class`,
 `cell_annotation_azimuth_l2`, `cell_annotation_blueprint_singler`
 
@@ -427,7 +427,7 @@ present in the original CELLxGENE metadata
   Monaco reference
 - `sample_id_db`: Sample subdivision for internal use
 - `file_id_db`: File subdivision for internal use
-- `sample_`: Sample ID
+- `sample_id`: Sample ID
 - `.sample_name`: How samples were defined
 
 # RNA abundance

@@ -59,7 +59,7 @@ Dataset-specific columns (definitions available at cellxgene.cziscience.com):
 \code{user_submitted}, \code{x_normalization}
 
 Sample-specific columns (definitions available at cellxgene.cziscience.com):
-\code{sample_}, \code{.sample_name}, \code{age_days}, \code{assay}, \code{assay_ontology_term_id},
+\code{sample_id}, \code{.sample_name}, \code{age_days}, \code{assay}, \code{assay_ontology_term_id},
 \code{development_stage}, \code{development_stage_ontology_term_id}, \code{ethnicity},
 \code{ethnicity_ontology_term_id}, \code{experiment___}, \code{organism},
 \code{organism_ontology_term_id}, \code{sample_placeholder}, \code{sex},
@@ -68,7 +68,7 @@ Sample-specific columns (definitions available at cellxgene.cziscience.com):
 \code{is_primary_data.x}
 
 Cell-specific columns (definitions available at cellxgene.cziscience.com):
-\code{cell_}, \code{cell_type}, \code{cell_type_ontology_term_idm}, \code{cell_type_harmonised},
+\code{cell_id}, \code{cell_type}, \code{cell_type_ontology_term_idm}, \code{cell_type_harmonised},
 \code{confidence_class}, \code{cell_annotation_azimuth_l2},
 \code{cell_annotation_blueprint_singler}
 
@@ -90,7 +90,7 @@ Blueprint reference
 reference
 \item \code{sample_id_db}: Sample subdivision for internal use
 \item \code{file_id_db}: File subdivision for internal use
-\item \code{sample_}: Sample ID
+\item \code{sample_id}: Sample ID
 \item \code{.sample_name}: How samples were defined
 }
 

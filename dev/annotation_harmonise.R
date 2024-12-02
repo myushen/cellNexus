@@ -656,7 +656,7 @@ metadata_annotated =
 
 # Replace `.` with `_` for all column names as it can create difficoulties for MySQL and Python
 colnames(metadata_annotated) = colnames(metadata_annotated) |> str_replace_all("\\.", "_")
-metadata_annotated = metadata_annotated |> rename(cell_ = `_cell`, sample_ = `_sample`)
+metadata_annotated = metadata_annotated |> rename(cell_id = `_cell`, sample_id = `_sample`)
 
 harmonise_names_non_immune = function(metadata){
   
@@ -989,7 +989,7 @@ arrow::write_parquet(metadata_annotated, glue("{tools::file_path_sans_ext(file_m
 # 	cell_metadata_with_harmonised_annotation |> filter(!is.na(cell_type_harmonised)) |>  distinct( cell_type, .sample, file_id)
 #
 # # Cell types that most need attention
-# cell_metadata_with_harmonised_annotation |> anti_join(annotated_samples) |> select(contains("cell_")) |> count(cell_type ,    cell_type_harmonised ,cell_annotation_azimuth_l2 ,cell_annotation_blueprint_singler) |> arrange(desc(n)) |> print(n=99)
+# cell_metadata_with_harmonised_annotation |> anti_join(annotated_samples) |> select(contains("cell_id")) |> count(cell_type ,    cell_type_harmonised ,cell_annotation_azimuth_l2 ,cell_annotation_blueprint_singler) |> arrange(desc(n)) |> print(n=99)
 #
 # # How many samples miss annotation
 # cell_metadata_with_harmonised_annotation |> anti_join(annotated_samples)  |>  distinct(cell_type,  cell_type_harmonised, .sample) |>  distinct( cell_type, .sample) |> count(cell_type)  |> arrange(desc(n))
