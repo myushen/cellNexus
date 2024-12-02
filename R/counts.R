@@ -183,11 +183,16 @@ get_data_container <- function(
   cli_alert_info("Realising metadata.")
   raw_data <- collect(data)
   versioned_cache_directory <- file.path(cache_directory, atlas_name, DATE, cell_aggregation)
-  versioned_cache_directory |> dir.create(
+  
+  versioned_cache_directory |> map( ~ {.x |> dir.create(
     showWarnings = FALSE,
     recursive = TRUE
-  )
-  
+  )})
+  # versioned_cache_directory |> dir.create(
+  #   showWarnings = FALSE,
+  #   recursive = TRUE
+  # )
+  # 
   subdirs <- assay_map[assays]
   
   # The repository is optional. If not provided we load only from the cache
@@ -205,6 +210,9 @@ get_data_container <- function(
       as.character() |>
       sync_assay_files(
         url = parsed_repo,
+        atlas_name,
+        version = DATE,
+        cell_aggregation = cell_aggregation,
         cache_dir = versioned_cache_directory,
         files = _,
         subdirs = subdirs
@@ -404,6 +412,9 @@ file_ids <- c(
 #' @noRd
 sync_assay_files <- function(
     url = parse_url(COUNTS_URL),
+    atlas_name,
+    version = DATE,
+    cell_aggregation,
     cache_dir,
     subdirs,
     files
@@ -411,7 +422,9 @@ sync_assay_files <- function(
   # Find every combination of file name, sample id, and assay, since each
   # will be a separate file we need to download
   files <- expand.grid(
-    filename = c("assays.h5", "se.rds"),
+    atlas_name = atlas_name,
+    version = DATE,
+    cell_aggregation = cell_aggregation,
     sample_id = files,
     subdir = subdirs,
     stringsAsFactors = FALSE
@@ -422,23 +435,23 @@ sync_assay_files <- function(
       full_url = paste0(
         url$path,
         "/",
+        .data$atlas_name,
+        "/",
+        .data$version,
+        "/",
+        .data$cell_aggregation,
+        "/",
         .data$subdir,
         "/",
-        .data$sample_id,
-        "/",
-        .data$filename
+        .data$sample_id
       ) |> map_chr(~ modify_url(url, path = .)),
       
       # Path to save the file on local disk (and its parent directory)
       # We use file.path since the file separator will differ on other OSs
-      output_dir = file.path(
+      output_file = file.path(
         cache_dir,
         .data$subdir,
         .data$sample_id
-      ),
-      output_file = file.path(
-        .data$output_dir,
-        .data$filename
       )
     ) |>
     filter(
