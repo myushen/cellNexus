@@ -44,11 +44,11 @@ root_directory = "/vast/projects/cellxgene_curated"
 #   duckdb() |>
 #   dbConnect(drv = _, read_only = TRUE) |>
 #   tbl(metadata_DB) |>
-#   distinct(file_id, sample_) |>
+#   distinct(file_id, sample_id) |>
 #   as_tibble() |>
 #   group_by(file_id) |>
 #   slice(1) |>
-#   pull(sample_)
+#   pull(sample_id)
 # 
 # # Read gene names
 # glue("{root_directory}/splitted_data_0.2") |> 
@@ -156,12 +156,12 @@ cells_to_keep =
   
   
 	dplyr::filter(file_id == !!file_id) |>
-	dplyr::select(cell_, sample_, file_id, cell_type) |>
+	dplyr::select(cell_id, sample_id, file_id, cell_type) |>
 	as_tibble() |>
 	unite("file_id_db2", c(file_id, cell_type), remove = FALSE) |>
 	mutate(file_id_db2 = file_id_db2 |> md5() |> as.character()) |>
 	filter(file_id_db2 == !!file_id_db2) |>
-	mutate(.cell_original = cell_ |> str_remove(sample_) |> str_remove("_$")) |>
+	mutate(.cell_original = cell_id |> str_remove(sample_id) |> str_remove("_$")) |>
 	pull(.cell_original)
 
 # Read

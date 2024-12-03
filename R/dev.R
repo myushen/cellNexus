@@ -279,7 +279,7 @@ downsample_metadata <- function(output = "sample_meta.parquet"){
         .data$tissue == "kidney blood vessel",
         # Used by tests
         .data$file_id_db == "3214d8f8986c1e33a85be5322f2db4a9",
-        .data$cell_ == "868417_1"
+        .data$cell_id == "868417_1"
     ) |>
         purrr::map(function(filter){
             all_ids <- metadata |> 
@@ -296,7 +296,7 @@ downsample_metadata <- function(output = "sample_meta.parquet"){
     
     metadata |>    
         dplyr::filter(.data$file_id_db %in% minimal_file_ids) |>
-        dplyr::arrange(.data$file_id_db, .data$sample_) |>
+        dplyr::arrange(.data$file_id_db, .data$sample_id) |>
         dplyr::collect() |>
         arrow::write_parquet(output)
     

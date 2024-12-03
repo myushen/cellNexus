@@ -53,15 +53,15 @@ conn = duckdb() |>
 metadata_df =
   conn |> 
   filter(disease=="normal") |> 
-	count(sample_, sex, age_days, assay, ethnicity, tissue_harmonised, file_id, disease) |> 
+	count(sample_id, sex, age_days, assay, ethnicity, tissue_harmonised, file_id, disease) |> 
   as_tibble()
 
 # plotly::ggplotly(
 # 	x |>
 # 	left_join(
 # 		metadata_df |>
-# 			count(sample_, sex, age_days, assay, ethnicity, tissue_harmonised, file_id),
-# 		by = c("sample" = "sample_")
+# 			count(sample_id, sex, age_days, assay, ethnicity, tissue_harmonised, file_id),
+# 		by = c("sample" = "sample_id")
 # 	) |>
 # 	mutate(lymphoid_organ = tissue_harmonised %in% c("blood", "lymph node", "bone", "spleen", "thymus")) |>
 #
@@ -94,7 +94,7 @@ cdc_weight_data =
 
 	left_join(
 		metadata_df ,
-		by = c("sample" = "sample_")
+		by = c("sample" = "sample_id")
 	) |>
 	filter(disease=="normal") |>
 
@@ -416,11 +416,11 @@ weight_data_per_gene =
   unnest(cell_vs_all_cells_per_pathway) |>
   
   # This because some samples have multiple disease! Will need to fix in the future
-  filter(!sample %in% (conn |> distinct(sample_, disease) |> count(sample_) |> filter(n>1) |> pull(sample_))) |> 
+  filter(!sample %in% (conn |> distinct(sample_id, disease) |> count(sample_id) |> filter(n>1) |> pull(sample_id))) |> 
   
   left_join(
     metadata_df ,
-    by = c("sample" = "sample_")
+    by = c("sample" = "sample_id")
   ) |>
   filter(disease=="normal") |>
   
@@ -816,7 +816,7 @@ lines_cell_type_communication =
 
 			left_join(
 				metadata_df ,
-				by = c("sample" = "sample_")
+				by = c("sample" = "sample_id")
 			) |>
 			filter(disease=="normal") |>
 
@@ -1096,8 +1096,8 @@ plot_circles |>
 #
 #  	left_join(
 #  		metadata_df |>
-#  			count(sample_, sex, age_days, assay, ethnicity, tissue_harmonised, file_id),
-#  		by = c("sample" = "sample_")
+#  			count(sample_id, sex, age_days, assay, ethnicity, tissue_harmonised, file_id),
+#  		by = c("sample" = "sample_id")
 #  	) |>
 #  	mutate(lymphoid_organ = tissue_harmonised %in% c("blood", "lymph node", "bone", "spleen")) |>
 #  	filter(file_id |> str_detect("973fa", negate = TRUE)) |>
@@ -1166,8 +1166,8 @@ fits =
 
 	left_join(
 		metadata_df |>
-			count(sample_, sex, age_days, assay, ethnicity, tissue_harmonised, file_id),
-		by = c("sample" = "sample_")
+			count(sample_id, sex, age_days, assay, ethnicity, tissue_harmonised, file_id),
+		by = c("sample" = "sample_id")
 	) |>
 	filter(!is.na(age_days)) |>
 	mutate(age_days = scale(age_days) |> as.numeric()) |>
@@ -1265,7 +1265,7 @@ job::job({
 	fits_tot_interactions =
 		x |>
 		left_join(
-			metadata |> count(sample_, sex, age_days, assay, ethnicity, tissue_harmonised, file_id)
+			metadata |> count(sample_id, sex, age_days, assay, ethnicity, tissue_harmonised, file_id)
 		) |>
 		mutate(age_days = scale(age_days) |> as.numeric()) |>
 		nest(data = -c(DB)) |>
@@ -1319,10 +1319,10 @@ xx |>
 	filter(cell_from == "cdc" ) |>
 	filter( cell_to  |> str_detect("cd4|cd8") ) |>
 	unite("cell_types", c(cell_from, cell_to), sep="->", remove = FALSE) |>
-	with_groups(c(sample_, DB, cell_from, cell_to), ~ .x |> summarise(mean_score = mean(score))) |>
-	#nest(data = -sample_) |>
+	with_groups(c(sample_id, DB, cell_from, cell_to), ~ .x |> summarise(mean_score = mean(score))) |>
+	#nest(data = -sample_id) |>
 	left_join(
-		metadata |> distinct(sample_, sex, age_days, assay, ethnicity, tissue_harmonised)
+		metadata |> distinct(sample_id, sex, age_days, assay, ethnicity, tissue_harmonised)
 	) |>
 	ggplot(aes(age_days, mean_score, color = DB)) +
 	geom_point() +
@@ -1338,11 +1338,11 @@ fits =
 	filter(cell_from == "cdc" ) |>
 	filter( cell_to  |> str_detect("cd4|cd8") ) |>
 	unite("cell_types", c(cell_from, cell_to), sep="->", remove = FALSE) |>
-	with_groups(c(sample_, DB, cell_from, cell_to), ~ .x |> summarise(mean_score = mean(score) |> sqrt())) |>
-	#nest(data = -sample_) |>
+	with_groups(c(sample_id, DB, cell_from, cell_to), ~ .x |> summarise(mean_score = mean(score) |> sqrt())) |>
+	#nest(data = -sample_id) |>
 	left_join(
 		metadata |>
-			count(sample_, sex, age_days, assay, ethnicity, tissue_harmonised, file_id, cell_type_harmonised) |>
+			count(sample_id, sex, age_days, assay, ethnicity, tissue_harmonised, file_id, cell_type_harmonised) |>
 			pivot_wider(names_from = cell_type_harmonised, values_from = n)
 	) |>
 	mutate(age_days = scale(age_days) |> as.numeric()) |>

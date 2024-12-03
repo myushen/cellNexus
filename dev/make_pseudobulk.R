@@ -148,7 +148,6 @@ tar_script({
         as_tibble() |> 
         mutate(chunk = file_id_cellNexus_single_Cell) |> 
         nest(data = -c(chunk)) |> 
-        
         mutate(number_of_cells = map_int(data, nrow)) 
     
     }
