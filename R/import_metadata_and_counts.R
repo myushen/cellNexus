@@ -1,38 +1,18 @@
-#' Import and process metadata and counts for a SingleCellExperiment object
-#'
-#' @param sce_obj A SingleCellExperiment object from RDS, the metadata slot of which
-#' must contain `cell_id` and `dataset_id`
-#' @param cache_dir Optional character vector of length 1. A file path on
-#'   your local system to a directory (not a file) that will be used to store
-#'   `metadata.parquet`
-#' @export
-#' @return A metadata.parquet strip from the SingleCellExperiment object. 
-#' Directories store counts and counts per million in the provided cache directory.
-#' @importFrom checkmate check_true check_character check_subset assert
-#' @importFrom dplyr select distinct pull
-#' @importFrom cli cli_alert_info
-#' @importFrom rlang .data
-#' @importFrom SingleCellExperiment reducedDims rowData reducedDims<-
-#' @importFrom S4Vectors metadata metadata<-
-#' @importFrom SummarizedExperiment assay
-#' @importFrom stringr str_detect
-#' @examples
-#' data(sample_sce_obj)
-#' import_one_sce(sample_sce_obj,
-#'                cache_dir = get_default_cache_dir())
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-import_one_sce <- function(
-    sce_obj,  
-    cache_dir = get_default_cache_dir()
-  ) {
-  original_dir <- file.path(cache_dir, "original")
-  
-  # Identify metadata and counts matrix
-  metadata_tbl <- metadata(sce_obj)$data
+# Maps user provided assay names to their corresponding paths in the repository
+assay_map <- c(
+  counts = "original",
+  cpm = "cpm",
+  quantile_normalised = "quantile_normalised"
+)
+
+# File extension
+extension <- ".h5ad"
+
+# Assertion of metadata
+assert_single_cell_metadata <- function(sce_obj,
+                                        cache_dir = get_default_cache_dir()
+                                        ) {
+  metadata_tbl <- metadata(sce_obj)$data_to_import 
   counts_matrix <- assay(sce_obj)
   
   # Check if the input contains only one dataset_id
@@ -43,80 +23,243 @@ import_one_sce <- function(
   # Identify whether genes in SingleCellxExperiment object are in ensembl nomenclature
   genes <- rowData(sce_obj) |> rownames()
   assert(sce_obj |> inherits( "SingleCellExperiment"),
-              "sce_obj is not identified as SingleCellExperiment object.")
-  assert(!str_detect(genes, "^ENSG%") |> all(), 
-              "Gene names in SingleCellExperiment object cannot contain Ensembl IDs.")
+         "sce_obj is not identified as SingleCellExperiment object.")
+  assert(!grepl("^ENSG\\d+$", genes) |> all(), 
+         "Genes in SingleCellExperiment object must be Ensembl gene ids.")
   assert(all(counts_matrix >= 0),
-              "Counts for SingleCellExperiment cannot be negative.")
+         "Counts for SingleCellExperiment cannot be negative.")
   
-  # Convert to tibble if not provided
-  metadata_tbl <- metadata_tbl |> as_tibble()
   
-  # Create file_id_db from dataset_id
-  file_id_db <- metadata_tbl$dataset_id |> unique() |> openssl::md5() |> as.character()
-  metadata_tbl <-
-    metadata_tbl |> mutate(file_id_db = file_id_db)
-  metadata(sce_obj)$data <- metadata_tbl
+  # Check the metadata contains cell_, file_id_cellNexus, sample_ with correct types
+  check_true("cell_" %in% colnames(metadata_tbl))
+  check_true("file_id_cellNexus" %in% names(metadata_tbl)) 
+  pull(metadata_tbl, .data$cell_) |> class() |> check_character()
+  select(metadata_tbl, .data$file_id_cellNexus) |> class() |> check_character()
   
-  # Remove existing reducedDim slot to enable get_SCE API functionality 
-  if (length(names(reducedDims(sce_obj))) >0 ) {
-    reducedDims(sce_obj) <- NULL
-  }
+  # Check cell_ values in metadata_tbl is unique
+  (anyDuplicated(metadata_tbl$cell_) == 0 ) |> assert("Cell names (cell_) in the metadata must be unique.")
   
-  # Create original and cpm folders in the cache directory if not exist
-  if (!dir.exists(original_dir)) {
-    cache_dir |> file.path("original") |> dir.create(recursive = TRUE)
-  }
-  
-  if (!dir.exists(file.path(cache_dir, "cpm"))) {
-    cache_dir |> file.path("cpm") |> dir.create(recursive = TRUE)
-  }
-  
-  # Check whether count H5 directory has been generated
-  all(!file_id_db %in% dir(original_dir)) |>
-    check_true() |>
-    assert("The filename for count assay (file_id_db) already exists in the cache directory.")
-  
-  # Check the metadata contains cell_id, file_id_db, sample_id with correct types
-  check_true("cell_id" %in% colnames(metadata_tbl))
-  check_true("file_id_db" %in% names(metadata_tbl)) 
-  pull(metadata_tbl, .data$cell_id) |> class() |> check_character()
-  select(metadata_tbl, .data$file_id_db) |> class() |> check_character()
-  
-  # Check cell_id values in metadata_tbl is unique
-  (anyDuplicated(metadata_tbl$cell_id) == 0 ) |> assert("Cell names (cell_id) in the metadata must be unique.")
-  
-  # Check cell_id values are not duplicated when join with parquet
-  cells <- select(get_metadata(cache_directory = cache_dir), .data$cell_id) |> as_tibble()
-  (!any(metadata_tbl$cell_id %in% cells$cell_id)) |> 
-    assert("Cell names (cell_id) should not clash with cells that already exist in the atlas.")
-  
-  # Check age_days is either -99 or greater than 365
-  if (any(colnames(metadata_tbl) == "age_days")) {
-    assert(all(metadata_tbl$age_days==-99 | metadata_tbl$age_days> 365),
-                "age_days should be either -99 for unknown or greater than 365.")
-  }
+  # Check cell_ values are not duplicated when join with parquet
+  cells <- select(get_metadata(cache_directory = cache_dir), .data$cell_) |> as_tibble()
+  if ((any(metadata_tbl$cell_ %in% cells$cell_))) 
+    cli_alert_warning(
+      single_line_str(
+        "Import API says:
+        Cells in your SingleCellExperiment already exists in the atlas."
+      )
+    )
   
   # Check sex capitalisation then convert to lower case 
   if (any(colnames(metadata_tbl) == "sex")) {
     metadata_tbl <- metadata_tbl |> mutate(sex = tolower(.data$sex))
     distinct(metadata_tbl, .data$sex) |> pull(.data$sex) |> check_subset(c("female","male","unknown"))
   }
+}
+
+# Assert pseudobulk metadata
+assert_pseudobulk_metadata <- function(sce_obj,
+                                       pseudobulk = FALSE) {
+  metadata_tbl <- metadata(sce_obj)$data
+  # Pseudobulk checkpoint 
+  pseudobulk_sample <- c("sample_", "cell_type_harmonised")
+  if (isTRUE(pseudobulk)) {
+    assert(
+      all(pseudobulk_sample %in% (colData(sce_obj) |> colnames()) ),
+      "Sample_ and cell_type_harmonised columns must be in the SingleCellExperiment colData")
+    
+    assert(c(pseudobulk_sample, "file_id") %in% (names(metadata_tbl)) |> all() ,
+           "SingleCellExperiment metadata must at least contain sample_, cell_type_harmonised,
+           file_id for pseudobulk generation"
+    ) }
+}
+
+#' Import and process metadata and counts for a SingleCellExperiment object
+#'
+#' @param sce_obj A SingleCellExperiment object, the metadata slot of which
+#' must contain `cell_` and `dataset_id`
+#' @param atlas_name A character string specifying the name of the atlas to import.
+#' @param import_date A character vector that specifies the date of the import.
+#' The date should be in the international format 'YYYY-MM-DD' for clarity and consistency.
+#' @param cell_aggregation A character vector that specifies which cell aggregation strategy
+#' should be applied. This will create  a corresponding subdirectory in the atlas cache.
+#' Choose one of the following: single_cell, pseudobulk
+#' @param cache_dir Optional character vector of length 1. A file path on
+#'   your local system to a directory (not a file) that will be used to store
+#'   `atlas_metadata.parquet`
+#' @param pseudobulk Optional character. Set to TRUE for generating and importing pseudobulk,
+#' the metadata slot of which must contain `file_id`, `cell_type_harmonised` and `sample_`
+#' @export
+#' @return 
+#' An user-defined atlas metadata.parquet from the SingleCellExperiment object. 
+#' Directories store counts and/or counts per million and/or quantile_normalised 
+#' in the provided cache directory.
+#' @importFrom checkmate check_true check_character check_subset assert
+#' @importFrom dplyr select distinct pull
+#' @importFrom cli cli_alert_info cli_alert_warning
+#' @importFrom rlang .data
+#' @importFrom SingleCellExperiment reducedDims rowData reducedDims<-
+#' @importFrom S4Vectors metadata metadata<-
+#' @importFrom SummarizedExperiment assay assay<-
+#' @importFrom stringr str_detect
+#' @importFrom zellkonverter writeH5AD
+#' @examples
+#' data(sample_sce_obj)
+#' import_one_sce(sample_sce_obj,
+#'                atlas_name = "sample_atlas",
+#'                import_date = "9999-99-99",
+#'                cell_aggregation = "single_cell",
+#'                cache_dir = get_default_cache_dir(),
+#'                pseudobulk = FALSE)
+#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
+#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
+#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
+#'   doi:10.1101/2023.06.08.542671.
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+import_one_sce <- function(
+    sce_obj,  
+    atlas_name,
+    import_date,
+    cell_aggregation,
+    cache_dir = get_default_cache_dir(),
+    pseudobulk = FALSE
+  ) {
+  # Create a new hierarchy for the imported metadata
+  atlas_directory = file.path(cache_dir, atlas_name, import_date, cell_aggregation)
   
-  original_path <- file.path(original_dir, basename(file_id_db))
-  cpm_path <- file.path(cache_dir, "cpm", basename(file_id_db))
+  # Identify metadata and counts matrix
+  metadata_tbl <- metadata(sce_obj)$data
+  counts_matrix <- assay(sce_obj)
   
+  # Convert to tibble if not provided
+  metadata_tbl <- metadata_tbl |> as_tibble()
+  
+  # Create file_id_cellNexus from dataset_id
+  file_id_cellNexus <- metadata_tbl$dataset_id |> unique() |> openssl::md5() |> as.character()
+  metadata_tbl <-
+    metadata_tbl |> mutate(file_id_cellNexus = paste0(file_id_cellNexus, extension))
+  metadata(sce_obj)$data_to_import <- metadata_tbl
+  
+  # Remove existing reducedDim slot to enable get_SCE API functionality 
+  reducedDims(sce_obj) <- NULL
+  
+  # Check if metadata pass pseudobulk checkpoint if pseudobulk is TRUE
+  sce_obj |> assert_pseudobulk_metadata(pseudobulk)
+  
+  # Check if metadata pass single cell checkpoint
+  sce_obj |> assert_single_cell_metadata(cache_dir)
+
+  # Create counts file directories
+  original_dir <- file.path(atlas_directory, assay_map["counts"])
+  cpm_dir <- file.path(atlas_directory, assay_map["cpm"])
+  
+  if (!dir.exists(original_dir)) dir.create(original_dir, recursive = TRUE)
+  if (!dir.exists(cpm_dir)) dir.create(cpm_dir, recursive = TRUE)
+  
+  # Check whether count H5 directory has been generated
+  if (any(file_id_cellNexus %in% dir(original_dir))) {
+    cli_alert_warning(
+      single_line_str(
+        "Import API says: The file you are trying to import is already present in the cache directory. "
+      )
+    )
+  }
+  
+  # Create counts file name
+  counts_file_path <- file.path(original_dir, basename(file_id_cellNexus)) |> paste0(extension)
+  cpm_file_path <- file.path(cpm_dir, basename(file_id_cellNexus)) |> paste0(extension)
+
   # Generate cpm from counts
-  cli_alert_info("Generating cpm from {file_id_db}. ")
-  get_counts_per_million(input_sce_obj = sce_obj, output_dir = cpm_path, hd5_file_dir = original_path)
-  saveHDF5SummarizedExperiment(sce_obj, original_path, replace=TRUE)
-  cli_alert_info("cpm are generated in {.path {cpm_path}}. ")
+  cli_alert_info("Generating cpm from {file_id_cellNexus}. ")
+  get_counts_per_million(sce_obj,
+                         counts_file_path, 
+                         cpm_file_path)
   
-  # check metadata sample file ID match the count file ID in cache directory
-  all(metadata_tbl |> pull(.data$file_id_db) %in% dir(original_dir)) |> 
-    assert("The filename for count assay, which matches the file_id_db column in the metadata, already exists in the cache directory.")
+  cli_alert_info("cpm are generated in {.path {cpm_dir}}. ")
   
   # convert metadata_tbl to parquet if above checkpoints pass
-  arrow::write_parquet(metadata_tbl, file.path(cache_dir, "metadata.parquet"))
+  arrow::write_parquet(metadata_tbl, file.path(cache_dir, glue("{atlas_name}_metadata.parquet")))
+  
+  # Generate pseudobulk
+  if (isTRUE(pseudobulk)) sce_obj |> calculate_pseudobulk(atlas_name = atlas_name,
+                                                          import_date = import_date,
+                                                          cell_aggregation = "pseudobulk",
+                                                          cache_dir = cache_dir)
 }
+
+
+#' Generate pseudobulk counts and quantile_normalised counts
+#' @param sce_data A SingleCellExperiment object, the metadata slot of which
+#' must contain `cell_` and `dataset_id`
+#' @param atlas_name A character string specifying the name of the atlas to import.
+#' @param import_date A character vector that specifies the date of the import.
+#' The date should be in the international format 'YYYY-MM-DD' for clarity and consistency.
+#' @param cell_aggregation A character vector that specifies which cell aggregation strategy
+#' should be applied. This will create  a corresponding subdirectory in the atlas cache.
+#' Choose one of the following: single_cell, pseudobulk.
+#' @param cache_dir Optional character vector of length 1. A file path on
+#'   your local system to a directory (not a file) that will be used to store pseudobulk counts
+#' @return Pseudobulk counts in `Anndata` format stored in the cache directory
+#' @export
+#' @importFrom S4Vectors metadata
+#' @importFrom dplyr select distinct pull
+#' @importFrom cli cli_alert_info cli_alert_warning
+#' @importFrom S4Vectors metadata
+#' @importFrom SummarizedExperiment assay assay<- assays
+#' @importFrom tidybulk quantile_normalise_abundance
+calculate_pseudobulk <- function(sce_data,
+                                 atlas_name,
+                                 import_date,
+                                 cell_aggregation,
+                                 cache_dir = get_default_cache_dir()) {
+  # Create a new pseudobulk hierarchy
+  pseudobulk_directory = file.path(cache_dir, atlas_name, import_date, cell_aggregation)
+  
+  metadata_tbl <- metadata(sce_data)$data
+  file_id <- metadata_tbl$file_id |> unique() |> as.character()
+  
+  original_dir <- file.path(pseudobulk_directory, assay_map["counts"])
+  quantile_normalised_dir <- file.path(pseudobulk_directory, assay_map["quantile_normalised"])
+  
+  if (!dir.exists(original_dir)) dir.create(original_dir, recursive = TRUE)
+  if (!dir.exists(quantile_normalised_dir)) dir.create(quantile_normalised_dir, recursive = TRUE)
+  
+  cli_alert_info("Generating pseudobulk from {file_id}. ")
+  
+  pseudobulk <- scuttle::aggregateAcrossCells(
+    sce_data, 
+    colData(sce_data)[,c("sample_","cell_type_harmonised")] |>
+      as_tibble(rownames = ".cell") |> 
+      mutate(aggregated_cells = paste(sample_, cell_type_harmonised, sep = "___")) |> 
+      pull(aggregated_cells), 
+    BPPARAM = BiocParallel::MulticoreParam(workers = 10)
+  ) |> 
+    # Handle column type cast correctly: https://github.com/scverse/anndata/issues/311
+    mutate(across(everything(), as.character))
+  
+  colData(pseudobulk) <- NULL
+  
+  assay_name <- pseudobulk |> assays() |> names()
+  normalised_counts_best_distribution <- assay(pseudobulk, assay_name) |>
+    preprocessCore::normalize.quantiles.determine.target()
+  
+  normalised_pseudobulk <- pseudobulk |> quantile_normalise_abundance(
+    method="preprocesscore_normalize_quantiles_use_target",
+    target_distribution = normalised_counts_best_distribution
+  ) |> 
+    mutate(across(everything(), as.character))
+  
+  # Keep quantile_normalised counts
+  assay(normalised_pseudobulk, assay_name) <- NULL
+  names(assays(normalised_pseudobulk)) <- "quantile_normalised"
+
+  counts_file_path <- file.path(original_dir, basename(file_id)) |> paste0(extension)
+  qnorm_file_path <- file.path(quantile_normalised_dir, basename(file_id)) |> paste0(extension)
+  
+  # Save pseudobulk counts
+  writeH5AD(pseudobulk, counts_file_path, compression = "gzip")
+  writeH5AD(normalised_pseudobulk, qnorm_file_path, compression = "gzip")
+  
+  cli_alert_info("pseudobulk are generated in {.path {pseudobulk_directory}}. ")
+}
+
 

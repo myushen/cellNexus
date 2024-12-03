@@ -7,19 +7,39 @@
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
 }
 \usage{
-import_one_sce(sce_obj, cache_dir = get_default_cache_dir())
+import_one_sce(
+  sce_obj,
+  atlas_name,
+  import_date,
+  cell_aggregation,
+  cache_dir = get_default_cache_dir(),
+  pseudobulk = FALSE
+)
 }
 \arguments{
-\item{sce_obj}{A SingleCellExperiment object from RDS, the metadata slot of which
-must contain \code{cell_id} and \code{dataset_id}}
+\item{sce_obj}{A SingleCellExperiment object, the metadata slot of which
+must contain \code{cell_} and \code{dataset_id}}
+
+\item{atlas_name}{A character string specifying the name of the atlas to import.}
+
+\item{import_date}{A character vector that specifies the date of the import.
+The date should be in the international format 'YYYY-MM-DD' for clarity and consistency.}
+
+\item{cell_aggregation}{A character vector that specifies which cell aggregation strategy
+should be applied. This will create  a corresponding subdirectory in the atlas cache.
+Choose one of the following: single_cell, pseudobulk}
 
 \item{cache_dir}{Optional character vector of length 1. A file path on
 your local system to a directory (not a file) that will be used to store
-\code{metadata.parquet}}
+\code{atlas_metadata.parquet}}
+
+\item{pseudobulk}{Optional character. Set to TRUE for generating and importing pseudobulk,
+the metadata slot of which must contain \code{file_id}, \code{cell_type_harmonised} and \code{sample_}}
 }
 \value{
-A metadata.parquet strip from the SingleCellExperiment object.
-Directories store counts and counts per million in the provided cache directory.
+An user-defined atlas metadata.parquet from the SingleCellExperiment object.
+Directories store counts and/or counts per million and/or quantile_normalised
+in the provided cache directory.
 }
 \description{
 Import and process metadata and counts for a SingleCellExperiment object
@@ -27,7 +47,11 @@ Import and process metadata and counts for a SingleCellExperiment object
 \examples{
 data(sample_sce_obj)
 import_one_sce(sample_sce_obj,
-               cache_dir = get_default_cache_dir())
+               atlas_name = "sample_atlas",
+               import_date = "9999-99-99",
+               cell_aggregation = "single_cell",
+               cache_dir = get_default_cache_dir(),
+               pseudobulk = FALSE)
 }
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,

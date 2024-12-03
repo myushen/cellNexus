@@ -10,7 +10,8 @@
 get_metadata(
   remote_url = get_database_url(),
   cache_directory = get_default_cache_dir(),
-  use_cache = TRUE
+  use_cache = TRUE,
+  ...
 )
 }
 \arguments{
@@ -25,6 +26,13 @@ your local system to a directory (not a file) that will be used to store
 function has been called before with the same parameters, then a cached
 reference to the table will be returned. If \code{FALSE}, a new connection will
 be created no matter what.}
+
+\item{...}{
+  Arguments passed on to \code{\link[=read_parquet]{read_parquet}}
+  \describe{
+    \item{\code{filename_column}}{A column name to the metadata that indicates which row came from which file.
+By default it does not add the column.}
+  }}
 }
 \value{
 A lazy data.frame subclass containing the metadata. You can interact
@@ -45,7 +53,7 @@ metadata. The data for which the column \code{organism_name} included "Homo
 sapiens" was collected collected from \code{cellxgenedp}.
 
 The columns \code{dataset_id} and \code{file_id} link the datasets explorable through
-\code{CuratedAtlasQueryR} and \code{cellxgenedp}to the CELLxGENE portal.
+\code{cellNexus} and \code{cellxgenedp}to the CELLxGENE portal.
 
 Our representation, harmonises the metadata at dataset, sample and cell
 levels, in a unique coherent database table.

@@ -51,7 +51,8 @@ tar_script({
         slurm_cpus_per_task = 1,
         workers = 200,
         tasks_max = 5,
-        verbose = T
+        verbose = T, 
+        seconds_idle = 30
       ),
       crew_controller_slurm(
         name = "slurm_1_10",
@@ -59,7 +60,8 @@ tar_script({
         slurm_cpus_per_task = 1,
         workers = 100,
         tasks_max = 5,
-        verbose = T
+        verbose = T, 
+        seconds_idle = 30
       ),
       crew_controller_slurm(
         name = "slurm_1_20",
@@ -67,8 +69,8 @@ tar_script({
         slurm_cpus_per_task = 1,
         workers = 100,
         tasks_max = 5,
-        verbose = T, 
-        script_directory = paste0("/vast/scratch/users/mangiola.s/cellxgenedp/crew_cluster/", basename(tempdir()))
+        verbose = T, , 
+        seconds_idle = 30
       ),
       crew_controller_slurm(
         name = "slurm_1_40",
@@ -76,7 +78,8 @@ tar_script({
         slurm_cpus_per_task = 1,
         workers = 50,
         tasks_max = 5,
-        verbose = T
+        verbose = T, 
+        seconds_idle = 30
       ),
       crew_controller_slurm(
         name = "slurm_1_80",
@@ -84,7 +87,8 @@ tar_script({
         slurm_cpus_per_task = 1,
         workers = 30,
         tasks_max = 5,
-        verbose = T
+        verbose = T, 
+        seconds_idle = 30
       ),
       crew_controller_slurm(
         name = "slurm_1_200",
@@ -92,7 +96,8 @@ tar_script({
         slurm_cpus_per_task = 1,
         workers = 5,
         tasks_max = 5,
-        verbose = T
+        verbose = T, 
+        seconds_idle = 30
       )
     ),
     resources = tar_resources(crew = tar_resources_crew("slurm_1_10"))  
@@ -901,7 +906,6 @@ age_days_tbl |>
 
 
 
-
 # # 
 # cell_ids_for_metadata <- tbl(
 #   dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
@@ -977,38 +981,38 @@ job::job({
   
   # Perform optimised joins within DuckDB
   copy_query <- "
-  COPY (
-    SELECT 
-      cell_to_refined_sample_from_Mengyuan.cell_,
-      cell_to_refined_sample_from_Mengyuan.observation_joinid,
-      cell_to_refined_sample_from_Mengyuan.dataset_id,
-      cell_to_refined_sample_from_Mengyuan.sample_id,
-      cell_to_refined_sample_from_Mengyuan.cell_type,
-      cell_to_refined_sample_from_Mengyuan.cell_type_ontology_term_id,
-      sample_metadata.*,
-      age_days_tbl.age_days,
-      tissue_grouped.tissue_groups
+COPY (
+  SELECT 
+    cell_to_refined_sample_from_Mengyuan.cell_,
+    cell_to_refined_sample_from_Mengyuan.observation_joinid,
+    cell_to_refined_sample_from_Mengyuan.dataset_id,
+    cell_to_refined_sample_from_Mengyuan.sample_id,
+    cell_to_refined_sample_from_Mengyuan.cell_type,
+    cell_to_refined_sample_from_Mengyuan.cell_type_ontology_term_id,
+    sample_metadata.*,
+    age_days_tbl.age_days,
+    tissue_grouped.tissue_groups
+  
+  FROM cell_to_refined_sample_from_Mengyuan
+  
+  LEFT JOIN cell_ids_for_metadata
+    ON cell_ids_for_metadata.cell_ = cell_to_refined_sample_from_Mengyuan.cell_
+    AND cell_ids_for_metadata.observation_joinid = cell_to_refined_sample_from_Mengyuan.observation_joinid
+    AND cell_ids_for_metadata.dataset_id = cell_to_refined_sample_from_Mengyuan.dataset_id
     
-    FROM cell_to_refined_sample_from_Mengyuan
+  LEFT JOIN sample_metadata
+    ON cell_ids_for_metadata.sample_ = sample_metadata.sample_
+    AND cell_ids_for_metadata.donor_id = sample_metadata.donor_id
+    AND cell_ids_for_metadata.dataset_id = sample_metadata.dataset_id
     
-    LEFT JOIN cell_ids_for_metadata
-      ON cell_ids_for_metadata.cell_ = cell_to_refined_sample_from_Mengyuan.cell_
-      AND cell_ids_for_metadata.observation_joinid = cell_to_refined_sample_from_Mengyuan.observation_joinid
-      AND cell_ids_for_metadata.dataset_id = cell_to_refined_sample_from_Mengyuan.dataset_id
-      
-    LEFT JOIN sample_metadata
-      ON cell_ids_for_metadata.sample_ = sample_metadata.sample_
-      AND cell_ids_for_metadata.donor_id = sample_metadata.donor_id
-      AND cell_ids_for_metadata.dataset_id = sample_metadata.dataset_id
-      
-    LEFT JOIN age_days_tbl
-      ON age_days_tbl.development_stage = sample_metadata.development_stage
- 
-    LEFT JOIN tissue_grouped
-      ON tissue_grouped.tissue = sample_metadata.tissue
-      
-  ) TO '/vast/projects/cellxgene_curated/metadata_cellxgenedp_Apr_2024/cell_metadata_new.parquet'
-  (FORMAT PARQUET, COMPRESSION 'gzip');
+  LEFT JOIN age_days_tbl
+    ON age_days_tbl.development_stage = sample_metadata.development_stage
+
+  LEFT JOIN tissue_grouped
+    ON tissue_grouped.tissue = sample_metadata.tissue
+    
+) TO '/vast/projects/cellxgene_curated/metadata_cellxgenedp_Apr_2024/cell_metadata.parquet'
+(FORMAT PARQUET, COMPRESSION 'gzip');
 "
   
   # Execute the final query to write the result to a Parquet file
@@ -1024,7 +1028,7 @@ job::job({
 
 cell_metadata = tbl(
   dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
-  sql("SELECT * FROM read_parquet('/vast/projects/cellxgene_curated/metadata_cellxgenedp_Apr_2024/cell_metadata_new.parquet')")
+  sql("SELECT * FROM read_parquet('/vast/projects/cellxgene_curated/metadata_cellxgenedp_Apr_2024/cell_metadata.parquet')")
 ) 
 
 tissues_grouped = get_tissue_grouped() 
@@ -1081,7 +1085,7 @@ dbDisconnect(con, shutdown = TRUE)
 non_immune_harmonisation = 
   read_csv("/vast/projects/mangiola_immune_map/PostDoc/CuratedAtlasQueryR/dev/cell_type_harmonisation_non_immune.csv") 
 
-system("~/bin/rclone copy /vast/projects/mangiola_immune_map/PostDoc/CuratedAtlasQueryR/dev/cell_type_harmonisation_non_immune.csv box_adelaide:/Mangiola_ImmuneAtlas/reannotation_consensus/")
+# system("~/bin/rclone copy /vast/projects/mangiola_immune_map/PostDoc/CuratedAtlasQueryR/dev/cell_type_harmonisation_non_immune.csv box_adelaide:/Mangiola_ImmuneAtlas/reannotation_consensus/")
 
 
 tbl(

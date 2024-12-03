@@ -1,4 +1,4 @@
-CuratedAtlasQueryR
+cellNexus
 ================
 
 <!-- badges: start -->
@@ -30,13 +30,13 @@ The API has delivered more than 15Tb of data to the community in the first year.
 ## Installation
 
 ``` r
-devtools::install_github("stemangiola/CuratedAtlasQueryR")
+devtools::install_github("MangiolaLaboratory/cellNexus")
 ```
 
 ## Load the package
 
 ``` r
-library(CuratedAtlasQueryR)
+library(cellNexus)
 ```
 
 ## Load and explore the metadata
@@ -47,7 +47,7 @@ library(CuratedAtlasQueryR)
 # Note: in real applications you should use the default value of remote_url 
 metadata <- get_metadata(remote_url = METADATA_URL)
 metadata
-#> # Source:   table</vast/scratch/users/milton.m/cache/R/CuratedAtlasQueryR/metadata.0.2.3.parquet> [?? x 56]
+#> # Source:   table</vast/scratch/users/milton.m/cache/R/cellNexus/metadata.1.0.4.parquet> [?? x 56]
 #> # Database: DuckDB 0.7.1 [unknown@Linux 3.10.0-1160.88.1.el7.x86_64:R 4.2.1/:memory:]
 #>    cell_id sample_id cell_id…¹ cell_id…² confi…³ cell_id…⁴ cell_id…⁵ cell_id…⁶ sampl…⁷ _samp…⁸
 #>    <chr> <chr>   <chr>   <chr>     <dbl> <chr>   <chr>   <chr>   <chr>   <chr>  
@@ -470,7 +470,7 @@ sessionInfo()
 #>  [7] IRanges_2.30.1                 S4Vectors_0.34.0              
 #>  [9] BiocGenerics_0.42.0            MatrixGenerics_1.8.1          
 #> [11] matrixStats_0.63.0             ttservice_0.2.2               
-#> [13] ggplot2_3.4.1                  CuratedAtlasQueryR_0.99.1     
+#> [13] ggplot2_3.4.1                  cellNexus_0.99.1     
 #> 
 #> loaded via a namespace (and not attached):
 #>   [1] plyr_1.8.8             igraph_1.4.1           lazyeval_0.2.2        

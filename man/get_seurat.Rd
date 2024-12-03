@@ -8,13 +8,13 @@ the samples in that data frame}
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
 }
 \usage{
-get_seurat(...)
+get_seurat(data, ...)
 }
 \arguments{
 \item{...}{
   Arguments passed on to \code{\link[=get_single_cell_experiment]{get_single_cell_experiment}}
   \describe{
-    \item{\code{data}}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus_single_cell} columns,
+    \item{\code{data}}{A data frame containing, at minimum, \code{cell_}, \code{file_id_cellNexus_single_cell} columns,
 which correspond to a single cell ID, file subdivision for internal use.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
   }}

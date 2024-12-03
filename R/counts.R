@@ -9,8 +9,9 @@ NULL
 
 # Maps user provided assay names to their corresponding paths in the repository
 assay_map <- c(
-  counts = "original",
+  X = "X",
   cpm = "cpm",
+  rank = "rank",
   quantile_normalised = "quantile_normalised"
 )
 
@@ -18,12 +19,12 @@ assay_map <- c(
 #' @noRd
 COUNTS_URL <- single_line_str(
   "https://object-store.rc.nectar.org.au/v1/
-    AUTH_06d6e008e3e642da99d806ba3ea629c5/cellxgene-0.2.1-hdf5"
+    AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata"
 )
-#' Current version of the counts. This will be incremented when a newer
+#' Current version of the counts. This will change when a newer
 #' version is released
 #' @noRd
-COUNTS_VERSION <- "0.2.1"
+COUNTS_DATE <- "26-11-2024"
 
 #' Base URL pointing to the pseudobulk counts at the current version
 #' @noRd
@@ -31,7 +32,6 @@ pseudobulk_url <- single_line_str(
   "https://object-store.rc.nectar.org.au/v1/
   AUTH_06d6e008e3e642da99d806ba3ea629c5/pseudobulk-0.1.1"
 )
-
 
 #' @inherit get_single_cell_experiment
 #' @inheritDotParams get_single_cell_experiment
@@ -52,7 +52,7 @@ get_SingleCellExperiment <- function(...){
 
 #' Gets a SingleCellExperiment from curated metadata
 #' 
-#' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_single_cell` columns, 
+#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus_single_cell` columns, 
 #'   which correspond to a single cell ID, file subdivision for internal use.
 #'   They can be obtained from the [get_metadata()] function.
 #' @inheritDotParams get_data_container
@@ -69,14 +69,16 @@ get_single_cell_experiment <- function(data, ...){
   raw_data <- collect(data)
   assert_that(
     inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_id", "file_id_cellNexus_single_cell"))
+    has_name(raw_data, c("cell_", "file_id_cellNexus_single_cell"))
   )
-  get_data_container(data, ..., repository = COUNTS_URL, grouping_column = "file_id_cellNexus_single_cell")
+  get_data_container(data, ..., repository = COUNTS_URL, 
+                     cell_aggregation = "single_cell",
+                     grouping_column = "file_id_cellNexus_single_cell")
 }
 
 #' Gets a Pseudobulk from curated metadata
 #' 
-#' @param data A data frame containing, at minimum, `cell_id`, `file_id`, 
+#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus_pseudobulk`, 
 #'   `sample_id`, `cell_type_harmonised` columns, which correspond to a single cell ID,
 #'   file subdivision for internal use, a singlel cell sample ID and harmonised cell type. 
 #'   They can be obtained from the [get_metadata()] function.
@@ -96,9 +98,11 @@ get_pseudobulk <- function(data, ...) {
   raw_data <- collect(data)
   assert_that(
     inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_id", "file_id", "sample_id", "cell_type_harmonised"))
+    has_name(raw_data, c("cell_", "file_id_cellNexus_pseudobulk", "sample_id", "cell_type_harmonised"))
   )
-  get_data_container(data, ..., repository = pseudobulk_url, grouping_column = "file_id")
+  get_data_container(data, ..., repository = pseudobulk_url, 
+                     cell_aggregation = "pseudobulk",
+                     grouping_column = "file_id_cellNexus_pseudobulk")
 }
 
 #' Gets data from curated metadata container
@@ -106,20 +110,27 @@ get_pseudobulk <- function(data, ...) {
 #' Given a data frame of Curated Atlas metadata obtained from [get_metadata()],
 #' returns a [`SummarizedExperiment::SummarizedExperiment-class`] object
 #' corresponding to the samples in that data frame
-#' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_single_cell`, `file_id` column, which
-#'   correspond to a single cell ID, file subdivision for internal use, and a single cell sample ID. 
+#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus_single_cell` 
+#'   and/or `file_id_cellNexus_pseudobulk` column, which correspond to a single cell ID, 
+#'   file subdivision for internal use for single_cell and/or pseudobulk level.
 #'   They can be obtained from the [get_metadata()] function.
-#' @param assays A character vector whose elements must be either "counts"
-#'   and/or "cpm" and/or "quantile_normalised", representing the corresponding assay(s) you want to request.
-#'   By default only the count assay is downloaded. If you are interested in
-#'   comparing a limited amount of genes, the "cpm" assay is more appropriate.
+#' @param assays A character vector specifying the desired assay(s) to be requested. 
+#'   Valid elements include "X", "cpm", and "rank" for single-cell analyses, or 
+#'   "X" and "quantile_normalised" for pseudobulk analyses. 
+#'   The default setting retrieves only the count assay ("X"). 
+#'   If your analysis involves a smaller set of genes, consider using the "cpm" assay. 
+#'   The "rank" assay is suited for signature calculations across millions of cells.
+#' @param atlas_name A character string specifying the name of the atlas to query.
+#' @param cell_aggregation A character vector that specifies which cell aggregation strategy
+#' should be applied. This will create  a corresponding subdirectory in the atlas cache.
+#' Choose one of the following: single_cell, pseudobulk
 #' @param cache_directory An optional character vector of length one. If
 #'   provided, it should indicate a local file path where any remotely accessed
 #'   files should be copied.
 #' @param repository A character vector of length one. If provided, it should be
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param grouping_column A character vector of metadata column for grouping. "file_id_cellNexus_single_cell" for
-#'   for Single Cell Experiment, "file_id" for pseudobulk.
+#'   for Single Cell Experiment, "file_id_cellNexus_pseudobulk" for pseudobulk.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
 #' @importFrom dplyr pull filter as_tibble inner_join collect
@@ -140,22 +151,22 @@ get_pseudobulk <- function(data, ...) {
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_data_container <- function(
     data,
-    assays = "counts",
+    assays = "X",
+    atlas_name,
+    cell_aggregation,
     cache_directory = get_default_cache_dir(),
     repository,
     grouping_column,
     features = NULL
     
 ) {
-  
-  # # Parameter validation
-  # assays %in% names(assay_map) |>
-  #   all() |>
-  #   assert_that(
-  #     msg = 'assays must be a character vector containing "counts" and/or
-  #           "cpm"'
-  #   )
-  # 
+  # Parameter validation
+  assays %in% names(assay_map) |>
+    all() |>
+    assert_that(
+      msg = 'assays must be a character vector containing "X" for counts and/or
+            "cpm" and/or "rank" and/or "quantile_normalised"(exclusive to pseudobulk)'
+    )
   assert_that(
     !anyDuplicated(assays),
     inherits(cache_directory, "character"),
@@ -170,13 +181,18 @@ get_data_container <- function(
   ## operations will fail when passed a database connection
   cli_alert_info("Realising metadata.")
   raw_data <- collect(data)
-  versioned_cache_directory <- cache_directory
-  versioned_cache_directory |> dir.create(
+  versioned_cache_directory <- file.path(cache_directory, atlas_name, COUNTS_DATE, cell_aggregation)
+  
+  versioned_cache_directory |> map( ~ {.x |> dir.create(
     showWarnings = FALSE,
     recursive = TRUE
-  )
-  
-  subdirs <- assays
+  )})
+  # versioned_cache_directory |> dir.create(
+  #   showWarnings = FALSE,
+  #   recursive = TRUE
+  # )
+  # 
+  subdirs <- assay_map[assays]
   
   # The repository is optional. If not provided we load only from the cache
   if (!is.null(repository)) {
@@ -193,6 +209,9 @@ get_data_container <- function(
       as.character() |>
       sync_assay_files(
         url = parsed_repo,
+        atlas_name,
+        version = COUNTS_DATE,
+        cell_aggregation = cell_aggregation,
         cache_dir = versioned_cache_directory,
         files = _,
         subdirs = subdirs
@@ -257,6 +276,7 @@ get_data_container <- function(
 #' @param grouping_column A character vector of metadata column for grouping
 #' @return A `SummarizedExperiment` object
 #' @importFrom dplyr mutate filter
+#' @importFrom zellkonverter readH5AD
 #' @importFrom SummarizedExperiment colData<-
 #' @importFrom tibble column_to_rownames
 #' @importFrom utils head
@@ -283,7 +303,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     )
   
   # Load experiment
-  experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE)
+  experiment <- readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE)
   
   # Fix for https://github.com/tidyverse/dplyr/issues/6746
   force(i)
@@ -322,10 +342,10 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
       `colnames<-`(new_coldata$cell_id) |>
       `colData<-`(value = new_coldata)
   }
-  else if (grouping_column == "file_id") {
+  else if (grouping_column == "file_id_cellNexus_pseudobulk") {
     # Process specific to Pseudobulk
     # remove cell-level annotations
-    cell_level_anno <- c("cell_id", "cell_type", "confidence_class", "file_id_cellNexus_single_cell",
+    cell_level_anno <- c("cell_", "cell_type", "confidence_class", "file_id_cellNexus_single_cell",
                          "cell_annotation_blueprint_singler",
                          "cell_annotation_monaco_singler", 
                          "cell_annotation_azimuth_l2",
@@ -336,7 +356,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
       select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
       distinct() |>
       mutate(
-        sample_identifier = ifelse(file_id %in% file_ids,
+        sample_identifier = ifelse(file_id_cellNexus_pseudobulk %in% file_ids,
                                    glue("{sample_id}___{cell_type_harmonised}___{disease}___{is_primary_data_x}"),
                                    glue("{sample_id}___{cell_type_harmonised}")),
         original_sample_id = .data$sample_identifier
@@ -353,7 +373,10 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     ) |>
         `colnames<-`(new_coldata$sample_identifier) |>
         `colData<-`(value = DataFrame(new_coldata))
-    experiment
+    
+    # Force renaming type class since zellkonverter::writeH5AD cannot save `SummarizedExperiment` object.
+    experiment <- as(experiment, "SummarizedExperiment")
+   
   }
 }
 
@@ -391,6 +414,9 @@ file_ids <- c(
 #' @noRd
 sync_assay_files <- function(
     url = parse_url(COUNTS_URL),
+    atlas_name,
+    version = COUNTS_DATE,
+    cell_aggregation,
     cache_dir,
     subdirs,
     files
@@ -398,7 +424,9 @@ sync_assay_files <- function(
   # Find every combination of file name, sample id, and assay, since each
   # will be a separate file we need to download
   files <- expand.grid(
-    filename = c("assays.h5", "se.rds"),
+    atlas_name = atlas_name,
+    version = COUNTS_DATE,
+    cell_aggregation = cell_aggregation,
     sample_id = files,
     subdir = subdirs,
     stringsAsFactors = FALSE
@@ -409,23 +437,23 @@ sync_assay_files <- function(
       full_url = paste0(
         url$path,
         "/",
+        .data$atlas_name,
+        "/",
+        .data$version,
+        "/",
+        .data$cell_aggregation,
+        "/",
         .data$subdir,
         "/",
-        .data$sample_id,
-        "/",
-        .data$filename
+        .data$sample_id
       ) |> map_chr(~ modify_url(url, path = .)),
       
       # Path to save the file on local disk (and its parent directory)
       # We use file.path since the file separator will differ on other OSs
-      output_dir = file.path(
+      output_file = file.path(
         cache_dir,
         .data$subdir,
         .data$sample_id
-      ),
-      output_file = file.path(
-        .data$output_dir,
-        .data$filename
       )
     ) |>
     filter(
@@ -456,7 +484,7 @@ check_gene_overlap <- function(obj_list) {
   if (any(lengths(gene_lists) != length(common_genes))) {
     single_line_str(
       "CuratedAtlasQuery says: Not all genes completely overlap across the provided objects.
-      Counts are generated by genes intersection"
+      Counts are generated by genes intersection. Are genes unique in the object? "
     ) |> cli_alert_warning()
   }
   

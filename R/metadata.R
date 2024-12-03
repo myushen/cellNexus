@@ -21,10 +21,9 @@ cache <- rlang::env(
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_database_url <- function(databases = c("metadata.0.2.3.parquet", "fibrosis.0.2.3.parquet",
-                                           "prostate.0.1.0.parquet")) {
+get_database_url <- function(databases = c("metadata.1.0.4.parquet")) {
   glue::glue(
-    "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/metadata/{databases}")
+    "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}")
 }
 
 #' URL pointing to the sample metadata file, which is smaller and for test,
@@ -91,7 +90,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' sapiens" was collected collected from `cellxgenedp`.
 #'
 #' The columns `dataset_id` and `file_id` link the datasets explorable through
-#' `CuratedAtlasQueryR` and `cellxgenedp`to the CELLxGENE portal.
+#' `cellNexus` and `cellxgenedp`to the CELLxGENE portal.
 #'
 #' Our representation, harmonises the metadata at dataset, sample and cell
 #' levels, in a unique coherent database table.
@@ -155,6 +154,8 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' get_metadata(cache_directory = path.expand('~'))
 #' ```
 #' 
+#' @inheritDotParams read_parquet
+#' 
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
@@ -163,7 +164,8 @@ SAMPLE_DATABASE_URL <- single_line_str(
 get_metadata <- function(
     remote_url = get_database_url(),
     cache_directory = get_default_cache_dir(),
-    use_cache = TRUE
+    use_cache = TRUE,
+    ...
 ) {
   # Synchronize remote files
   walk(remote_url, function(url) {
@@ -190,7 +192,7 @@ get_metadata <- function(
   else {
     table <- duckdb() |>
       dbConnect(drv = _, read_only = TRUE) |>
-      read_parquet(path = all_parquet)
+      read_parquet(path = all_parquet, ...)
     cache$metadata_table[[hash]] <- table
     table
   }
