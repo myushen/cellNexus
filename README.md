@@ -6,13 +6,13 @@ cellNexus
 [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 <!-- badges: end -->
 
-`CuratedAtlasQuery` is a query interface that allow the programmatic
+`cellNexus` is a query interface that allow the programmatic
 exploration and retrieval of the harmonised, curated and reannotated
 CELLxGENE single-cell human cell atlas. Data can be retrieved at cell,
 sample, or dataset levels based on filtering criteria.
 
 Harmonised data is stored in the ARDC Nectar Research Cloud, and most
-`CuratedAtlasQuery` functions interact with Nectar via web requests, so
+`cellNexus` functions interact with Nectar via web requests, so
 a network connection is required for most functionality.
 
 <img src="man/figures/logo.png" width="120x" height="139px" />

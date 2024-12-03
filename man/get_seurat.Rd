@@ -8,7 +8,7 @@ the samples in that data frame}
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
 }
 \usage{
-get_seurat(data, ...)
+get_seurat(...)
 }
 \arguments{
 \item{...}{
