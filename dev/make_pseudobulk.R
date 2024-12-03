@@ -31,7 +31,7 @@ tar_script({
     #-----------------------#
     tar_option_set(
       packages = c(
-        "CuratedAtlasQueryR", "stringr", "tibble", "tidySingleCellExperiment", "dplyr", "Matrix",
+        "cellNexus", "stringr", "tibble", "tidySingleCellExperiment", "dplyr", "Matrix",
         "Seurat", "glue", "qs",  "purrr", "tidybulk", "tidySummarizedExperiment", "edgeR", 
         "crew", "magrittr", "digest", "readr", "forcats", "scuttle", "BiocParallel", "SummarizedExperiment"
       ),
@@ -170,7 +170,7 @@ tar_script({
             } 
             
             .x |>
-            CuratedAtlasQueryR:::get_data_container(
+            cellNexus:::get_data_container(
               repository = NULL, 
               cache_directory = cache.path, 
               grouping_column = "file_id_cellNexus_single_Cell"
@@ -400,7 +400,7 @@ tar_script({
       #   ) |>
       #     head(1) |> 
       #     mutate(file_id_cellNexus_single_Cell = paste0(file_id_cellNexus_single_Cell, ".h5ad")) |> 
-      #     CuratedAtlasQueryR:::get_data_container(
+      #     cellNexus:::get_data_container(
       #       repository = NULL, 
       #       cache_directory = cache.path, 
       #       grouping_column = "file_id_cellNexus_single_Cell"

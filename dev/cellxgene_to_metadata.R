@@ -24,7 +24,7 @@ tar_script({
   #-----------------------#
   tar_option_set(
     packages = c(
-      "zellkonverter", "cellxgenedp", "CuratedAtlasQueryR", "stringr", "tibble", "tidySingleCellExperiment", "dplyr", "Matrix",
+      "zellkonverter", "cellxgenedp", "cellNexus", "stringr", "tibble", "tidySingleCellExperiment", "dplyr", "Matrix",
       "glue", "qs",  "purrr", "tidybulk", "tidySummarizedExperiment",  "crew", "magrittr", "digest", "readr", "forcats"
     ),
     
@@ -1083,9 +1083,9 @@ dbDisconnect(con, shutdown = TRUE)
 
 # Non immune harmonisation to Dharmesh immune harmonisation
 non_immune_harmonisation = 
-  read_csv("/vast/projects/mangiola_immune_map/PostDoc/CuratedAtlasQueryR/dev/cell_type_harmonisation_non_immune.csv") 
+  read_csv("/vast/projects/mangiola_immune_map/PostDoc/cellNexus/dev/cell_type_harmonisation_non_immune.csv") 
 
-# system("~/bin/rclone copy /vast/projects/mangiola_immune_map/PostDoc/CuratedAtlasQueryR/dev/cell_type_harmonisation_non_immune.csv box_adelaide:/Mangiola_ImmuneAtlas/reannotation_consensus/")
+# system("~/bin/rclone copy /vast/projects/mangiola_immune_map/PostDoc/cellNexus/dev/cell_type_harmonisation_non_immune.csv box_adelaide:/Mangiola_ImmuneAtlas/reannotation_consensus/")
 
 
 tbl(
