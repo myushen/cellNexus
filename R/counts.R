@@ -254,9 +254,8 @@ get_data_container <- function(
   experiment <- experiments[[1]]
   
   SummarizedExperiment::assays(experiment) <- map(experiments, function(exp) {
-    SummarizedExperiment::assays(exp)[1]
-  }) |> 
-    do.call(c, args = _)
+    SummarizedExperiment::assays(exp)[[1]]
+  })
   
   experiment
 }
