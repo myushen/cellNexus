@@ -405,7 +405,7 @@ cellxgene.cziscience.com)
 Cell-specific columns (definitions available at
 cellxgene.cziscience.com)
 
-`cell_id`, `cell_type`, `cell_type_ontology_term_idm`,
+`cell_`, `cell_type`, `cell_type_ontology_term_idm`,
 `cell_type_harmonised`, `confidence_class`,
 `cell_annotation_azimuth_l2`, `cell_annotation_blueprint_singler`
 

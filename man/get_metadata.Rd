@@ -76,7 +76,7 @@ Sample-specific columns (definitions available at cellxgene.cziscience.com):
 \code{is_primary_data.x}
 
 Cell-specific columns (definitions available at cellxgene.cziscience.com):
-\code{cell_id}, \code{cell_type}, \code{cell_type_ontology_term_idm}, \code{cell_type_harmonised},
+\code{cell_}, \code{cell_type}, \code{cell_type_ontology_term_idm}, \code{cell_type_harmonised},
 \code{confidence_class}, \code{cell_annotation_azimuth_l2},
 \code{cell_annotation_blueprint_singler}
 

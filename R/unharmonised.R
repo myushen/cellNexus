@@ -43,7 +43,7 @@ UNHARMONISED_URL <- single_line_str(
 #'     dplyr::filter(file_id == dataset) |> dplyr::collect()
 #' unharmonised_meta <- get_unharmonised_dataset(dataset)
 #' unharmonised_tbl <- dplyr::collect(unharmonised_meta[[dataset]])
-#' dplyr::left_join(harmonised_meta, unharmonised_tbl, by=c("file_id", "cell_id"))
+#' dplyr::left_join(harmonised_meta, unharmonised_tbl, by=c("file_id", "cell_"))
 #' }
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
@@ -70,7 +70,7 @@ get_unharmonised_dataset <- function(
         )
     
     read_parquet(conn, local_path) |>
-        filter(.data$cell_id %in% cells)
+        filter(.data$cell_ %in% cells)
 }
 
 #' Returns unharmonised metadata for a metadata query
@@ -103,7 +103,7 @@ get_unharmonised_metadata <- function(metadata, ...){
         summarise(
             unharmonised = list(
               dataset_id=.data$file_id[[1]],
-              cells=.data$cell_id,
+              cells=.data$cell_,
               conn=remote_con(metadata)
             ) |>
                 c(args) |> 
