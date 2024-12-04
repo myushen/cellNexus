@@ -113,7 +113,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' `is_primary_data.x`
 #'
 #' Cell-specific columns (definitions available at cellxgene.cziscience.com):
-#' `cell_id`, `cell_type`, `cell_type_ontology_term_idm`, `cell_type_harmonised`,
+#' `cell_`, `cell_type`, `cell_type_ontology_term_idm`, `cell_type_harmonised`,
 #' `confidence_class`, `cell_annotation_azimuth_l2`,
 #' `cell_annotation_blueprint_singler`
 #'

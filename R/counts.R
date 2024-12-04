@@ -310,7 +310,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   
   if (grouping_column == "file_id_cellNexus_single_cell") {
     # Process specific to SCE
-    cells <- colnames(experiment) |> intersect(df$cell_id)
+    cells <- colnames(experiment) |> intersect(df$cell_)
     
     if (length(cells) < nrow(df)){
       single_line_str(
@@ -319,27 +319,27 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
                 Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
                 "
       ) |> cli_alert_warning()
-      df <- filter(df, .data$cell_id %in% cells)
+      df <- filter(df, .data$cell_ %in% cells)
     }
     else if (length(cells) > nrow(df)){
       cli_abort("This should never happen")
     }
     
     new_coldata <- df |>
-      mutate(original_cell_id = .data$cell_id, cell_id = glue("{cell_id}_{i}")) |>
-      column_to_rownames("cell_id") |>
+      mutate(original_cell_ = .data$cell_, cell_ = glue("{cell_}_{i}")) |>
+      column_to_rownames("cell_") |>
       as("DataFrame")
     
     experiment <- `if`(
       is.null(features),
-      experiment[, new_coldata$original_cell_id],
+      experiment[, new_coldata$original_cell_],
       {
         # Optionally subset the genes
         genes <- rownames(experiment) |> intersect(features)
-        experiment[genes, new_coldata$original_cell_id]
+        experiment[genes, new_coldata$original_cell_]
       }
     ) |>
-      `colnames<-`(new_coldata$cell_id) |>
+      `colnames<-`(new_coldata$cell_) |>
       `colData<-`(value = new_coldata)
   }
   else if (grouping_column == "file_id_cellNexus_pseudobulk") {
