@@ -115,13 +115,14 @@ read_parquet <- function(conn, path, filename_column=FALSE){
     tbl(conn, from_clause)
 }
 
-
 #' Deletes specific counts and metadata from cache
 #' @importFrom purrr map
 #' @importFrom dplyr filter distinct pull collect
 #' @return `NULL`, invisibly
 #' @keywords internal
-delete_counts <- function(data, assay = c("original","cpm"), cache_directory = get_default_cache_dir()){
+delete_counts <- function(data, 
+                          assay = c("original","cpm"), 
+                          cache_directory = get_default_cache_dir()){
   data <- collect(data)
   ids <- data |> distinct(file_id_db) |> pull(file_id_db)
   counts_path <- file.path(cache_directory, assay, ids)
@@ -133,5 +134,29 @@ delete_counts <- function(data, assay = c("original","cpm"), cache_directory = g
     filter(file_id_db %in% ids) |> distinct(meta_filename) |> pull(meta_filename)
   arrow::read_parquet(filename) |> filter(!file_id_db %in% ids) |>
     arrow::write_parquet(filename)
+}
+
+#' Write table to Parquet file using DuckDB
+#'
+#' This function takes an SQL table, renders it into an SQL query, and writes the output directly
+#' to a Parquet file without loading into disk.
+#' @param .tbl_sql A data frame loaded by DuckDB.
+#' @param path A string specifying the file path where the Parquet file will be saved.
+#' @param con A DuckDB connection object that allows executing SQL queries on the DuckDB database.
+#' @return An integer specifying the row number of the output data frame.
+#' @importFrom dbplyr sql_render
+#' @importFrom DBI dbConnect dbExecute
+#' @keywords internal
+duckdb_write_parquet <- function(.tbl_sql, 
+                                 path, 
+                                 con = dbConnect(duckdb::duckdb(),  dbdir = ":memory:")) {
+  sql_tbl <- 
+    .tbl_sql |>
+    sql_render()
+  
+  sql_call <- glue::glue("COPY ({sql_tbl}) TO '{path}' (FORMAT 'parquet')")
+  
+  res <- dbExecute(con, sql_call)
+  res
 }
 
