@@ -115,6 +115,7 @@ census_samples_to_download <- samples |>
   left_join(sample_to_cell_primary_human_accepted_assay_sample_2,
             by = c("observation_joinid", "dataset_id"),
             relationship = "many-to-many") |>
+  # Use annotation from census
   select(-donor_id.x,
          -is_primary_data.x,
          -tissue.y,
@@ -122,19 +123,22 @@ census_samples_to_download <- samples |>
          -assay.y,
          -sex.y,
          -self_reported_ethnicity.y,
-         -disease.y) |>
+         -disease.y,
+         -cell_type.y) |>
   rename(assay = assay.x,
          disease = disease.x,
          sex = sex.x,
          self_reported_ethnicity = self_reported_ethnicity.x,
          tissue = tissue.x,
-         development_stage = development_stage.x
+         development_stage = development_stage.x,
+         sample_heuristic = sample_heuristic.x,
+         cell_type = cell_type.x
          ) |> 
   as_tibble() |>
   # remove space in the sample_2, as sample_2 will be regarded as filename 
   mutate(sample_2 = if_else(str_detect(sample_2, " "), str_replace_all(sample_2, " ",""), sample_2))
 
-#census_samples_to_download |> arrow::write_parquet("~/scratch/Census_rerun/census_samples_to_download.parquet")
+#census_samples_to_download |> arrow::write_parquet("/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/census_samples_to_download_MODIFIED.parquet")
 con <- duckdb::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
 parquet_file = "~/scratch/Census_rerun/census_samples_to_download.parquet"
 
@@ -147,11 +151,7 @@ census_samples_to_download |> dplyr::count(cell_id, sample_2) |> dplyr::count(n)
 
 census_samples_to_download |> group_by(dataset_id, sample_2)  |> 
   summarise(observation_joinid = list(observation_joinid), .groups = "drop") |> as_tibble() |> mutate(list_length = map_dbl(observation_joinid, length)) |>
-  filter(list_length >=100) |>
-  arrow::write_parquet("~/scratch/Census_rerun/census_samples_to_download_groups.parquet")
-
-census_samples_to_download_groups <- arrow::read_parquet("~/scratch/Census_rerun/census_samples_to_download_groups.parquet")
-
+  arrow::write_parquet("/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/census_samples_to_download_groups_MODIFIED.parquet")
 
 
 
