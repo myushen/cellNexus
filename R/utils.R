@@ -144,15 +144,15 @@ delete_counts <- function(data,
 #' @param path A string specifying the file path where the Parquet file will be saved.
 #' @param con A DuckDB connection object that allows executing SQL queries on the DuckDB database.
 #' @return An integer specifying the row number of the output data frame.
-#' @importFrom dbplyr sql_render
 #' @importFrom DBI dbConnect dbExecute
 #' @keywords internal
+#' @noRd
 duckdb_write_parquet <- function(.tbl_sql, 
                                  path, 
                                  con = dbConnect(duckdb::duckdb(),  dbdir = ":memory:")) {
   sql_tbl <- 
     .tbl_sql |>
-    sql_render()
+    dbplyr::sql_render()
   
   sql_call <- glue::glue("COPY ({sql_tbl}) TO '{path}' (FORMAT 'parquet')")
   

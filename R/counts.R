@@ -9,7 +9,7 @@ NULL
 
 # Maps user provided assay names to their corresponding paths in the repository
 assay_map <- c(
-  X = "X",
+  counts = "counts",
   cpm = "cpm",
   rank = "rank",
   quantile_normalised = "quantile_normalised"
@@ -24,7 +24,7 @@ COUNTS_URL <- single_line_str(
 #' Current version of the counts. This will change when a newer
 #' version is released
 #' @noRd
-COUNTS_DATE <- "26-11-2024"
+COUNTS_DATE <- "19_12_2024"
 
 #' Base URL pointing to the pseudobulk counts at the current version
 #' @noRd
@@ -52,7 +52,7 @@ get_SingleCellExperiment <- function(...){
 
 #' Gets a SingleCellExperiment from curated metadata
 #' 
-#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus_single_cell` columns, 
+#' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_single_cell` columns, 
 #'   which correspond to a single cell ID, file subdivision for internal use.
 #'   They can be obtained from the [get_metadata()] function.
 #' @inheritDotParams get_data_container
@@ -69,16 +69,16 @@ get_single_cell_experiment <- function(data, ...){
   raw_data <- collect(data)
   assert_that(
     inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_", "file_id_cellNexus_single_cell"))
+    has_name(raw_data, c("cell_id", "file_id_cellNexus_single_cell"))
   )
-  get_data_container(data, ..., repository = COUNTS_URL, 
+  get_data_container(data, ..., 
                      cell_aggregation = "single_cell",
                      grouping_column = "file_id_cellNexus_single_cell")
 }
 
 #' Gets a Pseudobulk from curated metadata
 #' 
-#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus_pseudobulk`, 
+#' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_pseudobulk`, 
 #'   `sample_id`, `cell_type_harmonised` columns, which correspond to a single cell ID,
 #'   file subdivision for internal use, a singlel cell sample ID and harmonised cell type. 
 #'   They can be obtained from the [get_metadata()] function.
@@ -98,7 +98,7 @@ get_pseudobulk <- function(data, ...) {
   raw_data <- collect(data)
   assert_that(
     inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_", "file_id_cellNexus_pseudobulk", "sample_id", "cell_type_harmonised"))
+    has_name(raw_data, c("cell_id", "file_id_cellNexus_pseudobulk", "sample_id", "cell_type_harmonised"))
   )
   get_data_container(data, ..., repository = pseudobulk_url, 
                      cell_aggregation = "pseudobulk",
@@ -110,7 +110,7 @@ get_pseudobulk <- function(data, ...) {
 #' Given a data frame of Curated Atlas metadata obtained from [get_metadata()],
 #' returns a [`SummarizedExperiment::SummarizedExperiment-class`] object
 #' corresponding to the samples in that data frame
-#' @param data A data frame containing, at minimum, `cell_`, `file_id_cellNexus_single_cell` 
+#' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_single_cell` 
 #'   and/or `file_id_cellNexus_pseudobulk` column, which correspond to a single cell ID, 
 #'   file subdivision for internal use for single_cell and/or pseudobulk level.
 #'   They can be obtained from the [get_metadata()] function.
@@ -151,11 +151,11 @@ get_pseudobulk <- function(data, ...) {
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_data_container <- function(
     data,
-    assays = "X",
+    assays = "counts",
     atlas_name,
     cell_aggregation,
     cache_directory = get_default_cache_dir(),
-    repository,
+    repository = COUNTS_URL,
     grouping_column,
     features = NULL
     
@@ -164,7 +164,7 @@ get_data_container <- function(
   assays %in% names(assay_map) |>
     all() |>
     assert_that(
-      msg = 'assays must be a character vector containing "X" for counts and/or
+      msg = 'assays must be a character vector containing counts and/or
             "cpm" and/or "rank" and/or "quantile_normalised"(exclusive to pseudobulk)'
     )
   assert_that(
@@ -309,7 +309,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   
   if (grouping_column == "file_id_cellNexus_single_cell") {
     # Process specific to SCE
-    cells <- colnames(experiment) |> intersect(df$cell_)
+    cells <- colnames(experiment) |> intersect(df$cell_id)
     
     if (length(cells) < nrow(df)){
       single_line_str(
@@ -318,15 +318,15 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
                 Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
                 "
       ) |> cli_alert_warning()
-      df <- filter(df, .data$cell_ %in% cells)
+      df <- filter(df, .data$cell_id %in% cells)
     }
     else if (length(cells) > nrow(df)){
       cli_abort("This should never happen")
     }
     
     new_coldata <- df |>
-      mutate(original_cell_ = .data$cell_, cell_ = glue("{cell_}_{i}")) |>
-      column_to_rownames("cell_") |>
+      mutate(original_cell_ = .data$cell_id, cell_id = glue("{cell_id}_{i}")) |>
+      column_to_rownames("cell_id") |>
       as("DataFrame")
     
     experiment <- `if`(
@@ -338,13 +338,13 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         experiment[genes, new_coldata$original_cell_]
       }
     ) |>
-      `colnames<-`(new_coldata$cell_) |>
+      `colnames<-`(new_coldata$cell_id) |>
       `colData<-`(value = new_coldata)
   }
   else if (grouping_column == "file_id_cellNexus_pseudobulk") {
     # Process specific to Pseudobulk
     # remove cell-level annotations
-    cell_level_anno <- c("cell_", "cell_type", "confidence_class", "file_id_cellNexus_single_cell",
+    cell_level_anno <- c("cell_id", "cell_type", "confidence_class", "file_id_cellNexus_single_cell",
                          "cell_annotation_blueprint_singler",
                          "cell_annotation_monaco_singler", 
                          "cell_annotation_azimuth_l2",
