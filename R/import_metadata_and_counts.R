@@ -1,6 +1,6 @@
 # Maps user provided assay names to their corresponding paths in the repository
 assay_map <- c(
-  X = "X",
+  counts = "counts",
   cpm = "cpm",
   rank = "rank",
   quantile_normalised = "quantile_normalised"

@@ -9,17 +9,17 @@
 \usage{
 get_data_container(
   data,
-  assays = "X",
+  assays = "counts",
   atlas_name,
   cell_aggregation,
   cache_directory = get_default_cache_dir(),
-  repository,
+  repository = COUNTS_URL,
   grouping_column,
   features = NULL
 )
 }
 \arguments{
-\item{data}{A data frame containing, at minimum, \code{cell_}, \code{file_id_cellNexus_single_cell}
+\item{data}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus_single_cell}
 and/or \code{file_id_cellNexus_pseudobulk} column, which correspond to a single cell ID,
 file subdivision for internal use for single_cell and/or pseudobulk level.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
