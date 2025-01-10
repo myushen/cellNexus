@@ -25,9 +25,9 @@ file subdivision for internal use for single_cell and/or pseudobulk level.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 
 \item{assays}{A character vector specifying the desired assay(s) to be requested.
-Valid elements include "X", "cpm", and "rank" for single-cell analyses, or
-"X" and "quantile_normalised" for pseudobulk analyses.
-The default setting retrieves only the count assay ("X").
+Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or
+"counts" and "quantile_normalised" for pseudobulk analyses.
+The default setting retrieves only the counts assay.
 If your analysis involves a smaller set of genes, consider using the "cpm" assay.
 The "rank" assay is suited for signature calculations across millions of cells.}
 

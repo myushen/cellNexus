@@ -137,7 +137,8 @@ list(
     # This should be run
     #read_parquet("/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/census_samples_to_download_groups_MODIFIED.parquet")
     # This was run due to time limit and a half were downloaded in the past
-    read_parquet("/vast/scratch/users/shen.m/Census_final_run/census_samples_to_download_groups_rest.parquet")
+    read_parquet("/vast/scratch/users/shen.m/Census_final_run/census_samples_to_download_groups_rest.parquet")|>
+      mutate(sample_2 = str_replace(sample_2, ".h5ad",""))
   ),
   tar_target(
     sliced_sce,
@@ -154,8 +155,7 @@ list(
 #          script = "~/git_control/CuratedAtlasQueryR/dev/split_census_anndata_base_on_sample_id.R",
 #          reporter = "summary")
 
-# Note: After subsetting, there are 27 samples with one cell. It caused 27 errors in the pipeline due to 
-#       zellkonverter::writeH5AD does not support write SCE with one cell.
-#       dataset_id "99950e99-2758-41d2-b2c9-643edcdf6d82" from Census does not contain any meaningful data, thus produced 
+# Note: dataset_id "99950e99-2758-41d2-b2c9-643edcdf6d82" and "9fcb0b73-c734-40a5-be9c-ace7eea401c9" 
+#       from Census does not contain any meaningful data (no observation_joinid in colData), thus produced 
 #       not meaningful samples (0 cells). They need to be deleted.
 

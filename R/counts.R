@@ -24,7 +24,7 @@ COUNTS_URL <- single_line_str(
 #' Current version of the counts. This will change when a newer
 #' version is released
 #' @noRd
-COUNTS_DATE <- "19_12_2024"
+COUNTS_DATE <- "19-12-2024"
 
 #' Base URL pointing to the pseudobulk counts at the current version
 #' @noRd
@@ -115,9 +115,9 @@ get_pseudobulk <- function(data, ...) {
 #'   file subdivision for internal use for single_cell and/or pseudobulk level.
 #'   They can be obtained from the [get_metadata()] function.
 #' @param assays A character vector specifying the desired assay(s) to be requested. 
-#'   Valid elements include "X", "cpm", and "rank" for single-cell analyses, or 
-#'   "X" and "quantile_normalised" for pseudobulk analyses. 
-#'   The default setting retrieves only the count assay ("X"). 
+#'   Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or 
+#'   "counts" and "quantile_normalised" for pseudobulk analyses. 
+#'   The default setting retrieves only the counts assay.
 #'   If your analysis involves a smaller set of genes, consider using the "cpm" assay. 
 #'   The "rank" assay is suited for signature calculations across millions of cells.
 #' @param atlas_name A character string specifying the name of the atlas to query.

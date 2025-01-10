@@ -19,9 +19,9 @@ They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} functi
   Arguments passed on to \code{\link[=get_data_container]{get_data_container}}
   \describe{
     \item{\code{assays}}{A character vector specifying the desired assay(s) to be requested.
-Valid elements include "X", "cpm", and "rank" for single-cell analyses, or
-"X" and "quantile_normalised" for pseudobulk analyses.
-The default setting retrieves only the count assay ("X").
+Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or
+"counts" and "quantile_normalised" for pseudobulk analyses.
+The default setting retrieves only the counts assay.
 If your analysis involves a smaller set of genes, consider using the "cpm" assay.
 The "rank" assay is suited for signature calculations across millions of cells.}
     \item{\code{atlas_name}}{A character string specifying the name of the atlas to query.}
