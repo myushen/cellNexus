@@ -920,12 +920,7 @@ job::job({
   
 })
 
-# (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
-# 99950e99-2758-41d2-b2c9-643edcdf6d82
-# 9fcb0b73-c734-40a5-be9c-ace7eea401c9
-
 # Create a missing cells parquet
-
 write_parquet_to_parquet = function(data_tbl, output_parquet, compression = "gzip") {
   
   # Establish connection to DuckDB in-memory database
@@ -954,6 +949,10 @@ missing_cells_tbl <- map(missing_cells_tbl$missing_cells, ~ {.x}) |> bind_rows()
 missing_cells <- missing_cells_tbl |> pull(cell_id)
 
 cell_metadata |> filter(!cell_id %in% missing_cells) |> 
+  
+  # (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
+  filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9")) |>
+  
   write_parquet_to_parquet("/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_7_mengyuan.parquet")
 
 
