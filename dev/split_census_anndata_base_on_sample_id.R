@@ -66,7 +66,10 @@ subset_samples <- function(dataset_id, observation_joinid, sample_id) {
   S4Vectors::metadata(sce) <- list()
   
   # Add sample identifier to the dataset
-  sce <- sce |> mutate(sample_id = !!sample_id)
+  sce <- sce |> mutate(sample_id = !!sample_id) |>
+    
+    # Remove the ".h5ad" extension if there is
+    mutate(sample_id = stringr::str_like(sample_id, ".h5ad$", ""))
   
   # Identify cells that match the observation_joinid
   cells_to_subset <- which(colData(sce)$observation_joinid %in% unlist(observation_joinid))
