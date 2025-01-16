@@ -3,6 +3,9 @@
 \name{single_line_str}
 \alias{single_line_str}
 \title{Formats a multi-line string as it it were on one line}
+\source{
+\href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
+}
 \usage{
 single_line_str(text)
 }

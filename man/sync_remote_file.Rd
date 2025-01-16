@@ -3,6 +3,9 @@
 \name{sync_remote_file}
 \alias{sync_remote_file}
 \title{Synchronises a single remote file with a local path}
+\source{
+\href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
+}
 \usage{
 sync_remote_file(full_url, output_file, ...)
 }
