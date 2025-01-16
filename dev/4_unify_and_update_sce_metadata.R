@@ -141,7 +141,7 @@ if (!dir.exists(cpm_hdf5_download_path))  dir.create(cpm_hdf5_download_path, rec
 # test fibrosis and prostate with anndata 
 cache = "/vast/scratch/users/shen.m/cellNexus"
 get_metadata(cache_directory = cache,
-             get_database_url(databases = NULL)) |> 
+             get_metadata_url(databases = NULL)) |> 
   dplyr::filter(file_id_cellNexus %in% c( "0004e421765504041c8a460a83de2d01.h5ad", # this is from cellxgene
                                           "0a54b616d9afd26c9da310e8a504b541.h5ad", # this is from prostate atlas
                                           "12eb5fe25994253c1d320ca590a6e681.h5ad"  # this is from fibrosis atlas

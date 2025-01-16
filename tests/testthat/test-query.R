@@ -206,7 +206,7 @@ test_that("get_metadata() is cached", {
 })
 
 test_that("database_url() expect character ", {
-  get_database_url() |>
+  get_metadata_url() |>
     expect_s3_class("character")
 })
 

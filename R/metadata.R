@@ -15,13 +15,13 @@ cache <- rlang::env(
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
-#' get_database_url("metadata.0.2.3.parquet")
+#' get_metadata_url("metadata.0.2.3.parquet")
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_database_url <- function(databases = c("metadata.1.0.7.parquet")) {
+get_metadata_url <- function(databases = c("metadata.1.0.7.parquet")) {
   clear_old_metadata(updated_data = databases)
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}")
@@ -32,7 +32,7 @@ get_database_url <- function(databases = c("metadata.1.0.7.parquet")) {
 #' @export
 #' @return A character scalar consisting of the URL
 #' @examples
-#' get_metadata(remote_url = SAMPLE_DATABASE_URL, cache_directory = tempdir())
+#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir())
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
@@ -51,8 +51,10 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' into [get_single_cell_experiment()] to obtain a
 #' [`SingleCellExperiment::SingleCellExperiment-class`]
 #'
-#' @param remote_url Optional character vector of any length. HTTP URL/URLs pointing
+#' @param cloud_metadata Optional character vector of any length. HTTP URL/URLs pointing
 #'   to the name and location of parquet database/databases.
+#' @param local_metadata Optional character vector of any length representing the local
+#'   path of parquet database(s).
 #' @param cache_directory Optional character vector of length 1. A file path on
 #'   your local system to a directory (not a file) that will be used to store
 #'   `metadata.parquet`
@@ -163,13 +165,14 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_metadata <- function(
-    remote_url = get_database_url(),
+    cloud_metadata = get_metadata_url(),
+    local_metadata = NULL,
     cache_directory = get_default_cache_dir(),
     use_cache = TRUE,
     ...
 ) {
   # Synchronize remote files
-  walk(remote_url, function(url) {
+  walk(cloud_metadata, function(url) {
     # Calculate the file path from the URL
     path <- file.path(cache_directory, url |> basename())
     if (!file.exists(path)) {
@@ -179,7 +182,9 @@ get_metadata <- function(
                        progress(type = "down", con = stderr()))
     }
   })
-  all_parquet <- file.path(cache_directory, dir(cache_directory, pattern = "\\.parquet$"))
+  
+  all_parquet <- file.path(cache_directory, dir(cache_directory, pattern = "\\.parquet$")) |>
+    c(local_metadata)
   # We try to avoid re-reading a set of parquet files 
   # that is identical to a previous set by hashing the file list
   hash <- all_parquet |> paste0(collapse="") |>

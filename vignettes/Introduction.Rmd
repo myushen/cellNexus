@@ -51,7 +51,7 @@ find_figure <- function(names){
 }
 METADATA_URL = if (params$demo_metadata)
        cellNexus::SAMPLE_DATABASE_URL else
-       cellNexus::get_database_url
+       cellNexus::get_metadata_url
 
 ```
 

@@ -8,15 +8,19 @@
 }
 \usage{
 get_metadata(
-  remote_url = get_database_url(),
+  cloud_metadata = get_metadata_url(),
+  local_metadata = NULL,
   cache_directory = get_default_cache_dir(),
   use_cache = TRUE,
   ...
 )
 }
 \arguments{
-\item{remote_url}{Optional character vector of any length. HTTP URL/URLs pointing
+\item{cloud_metadata}{Optional character vector of any length. HTTP URL/URLs pointing
 to the name and location of parquet database/databases.}
+
+\item{local_metadata}{Optional character vector of any length representing the local
+path of parquet database(s).}
 
 \item{cache_directory}{Optional character vector of length 1. A file path on
 your local system to a directory (not a file) that will be used to store
