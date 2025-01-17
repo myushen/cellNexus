@@ -101,7 +101,7 @@ library(cellNexus)
 
 ```{r, eval=FALSE}
 # Note: in real applications you should use the default value of remote_url 
-metadata <- get_metadata(remote_url = METADATA_URL)
+metadata <- get_metadata()
 metadata
 ```
 
@@ -119,7 +119,7 @@ The `metadata` variable can then be re-used for all subsequent queries.
 
 ```{r}
 metadata |>
-    dplyr::distinct(tissue, file_id) 
+    dplyr::distinct(tissue, cell_type_unified_ensemble) 
 ```
 
 ## Download single-cell RNA sequencing counts 
@@ -130,10 +130,10 @@ metadata |>
 single_cell_counts = 
     metadata |>
     dplyr::filter(
-        ethnicity == "African" &
-        stringr::str_like(assay, "%10x%") &
+        self_reported_ethnicity == "African" &
+        assay |> stringr::str_like("%10x%") &
         tissue == "lung parenchyma" &
-        stringr::str_like(cell_type, "%CD4%")
+        cell_type |> stringr::str_like("%CD4%")
     ) |>
     get_single_cell_experiment()
 
@@ -148,10 +148,10 @@ This is helpful if just few genes are of interest, as they can be compared acros
 single_cell_counts = 
     metadata |>
     dplyr::filter(
-        ethnicity == "African" &
-        stringr::str_like(assay, "%10x%") &
+        self_reported_ethnicity == "African" &
+        assay |> stringr::str_like("%10x%") &
         tissue == "lung parenchyma" &
-        stringr::str_like(cell_type, "%CD4%")
+        cell_type |> stringr::str_like("%CD4%")
     ) |>
     get_single_cell_experiment(assays = "cpm")
 
@@ -164,10 +164,10 @@ single_cell_counts
 single_cell_counts = 
     metadata |>
     dplyr::filter(
-        ethnicity == "African" &
-        stringr::str_like(assay, "%10x%") &
+        self_reported_ethnicity == "African" &
+        assay |> stringr::str_like("%10x%") &
         tissue == "lung parenchyma" &
-        stringr::str_like(cell_type, "%CD4%")
+        cell_type |> stringr::str_like("%CD4%")
     ) |>
     get_single_cell_experiment(assays = "cpm", features = "PUM1")
 
@@ -182,10 +182,10 @@ This convert the H5 SingleCellExperiment to Seurat so it might take long time an
 single_cell_counts_seurat = 
     metadata |>
     dplyr::filter(
-        ethnicity == "African" &
-        stringr::str_like(assay, "%10x%") &
+        self_reported_ethnicity == "African" &
+        assay |> stringr::str_like("%10x%") &
         tissue == "lung parenchyma" &
-        stringr::str_like(cell_type, "%CD4%")
+        cell_type |> stringr::str_like("%CD4%")
     ) |>
     get_seurat()
 
@@ -217,7 +217,16 @@ The resulting `.hdf5` file will also be totally portable and sharable.
 However this `.hdf5` has the disadvantage of being larger than the corresponding `.rds` as it includes a copy of the count information, and the saving process is going to be slow for large objects.
 
 ```{r}
-single_cell_counts |> HDF5Array::saveHDF5SummarizedExperiment("single_cell_counts", replace = TRUE)
+# ! IMPORTANT if you save 200K+ cells
+setAutoBlockSize(size = 1e+09) 
+
+single_cell_counts |> 
+  HDF5Array::saveHDF5SummarizedExperiment(
+    "single_cell_counts", 
+    replace = TRUE, 
+    as.sparse = TRUE, 
+    verbose = TRUE
+  )
 ```
 
 ## Visualise gene transcription
