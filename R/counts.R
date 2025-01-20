@@ -126,7 +126,7 @@ get_single_cell_experiment <- function(data,
         files = .data[[grouping_column]], 
         atlas_name = atlas_id, 
         cache_dir = cache_directory
-      ) |> 
+      ) |>  distinct() |> 
       pmap(function(files, atlas_name, cache_dir) {
         sync_assay_files(
           files = files,
@@ -149,13 +149,13 @@ get_single_cell_experiment <- function(data,
       )
       
       experiment_list <- raw_data |> 
-        mutate(dir_prefix = dir_prefix) |>
+        mutate(dir_prefix = file.path(cache_directory, atlas_id, current_subdir)) |>
         dplyr::group_by(.data[[grouping_column]], dir_prefix) |>
         dplyr::summarise(experiments = list(
           group_to_data_container(
             dplyr::cur_group_id(),
             dplyr::cur_data_all(),
-            dir_prefix,
+            unique(dir_prefix),
             features,
             grouping_column
           )
