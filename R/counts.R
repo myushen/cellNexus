@@ -70,9 +70,9 @@ get_SingleCellExperiment <- function(...){
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#' @importFrom dplyr pull filter as_tibble inner_join collect
+#' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
-#' @importFrom purrr reduce map map_int imap 
+#' @importFrom purrr reduce map map_int imap pmap
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
 #' @importFrom SummarizedExperiment colData assayNames<-
@@ -121,18 +121,22 @@ get_single_cell_experiment <- function(data,
       assert_that()
     
     files_to_read <-
-      raw_data |> distinct(grouping_column, atlas_id) |>
-      mutate(cache = cache_directory) |> 
-      pmap(function(file_column, id, cache) {
+      raw_data |> 
+      transmute(
+        files = .data[[grouping_column]], 
+        atlas_name = atlas_id, 
+        cache_dir = cache_directory
+      ) |> 
+      pmap(function(files, atlas_name, cache_dir) {
         sync_assay_files(
+          files = files,
+          atlas_name = atlas_name,
+          cache_dir = cache_dir,
           url = parsed_repo,
-          atlas_name = id,
           cell_aggregation = cell_aggregation,
-          cache_dir = cache,
-          files = file_column,
           subdirs = subdirs
-        )} 
-      )
+        )
+      })
   }
   
   cli_alert_info("Reading files.")
@@ -207,7 +211,7 @@ get_single_cell_experiment <- function(data,
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#' @importFrom dplyr pull filter as_tibble inner_join collect
+#' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
 #' @importFrom purrr reduce map map_int imap 
 #' @importFrom BiocGenerics cbind
@@ -259,18 +263,22 @@ get_pseudobulk <- function(data,
       assert_that()
     
     files_to_read <-
-      raw_data |> distinct(grouping_column, atlas_id) |>
-      mutate(cache = cache_directory) |> 
-      pmap(function(file_column, id,cache) {
+      raw_data |> 
+      transmute(
+        files = .data[[grouping_column]], 
+        atlas_name = atlas_id, 
+        cache_dir = cache_directory
+      ) |> 
+      pmap(function(files, atlas_name, cache_dir) {
         sync_assay_files(
+          files = files,
+          atlas_name = atlas_name,
+          cache_dir = cache_dir,
           url = parsed_repo,
-          atlas_name = id,
           cell_aggregation = cell_aggregation,
-          cache_dir = cache,
-          files = file_column,
           subdirs = subdirs
-        )} 
-      )
+        )
+      })
   }
   
   cli_alert_info("Reading files.")
@@ -592,11 +600,14 @@ sync_assay_files <- function(
         "/",
         .data$sample_id
       ) |> map_chr(~ modify_url(url, path = .)),
-      
+      # Nectar cloud is strict to url slashes, thus we normalize the URLs 
+      # by removing multiple slashes except in the protocol part.
+      full_url = gsub("(?<!:)/{2,}", "/", full_url, perl = TRUE),
       # Path to save the file on local disk (and its parent directory)
       # We use file.path since the file separator will differ on other OSs
       output_file = file.path(
         cache_dir,
+        .data$atlas_name,
         .data$subdir,
         .data$sample_id
       )
