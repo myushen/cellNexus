@@ -268,7 +268,7 @@ get_pseudobulk <- function(data,
         files = .data[[grouping_column]], 
         atlas_name = atlas_id, 
         cache_dir = cache_directory
-      ) |> 
+      ) |> distinct() |>
       pmap(function(files, atlas_name, cache_dir) {
         sync_assay_files(
           files = files,
@@ -297,7 +297,7 @@ get_pseudobulk <- function(data,
           group_to_data_container(
             dplyr::cur_group_id(),
             dplyr::cur_data_all(),
-            dir_prefix,
+            unique(dir_prefix),
             features,
             grouping_column
           )
@@ -394,10 +394,13 @@ validate_data <- function(
   atlas_name <- raw_data |> distinct(atlas_id) |> pull()
   versioned_cache_directory <- file.path(cache_directory, atlas_name, cell_aggregation)
   
-  versioned_cache_directory |> map( ~ .x |> dir.create(
-    showWarnings = FALSE,
-    recursive = TRUE
-  ))
+  versioned_cache_directory |> map(function(directory_path) {
+    dir.create(
+      directory_path,
+      showWarnings = FALSE,
+      recursive = TRUE
+    )
+  })
   
   subdirs <- assay_map[assays]
   
@@ -443,20 +446,15 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     )
   
   # Check if file exists
-  experiment_path |> map(~ .x |> file.exists() |> 
-                           assert_that(
-                             msg = "Your cache does not contain the file {experiment_path} you
-                            attempted to query. Please provide the repository
-                            parameter so that files can be synchronised from the
-                            internet" |> glue()
-                           ))
-  # file.exists(experiment_path) |>
-  #   assert_that(
-  #     msg = "Your cache does not contain the file {experiment_path} you
-  #                           attempted to query. Please provide the repository
-  #                           parameter so that files can be synchronised from the
-  #                           internet" |> glue()
-  #   )
+  experiment_path |> map(function(path) {
+    file_exists = file.exists(path)
+    file_exists |> assert_that(
+      msg = "Your cache does not contain the file {experiment_path} you
+           attempted to query. Please provide the repository
+           parameter so that files can be synchronised from the
+           internet" |> glue()
+    )
+    })
   
   # Load experiment
   experiment <- readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE)
