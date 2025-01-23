@@ -52,7 +52,9 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' [`SingleCellExperiment::SingleCellExperiment-class`]
 #'
 #' @param cloud_metadata Optional character vector of any length. HTTP URL/URLs pointing
-#'   to the name and location of parquet database/databases.
+#'   to the name and location of parquet database/databases. By default, it points to 
+#'   cellNexus ARDC Nectar Research Cloud. Assign `NULL` to query local_metadata only 
+#'   if exists. 
 #' @param local_metadata Optional character vector of any length representing the local
 #'   path of parquet database(s).
 #' @param cache_directory Optional character vector of length 1. A file path on
@@ -116,7 +118,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' `is_primary_data.x`
 #'
 #' Cell-specific columns (definitions available at cellxgene.cziscience.com):
-#' `cell_`, `cell_type`, `cell_type_ontology_term_idm`, `cell_type_harmonised`,
+#' `cell_id`, `cell_type`, `cell_type_ontology_term_idm`, `cell_type_harmonised`,
 #' `confidence_class`, `cell_annotation_azimuth_l2`,
 #' `cell_annotation_blueprint_singler`
 #'
@@ -183,8 +185,11 @@ get_metadata <- function(
     }
   })
   
-  all_parquet <- file.path(cache_directory, dir(cache_directory, pattern = "\\.parquet$")) |>
-    c(local_metadata)
+  if (is.null(cloud_metadata)) all_parquet <- c(local_metadata)
+  if (!is.null(cloud_metadata)) all_parquet <- c(file.path(cache_directory, 
+                                                           cloud_metadata |> basename()), 
+                                                 local_metadata)
+  
   # We try to avoid re-reading a set of parquet files 
   # that is identical to a previous set by hashing the file list
   hash <- all_parquet |> paste0(collapse="") |>

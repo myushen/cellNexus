@@ -17,7 +17,9 @@ get_metadata(
 }
 \arguments{
 \item{cloud_metadata}{Optional character vector of any length. HTTP URL/URLs pointing
-to the name and location of parquet database/databases.}
+to the name and location of parquet database/databases. By default, it points to
+cellNexus ARDC Nectar Research Cloud. Assign \code{NULL} to query local_metadata only
+if exists.}
 
 \item{local_metadata}{Optional character vector of any length representing the local
 path of parquet database(s).}
@@ -80,7 +82,7 @@ Sample-specific columns (definitions available at cellxgene.cziscience.com):
 \code{is_primary_data.x}
 
 Cell-specific columns (definitions available at cellxgene.cziscience.com):
-\code{cell_}, \code{cell_type}, \code{cell_type_ontology_term_idm}, \code{cell_type_harmonised},
+\code{cell_id}, \code{cell_type}, \code{cell_type_ontology_term_idm}, \code{cell_type_harmonised},
 \code{confidence_class}, \code{cell_annotation_azimuth_l2},
 \code{cell_annotation_blueprint_singler}
 
