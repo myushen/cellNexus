@@ -22,7 +22,7 @@ URL pointing to the sample metadata file, which is smaller and for test,
 demonstration, and vignette purposes only
 }
 \examples{
-get_metadata(remote_url = SAMPLE_DATABASE_URL, cache_directory = tempdir())
+get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir())
 }
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,

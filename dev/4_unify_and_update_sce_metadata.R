@@ -19,6 +19,7 @@ library(stringr)
 library(targets)
 library(purrr)
 
+DATE = "19-12-2024"
 # read cellxgene
 metadata <- tbl(dbConnect(duckdb::duckdb(), dbdir = ":memory:"),  
     sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_7_mengyuan.parquet')") )
@@ -102,12 +103,14 @@ missing_cells <- missing_cells_tbl |> pull(cell_id)
 metadata = metadata |> filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9")) |> 
   filter(!cell_id %in% missing_cells)
   
-metadata_path = "/vast/scratch/users/shen.m/cellNexus/metadata.1.0.7.parquet"
-metadata |>  duckdb_write_parquet(path = metadata_path,
+metadata_path = "/vast/scratch/users/shen.m/cellNexus/metadata.1.0.8.parquet"
+
+metadata |> mutate(atlas_id = paste0(atlas_id, "/", DATE) ) |>
+  duckdb_write_parquet(path = metadata_path,
                        con = dbConnect(duckdb::duckdb(), dbdir = ":memory:"))
 
 file.copy(metadata_path,
-          to = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/metadata.1.0.7.parquet")
+          to = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/metadata.1.0.8.parquet")
 
 # Repeat similar steps for the fibrosis atlas
 fibrosis <- tbl(dbConnect(duckdb::duckdb(), dbdir = ":memory:"),  
@@ -141,7 +144,7 @@ if (!dir.exists(cpm_hdf5_download_path))  dir.create(cpm_hdf5_download_path, rec
 # test fibrosis and prostate with anndata 
 cache = "/vast/scratch/users/shen.m/cellNexus"
 get_metadata(cache_directory = cache,
-             get_database_url(databases = NULL)) |> 
+             get_metadata_url(databases = NULL)) |> 
   dplyr::filter(file_id_cellNexus %in% c( "0004e421765504041c8a460a83de2d01.h5ad", # this is from cellxgene
                                           "0a54b616d9afd26c9da310e8a504b541.h5ad", # this is from prostate atlas
                                           "12eb5fe25994253c1d320ca590a6e681.h5ad"  # this is from fibrosis atlas

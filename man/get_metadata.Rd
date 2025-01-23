@@ -8,15 +8,21 @@
 }
 \usage{
 get_metadata(
-  remote_url = get_database_url(),
+  cloud_metadata = get_metadata_url(),
+  local_metadata = NULL,
   cache_directory = get_default_cache_dir(),
   use_cache = TRUE,
   ...
 )
 }
 \arguments{
-\item{remote_url}{Optional character vector of any length. HTTP URL/URLs pointing
-to the name and location of parquet database/databases.}
+\item{cloud_metadata}{Optional character vector of any length. HTTP URL/URLs pointing
+to the name and location of parquet database/databases. By default, it points to
+cellNexus ARDC Nectar Research Cloud. Assign \code{NULL} to query local_metadata only
+if exists.}
+
+\item{local_metadata}{Optional character vector of any length representing the local
+path of parquet database(s).}
 
 \item{cache_directory}{Optional character vector of length 1. A file path on
 your local system to a directory (not a file) that will be used to store
@@ -76,7 +82,7 @@ Sample-specific columns (definitions available at cellxgene.cziscience.com):
 \code{is_primary_data.x}
 
 Cell-specific columns (definitions available at cellxgene.cziscience.com):
-\code{cell_}, \code{cell_type}, \code{cell_type_ontology_term_idm}, \code{cell_type_harmonised},
+\code{cell_id}, \code{cell_type}, \code{cell_type_ontology_term_idm}, \code{cell_type_harmonised},
 \code{confidence_class}, \code{cell_annotation_azimuth_l2},
 \code{cell_annotation_blueprint_singler}
 

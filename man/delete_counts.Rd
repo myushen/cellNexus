@@ -3,6 +3,9 @@
 \name{delete_counts}
 \alias{delete_counts}
 \title{Deletes specific counts and metadata from cache}
+\source{
+\href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
+}
 \usage{
 delete_counts(
   data,

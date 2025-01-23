@@ -17,6 +17,22 @@ get_seurat(...)
     \item{\code{data}}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus_single_cell} columns,
 which correspond to a single cell ID, file subdivision for internal use.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
+    \item{\code{assays}}{A character vector specifying the desired assay(s) to be requested.
+Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or
+"counts" and "quantile_normalised" for pseudobulk analyses.
+The default setting retrieves only the counts assay.
+If your analysis involves a smaller set of genes, consider using the "cpm" assay.
+The "rank" assay is suited for signature calculations across millions of cells.}
+    \item{\code{cell_aggregation}}{A character vector that specifies which cell aggregation
+strategy should be applied. This will create a corresponding subdirectory
+in the cache directory. Single cell level is applied by default.}
+    \item{\code{cache_directory}}{An optional character vector of length one. If
+provided, it should indicate a local file path where any remotely accessed
+files should be copied.}
+    \item{\code{repository}}{A character vector of length one. If provided, it should be
+an HTTP URL pointing to the location where the single cell data is stored.}
+    \item{\code{features}}{An optional character vector of features (ie genes) to return
+the counts for. By default counts for all features will be returned.}
   }}
 }
 \value{

@@ -7,39 +7,45 @@
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
 }
 \usage{
-get_single_cell_experiment(data, ...)
+get_single_cell_experiment(
+  data,
+  assays = "counts",
+  cell_aggregation = "",
+  cache_directory = get_default_cache_dir(),
+  repository = COUNTS_URL,
+  features = NULL
+)
 }
 \arguments{
 \item{data}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus_single_cell} columns,
 which correspond to a single cell ID, file subdivision for internal use.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 
-\item{...}{
-  Arguments passed on to \code{\link[=get_data_container]{get_data_container}}
-  \describe{
-    \item{\code{assays}}{A character vector specifying the desired assay(s) to be requested.
+\item{assays}{A character vector specifying the desired assay(s) to be requested.
 Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or
 "counts" and "quantile_normalised" for pseudobulk analyses.
 The default setting retrieves only the counts assay.
 If your analysis involves a smaller set of genes, consider using the "cpm" assay.
 The "rank" assay is suited for signature calculations across millions of cells.}
-    \item{\code{atlas_name}}{A character string specifying the name of the atlas to query.}
-    \item{\code{cell_aggregation}}{A character vector that specifies which cell aggregation strategy
-should be applied. This will create  a corresponding subdirectory in the atlas cache.
-Choose one of the following: single_cell, pseudobulk}
-    \item{\code{cache_directory}}{An optional character vector of length one. If
+
+\item{cell_aggregation}{A character vector that specifies which cell aggregation
+strategy should be applied. This will create a corresponding subdirectory
+in the cache directory. Single cell level is applied by default.}
+
+\item{cache_directory}{An optional character vector of length one. If
 provided, it should indicate a local file path where any remotely accessed
 files should be copied.}
-    \item{\code{repository}}{A character vector of length one. If provided, it should be
+
+\item{repository}{A character vector of length one. If provided, it should be
 an HTTP URL pointing to the location where the single cell data is stored.}
-    \item{\code{grouping_column}}{A character vector of metadata column for grouping. "file_id_cellNexus_single_cell" for
-for Single Cell Experiment, "file_id_cellNexus_pseudobulk" for pseudobulk.}
-    \item{\code{features}}{An optional character vector of features (ie genes) to return
+
+\item{features}{An optional character vector of features (ie genes) to return
 the counts for. By default counts for all features will be returned.}
-  }}
 }
 \description{
-Gets a SingleCellExperiment from curated metadata
+Given a data frame of Curated Atlas metadata obtained from \code{\link[=get_metadata]{get_metadata()}},
+returns a \code{\link[SingleCellExperiment:SingleCellExperiment]{SingleCellExperiment::SingleCellExperiment}} object
+corresponding to the samples in that data frame
 }
 \examples{
 meta <- get_metadata() |> head(2)

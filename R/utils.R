@@ -7,6 +7,7 @@
 #' @importFrom purrr map_dbl
 #' @importFrom httr HEAD
 #' @keywords internal
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 url_file_size <- function(urls){
     map_dbl(urls, function(url){
         as.integer(
@@ -20,6 +21,7 @@ url_file_size <- function(urls){
 #' @importFrom cli cli_alert_info
 #' @keywords internal
 #' @return `NULL`, invisibly
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 report_file_sizes <- function(urls){
     total_size <- url_file_size(urls) |> 
         sum() |>
@@ -37,6 +39,7 @@ report_file_sizes <- function(urls){
 #'   removed
 #' @keywords internal
 #' @importFrom stringr str_remove_all
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 single_line_str <- function(text){
     str_remove_all(text, r"(\n\s*)")
 }
@@ -70,12 +73,26 @@ clear_cache <- function() {
   get_default_cache_dir() |> unlink(TRUE, TRUE)
 }
 
+#' Clear the outdated metadata in the default cache directory.
+#' @param metadata A character vector of outdated metadata name
+#' @return `NULL`, invisibly
+#' @keywords internal
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+clear_old_metadata <- function(updated_data) {
+  cache_directory <- get_default_cache_dir()
+  files_in_cache <- list.files(cache_directory)
+  pattern <- "\\.parquet$"
+  parquet_files <- grep(pattern, files_in_cache, value = TRUE)
+  files_to_delete <- setdiff(parquet_files, updated_data)
+  unlink(file.path(cache_directory, files_to_delete))
+} 
 
 #' Synchronises a single remote file with a local path
 #' @importFrom httr write_disk GET stop_for_status
 #' @importFrom cli cli_abort cli_alert_info
 #' @return `NULL`, invisibly
 #' @keywords internal
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 sync_remote_file <- function(full_url, output_file, ...) {
     if (!file.exists(output_file)) {
         output_dir <- dirname(output_file)
@@ -110,6 +127,7 @@ sync_remote_file <- function(full_url, output_file, ...) {
 #' @importFrom glue glue_sql
 #' @return An SQL data frame
 #' @keywords internal
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 read_parquet <- function(conn, path, filename_column=FALSE){
     from_clause <- glue_sql("FROM read_parquet([{`path`*}], union_by_name=true, filename={filename_column})", .con=conn) |> sql()
     tbl(conn, from_clause)
@@ -120,6 +138,7 @@ read_parquet <- function(conn, path, filename_column=FALSE){
 #' @importFrom dplyr filter distinct pull collect
 #' @return `NULL`, invisibly
 #' @keywords internal
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 delete_counts <- function(data, 
                           assay = c("original","cpm"), 
                           cache_directory = get_default_cache_dir()){
