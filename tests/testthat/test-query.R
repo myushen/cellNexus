@@ -183,15 +183,35 @@ test_that("get_metadata() expect to combine local and cloud metadata", {
   file_id_from_cloud <- "68aea852584d77f78e5c91204558316d___1.h5ad"
   file_path <- file.path(cache, atlas_name, assay)
   
-  if (!dir.exists(file_path)) dir.create(file_path, recursive = TRUE)
-  sample_sce_obj |> writeH5AD(glue("{cache}/{atlas_name}/{assay}/sample_sce_obj.h5ad"), 
-                              compression = "gzip")
-  
   n_cell = get_metadata(local_metadata = glue("{cache}/my_metadata.parquet")) |>
     filter(file_id_cellNexus_single_cell %in% c("sample_sce_obj.h5ad",
                                                 file_id_from_cloud)) |>
     dplyr::count() |> pull() |> as.integer()
   expect_gt(n_cell , 1)
+})
+
+test_that("get_metadata() expect to combine local and cloud counts", {
+  data("sample_sce_obj")
+  
+  cache = tempfile()
+  if (!dir.exists(cache)) dir.create(cache, recursive = TRUE)
+  metadata(sample_sce_obj)$data |> arrow::write_parquet(glue("{cache}/my_metadata.parquet"))
+  
+  atlas_name <- metadata(sample_sce_obj)$data |> pull(atlas_id) |> unique()
+  assay <- "counts"
+  file_id_from_cloud <- "68aea852584d77f78e5c91204558316d___1.h5ad"
+  file_path <- file.path(cache, atlas_name, assay)
+  
+  if (!dir.exists(file_path)) dir.create(file_path, recursive = TRUE)
+  sample_sce_obj |> writeH5AD(glue("{cache}/{atlas_name}/{assay}/sample_sce_obj.h5ad"), 
+                              compression = "gzip")
+  
+  sce = get_metadata(local_metadata = glue("{cache}/my_metadata.parquet")) |>
+    filter(file_id_cellNexus_single_cell %in% c("sample_sce_obj.h5ad",
+                                                file_id_from_cloud)) |>
+    get_single_cell_experiment(cache = cache)
+    
+  expect_contains(colnames(sce), "Liver_cDNA_CCTATTAGTTTGTGAC-1_2" )
 })
 
 # unharmonised_data is not implemented yet
