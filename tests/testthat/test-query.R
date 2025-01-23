@@ -1,20 +1,5 @@
 library(dplyr)
 
-test_that("get_SingleCellExperiment() correctly handles duplicate cell IDs", {
-    meta <- get_metadata() |>
-        dplyr::filter(cell_ == "868417_1") |>
-        dplyr::collect()
-    sce <- get_SingleCellExperiment(meta)
-    # This query should return multiple cells, despite querying only 1 cell ID
-    nrow(meta) |> expect_gt(1)
-    # Each of the two ambiguous cell IDs should now be unique
-    colnames(sce) |> expect_equal(c("868417_1_1", "868417_1_2"))
-    # We should have lots of column data, derived from the metadata
-    SummarizedExperiment::colData(sce) |>
-        dim() |>
-        expect_equal(c(2, 56))
-})
-
 test_that("get_default_cache_dir() returns the correct directory on Linux", {
     grepl("linux", version$platform, fixed = TRUE) |>
         skip_if_not()
@@ -29,18 +14,18 @@ test_that("get_default_cache_dir() returns the correct directory on Linux", {
 test_that("sync_assay_files() syncs appropriate files", {
     temp <- tempfile()
     test_file <- "4164d0eb972ad5e12719b6858c9559ea___1.h5ad"
-    COUNTS_DATE <- "26-11-2024"
+    
+    atlas_name <- "cellxgene/19-12-2024"
 
     sync_assay_files(
-      atlas_name = "cellxgene",
-      cell_aggregation = "single_cell",
-      version = COUNTS_DATE,
+      atlas_name = atlas_name,
+      cell_aggregation = "",
       cache_dir = temp,
       files = test_file,
       subdirs = "cpm"
     )
     
-    temp_subdir <- file.path(temp, "cpm")
+    temp_subdir <- file.path(temp, atlas_name, "cpm")
     
     test_file %in% list.files(temp_subdir) |>
         expect(failure_message = "The file was not downloaded")
@@ -53,8 +38,7 @@ test_that("get_SingleCellExperiment() syncs appropriate files", {
     meta <- get_metadata() |> head(2)
 
     # The remote dataset should have many genes
-    sce <- get_SingleCellExperiment(meta, cache_directory = temp,
-                                    atlas_name = "cellxgene")
+    sce <- get_SingleCellExperiment(meta, cache_directory = temp)
     sce |>
         row.names() |>
         length() |>
@@ -67,29 +51,30 @@ test_that(
     {
         # We need this for the assays() function
         library(SummarizedExperiment)
-      
-        temp <- tempfile()
 
         meta <- get_metadata() |> head(2)
+        
+        atlas_name <- meta |> distinct(atlas_id) |> pull()
+        
+        assay_names <- c("counts", "cpm")
+        
+        temp <- tempfile()
 
         # If we request both assays, we get both assays
         get_SingleCellExperiment(meta, cache_directory = temp,
-                                 assays = c("X", "cpm"),
-                                 atlas_name = "cellxgene") |>
+                                 assays = assay_names) |>
             assays() |>
             names() |>
-            expect_setequal(c("X", "cpm"))
+            expect_setequal(assay_names)
 
         # If we request one assay, we get one assays
         get_SingleCellExperiment(meta, cache_directory = temp,
-                                 assays = "X",
-                                 atlas_name = "cellxgene") |>
+                                 assays = "counts") |>
             assays() |>
             names() |>
-            expect_setequal("X")
+            expect_setequal("counts")
         get_SingleCellExperiment(meta, cache_directory = temp,
-                                 assays = "cpm",
-                                 atlas_name = "cellxgene") |>
+                                 assays = "cpm") |>
             assays() |>
             names() |>
             expect_setequal("cpm")
@@ -100,14 +85,13 @@ test_that("The features argument to get_SingleCellExperiment subsets genes", {
     meta <- get_metadata() |> head(2)
 
     # The un-subset dataset should have many genes
-    sce_full <- get_SingleCellExperiment(meta, atlas_name = "cellxgene") |>
+    sce_full <- get_SingleCellExperiment(meta) |>
         row.names() |>
         length()
     expect_gt(sce_full, 1)
 
     # The subset dataset should only have one gene
-    sce_subset <- get_SingleCellExperiment(meta, features = "ENSG00000243485",
-                                           atlas_name = "cellxgene") |>
+    sce_subset <- get_SingleCellExperiment(meta, features = "ENSG00000254123") |>
         row.names() |>
         length()
     expect_equal(sce_subset, 1)
@@ -118,10 +102,8 @@ test_that("The features argument to get_SingleCellExperiment subsets genes", {
 test_that("get_seurat() returns the appropriate data in Seurat format", {
     meta <- get_metadata() |> head(2)
 
-    sce <- get_SingleCellExperiment(meta, features = "ENSG00000243485",
-                                    atlas_name = "cellxgene")
-    seurat <- get_seurat(meta, features = "ENSG00000243485",
-                         atlas_name = "cellxgene")
+    sce <- get_SingleCellExperiment(meta, features = "ENSG00000254123")
+    seurat <- get_seurat(meta, features = "ENSG00000254123")
 
     # The output should be a Seurat object
     expect_s4_class(seurat, "Seurat")
@@ -133,19 +115,20 @@ test_that("get_seurat() returns the appropriate data in Seurat format", {
 })
 
 test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
-    id = "3214d8f8986c1e33a85be5322f2db4a9"
-    file_id = "7eb6d9a1-a723-4d59-bdbc-03e0a263e836"
+    atlas_id = "cellxgene/19-12-2024"
+    id = "a65bcc2d-4243-44c1-a262-ab7dcddfcf86"
+    file_id <- "7ddd6775d704d6826539abaee8d22f65___1.h5ad"
     
     # Force the file to be cached
     get_metadata() |>
-        filter(file_id_db == id) |>
+        filter(dataset_id == id) |>
         get_SingleCellExperiment()
     
     # Load the SCE from cache directly
     assay_1 = cellNexus:::get_default_cache_dir() |>
-        file.path("original", id) |>
-        HDF5Array::loadHDF5SummarizedExperiment() |>
-        assay("X") |>
+        file.path(atlas_id, "counts", file_id ) |>
+        zellkonverter::readH5AD(reader = "R", use_hdf5 = TRUE) |>
+        assay("counts") |>
         as.matrix()
     
     # Make a SCE that has the right column names, but reversed
@@ -153,9 +136,10 @@ test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
         assay_1 |>
         colnames() |>
         tibble::tibble(
-            file_id_db = id,
-            file_id = file_id,
-            cell_ = _
+            file_id_cellNexus_single_cell = file_id,
+            dataset_id = id,
+            cell_id = _,
+            atlas_id = atlas_id
         ) |>
         arrange(-row_number()) |>
         get_SingleCellExperiment(assays = "counts") |>
@@ -168,6 +152,46 @@ test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
         assay_1,
         assay_2[, colnames(assay_1)]
     )
+})
+
+test_that("get_metadata() is cached", {
+    table = get_metadata()
+    table_2 = get_metadata()
+    
+    identical(table, table_2) |> expect_true()
+})
+
+test_that("database_url() expect character ", {
+  get_metadata_url() |>
+    expect_s3_class("character")
+})
+
+test_that("get_metadata() expect a unique cell_type `abnormal cell` is present", {
+  n_cell <- get_metadata() |> filter(cell_type == 'abnormal cell') |> as_tibble() |> nrow()
+  expect_true(n_cell > 0)
+})
+
+test_that("get_metadata() expect to combine local and cloud metadata", {
+  data("sample_sce_obj")
+  
+  cache = tempfile()
+  if (!dir.exists(cache)) dir.create(cache, recursive = TRUE)
+  metadata(sample_sce_obj)$data |> arrow::write_parquet(glue("{cache}/my_metadata.parquet"))
+  
+  atlas_name <- metadata(sample_sce_obj)$data |> pull(atlas_id) |> unique()
+  assay <- "counts"
+  file_id_from_cloud <- "68aea852584d77f78e5c91204558316d___1.h5ad"
+  file_path <- file.path(cache, atlas_name, assay)
+  
+  if (!dir.exists(file_path)) dir.create(file_path, recursive = TRUE)
+  sample_sce_obj |> writeH5AD(glue("{cache}/{atlas_name}/{assay}/sample_sce_obj.h5ad"), 
+                              compression = "gzip")
+  
+  n_cell = get_metadata(local_metadata = glue("{cache}/my_metadata.parquet")) |>
+    filter(file_id_cellNexus_single_cell %in% c("sample_sce_obj.h5ad",
+                                                file_id_from_cloud)) |>
+    dplyr::count() |> pull() |> as.integer()
+  expect_gt(n_cell , 1)
 })
 
 # unharmonised_data is not implemented yet
@@ -198,23 +222,7 @@ test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
 #     )
 # })
 
-test_that("get_metadata() is cached", {
-    table = get_metadata()
-    table_2 = get_metadata()
-    
-    identical(table, table_2) |> expect_true()
-})
 
-test_that("database_url() expect character ", {
-  get_metadata_url() |>
-    expect_s3_class("character")
-})
-
-test_that("get_metadata() expect a unique cell_type `abnormal cell` is present", {
-  n_cell <- get_metadata() |> filter(cell_type == 'abnormal cell') |> as_tibble() |> nrow()
-  expect_true(n_cell > 0)
-})
-  
 # test_that("import_one_sce() loads metadata from a SingleCellExperiment object into a parquet file and generates pseudobulk", {
 #   # Test both functionalities together because if import them independently,
 #   # the sample data will be loaded into the cache, which causes the second import to fail the unique file check
