@@ -204,6 +204,7 @@ get_metadata <- function(
     table <- duckdb() |>
       dbConnect(drv = _, read_only = TRUE) |>
       read_parquet(path = all_parquet, ...)
+    table <- table |> clean_and_report_NA_columns()
     cache$metadata_table[[hash]] <- table
     table
   }

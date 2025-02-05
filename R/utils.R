@@ -115,7 +115,6 @@ sync_remote_file <- function(full_url, output_file, ...) {
 }
 
 #' Returns a tibble from a parquet file path
-#' 
 #' Since dbplyr 2.4.0, raw file paths aren't handled very well
 #' See: <https://github.com/duckdb/duckdb-r/issues/38>
 #' Hence the need for this method
@@ -156,7 +155,6 @@ delete_counts <- function(data,
 }
 
 #' Write table to Parquet file using DuckDB
-#'
 #' This function takes an SQL table, renders it into an SQL query, and writes the output directly
 #' to a Parquet file without loading into disk.
 #' @param .tbl_sql A data frame loaded by DuckDB.
@@ -166,6 +164,7 @@ delete_counts <- function(data,
 #' @importFrom DBI dbConnect dbExecute
 #' @keywords internal
 #' @noRd
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 duckdb_write_parquet <- function(.tbl_sql, 
                                  path, 
                                  con = dbConnect(duckdb::duckdb(),  dbdir = ":memory:")) {
@@ -178,4 +177,18 @@ duckdb_write_parquet <- function(.tbl_sql,
   res <- dbExecute(con, sql_call)
   res
 }
+
+#' Check whether a column is all NA in a dataframe, drop the column and warn users
+#' @return A data frame where all values are not NA
+#' @keywords internal
+#' @noRd
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+clean_and_report_NA_columns <- function(df) {
+  column_names <- df |> dplyr::select_if(~any(is.na(.))) |> colnames()
+  
+  "Dropping {column_names} as they all contain only NA values" |>
+    cli_alert_info()
+  df |> select(-all_of(column_names))
+}
+
 
