@@ -289,7 +289,6 @@ get_pseudobulk <- function(data,
         versioned_cache_directory,
         current_subdir
       )
-      
       experiment_list <- raw_data |>
         mutate(dir_prefix = dir_prefix) |>
         dplyr::group_by(.data[[grouping_column]], dir_prefix) |>
@@ -499,20 +498,20 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   else if (grouping_column == "file_id_cellNexus_pseudobulk") {
     # Process specific to Pseudobulk
     # remove cell-level annotations
-    cell_level_anno <- c("cell_id", "cell_type", "confidence_class", "file_id_cellNexus_single_cell",
+    cell_level_anno <- c("cell_id", "cell_type", "file_id_cellNexus_single_cell",
                          "cell_annotation_blueprint_singler",
                          "cell_annotation_monaco_singler", 
                          "cell_annotation_azimuth_l2",
                          "cell_type_ontology_term_id",
-                         "sample_id_db")
+                         "observation_joinid", "ensemble_joinid",
+                         "nFeature_RNA", "data_driven_ensemble", "cell_type_unified",
+                         "empty_droplet")
     
     new_coldata <- df |>
       select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
       distinct() |>
       mutate(
-        sample_identifier = ifelse(file_id_cellNexus_pseudobulk %in% file_ids,
-                                   glue("{sample_id}___{cell_type_harmonised}___{disease}___{is_primary_data_x}"),
-                                   glue("{sample_id}___{cell_type_harmonised}")),
+        sample_identifier = glue("{sample_id}___{cell_type_unified_ensemble}"),
         original_sample_id = .data$sample_identifier
       ) |>
       column_to_rownames("original_sample_id")
@@ -529,7 +528,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         `colData<-`(value = DataFrame(new_coldata))
     
     # Force renaming type class since zellkonverter::writeH5AD cannot save `SummarizedExperiment` object.
-    experiment <- as(experiment, "SummarizedExperiment")
+    experiment <- as(experiment, "SingleCellExperiment")
    
   }
 }
