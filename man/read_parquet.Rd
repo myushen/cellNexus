@@ -2,7 +2,10 @@
 % Please edit documentation in R/utils.R
 \name{read_parquet}
 \alias{read_parquet}
-\title{Returns a tibble from a parquet file path}
+\title{Returns a tibble from a parquet file path
+Since dbplyr 2.4.0, raw file paths aren't handled very well
+See: \url{https://github.com/duckdb/duckdb-r/issues/38}
+Hence the need for this method}
 \source{
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
 }
@@ -17,6 +20,7 @@ By default it does not add the column.}
 An SQL data frame
 }
 \description{
+Returns a tibble from a parquet file path
 Since dbplyr 2.4.0, raw file paths aren't handled very well
 See: \url{https://github.com/duckdb/duckdb-r/issues/38}
 Hence the need for this method

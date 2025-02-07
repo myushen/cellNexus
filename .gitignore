@@ -2,15 +2,12 @@
 .Rhistory
 .RData
 .Ruserdata
-human_cell_atlas.Rproj
 local_file.rds
 slurm.status.*
 cellNexus.Rproj
-CuratedAtlasQueryR.Rproj
 split_files.makeflow
 ._*
 .DS_Store
 inst/doc
 /doc/
 /Meta/
-cellNexus.Rproj
