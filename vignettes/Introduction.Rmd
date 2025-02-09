@@ -65,7 +65,7 @@ Harmonised data is stored in the ARDC Nectar Research Cloud, and most
 `cellNexus` functions interact with Nectar via web requests, so a 
 network connection is required for most functionality.
 
-```{r, echo=FALSE, out.height = c("139px"), out.width = "120x" }
+```{r, echo=TRUE, eval=FALSE, out.height = c("139px"), out.width = "120x" }
 find_figure("logo.png") |> knitr::include_graphics()
 ```
 
@@ -107,7 +107,7 @@ metadata
 
 ```{r, echo=FALSE}
 # Note: a custom cache is used here ONLY for R CHECK compliance purposes. Users will NOT need to specify a custom cache
-metadata <- get_metadata(remote_url = METADATA_URL, cache_directory = tempdir())
+metadata <- get_metadata(cache_directory = tempdir())
 metadata
 ```
  
@@ -194,11 +194,11 @@ single_cell_counts_seurat
 
 ## Save your `SingleCellExperiment`
 
-The returned `SingleCellExperiment` can be saved with two modalities, as `.rds` or as `HDF5`.
+The returned `SingleCellExperiment` can be saved with three modalities, as `.rds` or as `HDF5` or as `H5AD`.
 
 ### Saving as RDS (fast saving, slow reading)
 
-Saving as `.rds` has the advantage of being fast, andd the `.rds` file occupies very little disk space as it only stores the links to the files in your cache.
+Saving as `.rds` has the advantage of being fast, and the `.rds` file occupies very little disk space as it only stores the links to the files in your cache.
 
 However it has the disadvantage that for big `SingleCellExperiment` objects, which merge a lot of HDF5 from your `get_single_cell_experiment`, the display and manipulation is going to be slow.
 In addition, an `.rds` saved in this way is not portable: you will not be able
@@ -218,7 +218,7 @@ However this `.hdf5` has the disadvantage of being larger than the corresponding
 
 ```{r}
 # ! IMPORTANT if you save 200K+ cells
-setAutoBlockSize(size = 1e+09) 
+DelayedArray::setAutoBlockSize(size = 1e+09) 
 
 single_cell_counts |> 
   HDF5Array::saveHDF5SummarizedExperiment(
@@ -227,6 +227,35 @@ single_cell_counts |>
     as.sparse = TRUE, 
     verbose = TRUE
   )
+```
+
+### Saving as H5AD (slow saving, fast reading)
+
+Saving as `.h5ad` executes any computation on the `SingleCellExperiment` and writes it to disk as a monolithic `H5AD`.
+The `H5AD` format is the HDF5 disk representation of the AnnData object and is well-supported in Python.
+
+However this `.h5ad` saving strategy has a bottleneck of handling columns with only NA values of a `SingleCellExperiment` metadata. 
+
+```{r echo=FALSE}
+# ! IMPORTANT if you save 200K+ cells
+DelayedArray::setAutoBlockSize(size = 1e+09) 
+
+single_cell_counts |> select(cell_id,
+                             sample_id,
+                             dataset_id,
+                             cell_type_unified_ensemble) |>
+  zellkonverter::writeH5AD("single_cell_counts.h5ad", 
+                           compression = "gzip",
+                           verbose = TRUE)
+```
+
+```{r eval=FALSE}
+# ! IMPORTANT if you save 200K+ cells
+DelayedArray::setAutoBlockSize(size = 1e+09) 
+
+single_cell_counts |> zellkonverter::writeH5AD("single_cell_counts.h5ad", 
+                                               compression = "gzip",
+                                               verbose = TRUE)
 ```
 
 ## Visualise gene transcription
@@ -320,51 +349,60 @@ metadata |>
   ggtitle("HLA-A in nk cells by tissue")
 ```
 
-## Obtain Unharmonised Metadata
+## Integrate Cloud Metadata with Local Metadata
+CellNexus not only enables users to query our metadata but also allows integration with your local metadata. Additionally, users can integrate with your metadata stored in the cloud. 
 
-Various metadata fields are *not* common between datasets, so it does not
-make sense for these to live in the main metadata table. However, we can
-obtain it using the `get_unharmonised_metadata()` function. This function
-returns a data frame with one row per dataset, including the `unharmonised` 
-column which contains unharmnised metadata as a nested data frame.
+To enable this feature, users must include `file_id_cellNexus_single_cell` (e.g my_sce.h5ad) 
+and `atlas_id` (e.g cellxgene/dd-mm-yy) columns in the metadata. 
 
-```{r}
-harmonised <- metadata |> dplyr::filter(tissue == "kidney blood vessel")
-unharmonised <- get_unharmonised_metadata(harmonised)
-unharmonised
+``` {r}
+# Example of creating local metadata 
+local_cache = tempdir()
+meta_path = paste0(local_cache,"/my_metadata.parquet")
+sce_path = paste0(local_cache, "/my_sce.h5ad")
+cellNexus::sample_sce_obj |> metadata() |> purrr::pluck("data") |> arrow::write_parquet(meta_path)
+cellNexus::sample_sce_obj |> zellkonverter::writeH5AD(file = sce_path,
+                                                      compression = "gzip",
+                                                      verbose = TRUE)
 ```
 
-Notice that the columns differ between each dataset's data frame:
-
-```{r}
-dplyr::pull(unharmonised) |> head(2)
+``` {r}
+file_id_from_cloud <- "68aea852584d77f78e5c91204558316d___1.h5ad"
+get_metadata(local_metadata = meta_path) |>
+    filter(file_id_cellNexus_single_cell %in% c("my_sce.h5ad",
+                                                file_id_from_cloud)) |>
+    get_single_cell_experiment()
+    
 ```
+
+
 
 # Cell metadata
 
 Dataset-specific columns (definitions available at cellxgene.cziscience.com)
 
-`cell_count`, `collection_id`, `created_at.x`, `created_at.y`, `dataset_deployments`, `dataset_id`, `file_id`, `filename`, `filetype`, `is_primary_data.y`, `is_valid`, `linked_genesets`, `mean_genes_per_cell`, `name`, `published`, `published_at`, `revised_at`, `revision`, `s3_uri`, `schema_version`, `tombstone`, `updated_at.x`, `updated_at.y`, `user_submitted`, `x_normalization`
+`cell_count`, `collection_id`, `filetype`, `is_primary_data`, `mean_genes_per_cell`, `published_at`, `revised_at`, `schema_version`, `tombstone`, `x_normalization`, `explorer_url`, `dataset_id`, `dataset_version_id`
 
 Sample-specific columns (definitions available at cellxgene.cziscience.com)
 
-`sample_id`, `sample_name`, `age_days`, `assay`, `assay_ontology_term_id`, `development_stage`, `development_stage_ontology_term_id`, `ethnicity`, `ethnicity_ontology_term_id`, `experiment___`, `organism`, `organism_ontology_term_id`, `sample_placeholder`, `sex`, `sex_ontology_term_id`, `tissue`, `tissue_harmonised`, `tissue_ontology_term_id`, `disease`, `disease_ontology_term_id`, `is_primary_data.x`
+`sample_id`, `sample_`, `age_days`, `assay`, `assay_ontology_term_id`, `development_stage`, `development_stage_ontology_term_id`, `self_reported_ethnicity`, `self_reported_ethnicity_ontology_term_id`, `experiment___`, `organism`, `organism_ontology_term_id`, `sample_placeholder`, `sex`, `sex_ontology_term_id`, `tissue`, `tissue_type`, `tissue_ontology_term_id`, `tissue_groups`, `disease`, `disease_ontology_term_id`, `is_primary_data`, `donor_id`, `is_immune`
 
 Cell-specific columns (definitions available at cellxgene.cziscience.com)
 
-`cell_`, `cell_type`, `cell_type_ontology_term_idm`, `cell_type_harmonised`, `confidence_class`, `cell_annotation_azimuth_l2`, `cell_annotation_blueprint_singler` 
+`cell_id`, `cell_type`, `cell_type_ontology_term_id`, `cell_annotation_azimuth_l2`, 
+`cell_annotation_blueprint_singler`, `observation_joinid`, `empty_droplet`
 
 Through harmonisation and curation we introduced custom column, not present in the original CELLxGENE metadata
 
 - `tissue_harmonised`: a coarser tissue name for better filtering
 - `age_days`: the number of days corresponding to the age
-- `cell_type_harmonised`: the consensus call identity (for immune cells) using the original and three novel annotations using Seurat Azimuth and SingleR
-- `confidence_class`: an ordinal class of how confident `cell_type_harmonised` is. 1 is complete consensus, 2 is 3 out of four and so on.             
+- `cell_type_unified_ensemble`: the consensus call identity (for immune cells) using the original and three novel annotations using Seurat Azimuth and SingleR
 - `cell_annotation_azimuth_l2`: Azimuth cell annotation
 - `cell_annotation_blueprint_singler`: SingleR cell annotation using Blueprint reference
 - `cell_annotation_blueprint_monaco`: SingleR cell annotation using Monaco reference
-- `sample_id_db`: Sample subdivision for internal use
-- `file_id_db`: File subdivision for internal use
+- `sample_heuristic`: Sample subdivision for internal use
+- `file_id_cellNexus_single_cell`: File subdivision for internal use
+- `file_id_cellNexus_pseudobulk`: File subdivision for internal use
 - `sample_id`: Sample ID
 - `.sample_name`: How samples were defined
 
