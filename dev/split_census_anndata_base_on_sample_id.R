@@ -7,7 +7,7 @@ library(tidybulk)
 library(tidySingleCellExperiment)
 library(stringr)
 library(arrow)
-anndata_path_based_on_dataset_id_to_read <- "/vast/scratch/users/shen.m/Census_final_run/h5ad/"
+anndata_path_based_on_dataset_id_to_read <- "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/h5ad/"
 anndata_path_based_on_sample_id_to_save <- "/vast/scratch/users/shen.m/Census_final_run/split_h5ad_based_on_sample_id/"
 dir.create(anndata_path_based_on_sample_id_to_save, recursive = TRUE)
 
@@ -69,7 +69,7 @@ subset_samples <- function(dataset_id, observation_joinid, sample_id) {
   sce <- sce |> mutate(sample_id = !!sample_id) |>
     
     # Remove the ".h5ad" extension if there is
-    mutate(sample_id = stringr::str_like(sample_id, ".h5ad$", ""))
+    mutate(sample_id = stringr::str_replace(sample_id, ".h5ad$", ""))
   
   # Identify cells that match the observation_joinid
   cells_to_subset <- which(colData(sce)$observation_joinid %in% unlist(observation_joinid))
@@ -111,9 +111,9 @@ subset_samples <- function(dataset_id, observation_joinid, sample_id) {
 # }
 
 computing_resources = crew.cluster::crew_controller_slurm(
-  slurm_memory_gigabytes_per_cpu = 25, 
+  slurm_memory_gigabytes_per_cpu = 40, 
   slurm_cpus_per_task = 1,
-  workers = 90,
+  workers = 100,
   verbose = TRUE
 )
 tar_option_set(
@@ -123,7 +123,7 @@ tar_option_set(
   retrieval = "worker",
   format = "qs",
   cue = tar_cue(mode = "never"),
-  #error = "continue",
+  error = "continue",
   #debug = "sliced_sce_9c40d298d224bab6",
   controller = computing_resources
 )
@@ -138,10 +138,13 @@ list(
   tar_target(
     grouped_observation_joinid_per_sample,
     # This should be run
-    #read_parquet("/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/census_samples_to_download_groups_MODIFIED.parquet")
-    # This was run due to time limit and a half were downloaded in the past
-    read_parquet("/vast/scratch/users/shen.m/Census_final_run/census_samples_to_download_groups_rest.parquet")|>
-      mutate(sample_2 = str_replace(sample_2, ".h5ad",""))
+    read_parquet("/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/census_samples_to_download_groups_MODIFIED.parquet") |>
+      
+      # Note: dataset_id "99950e99-2758-41d2-b2c9-643edcdf6d82" and "9fcb0b73-c734-40a5-be9c-ace7eea401c9" 
+      #       from Census does not contain any meaningful data (no observation_joinid in colData), thus produced 
+      #       not meaningful samples (0 cells). They need to be deleted.
+      
+      filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9" ))
   ),
   tar_target(
     sliced_sce,
@@ -155,10 +158,10 @@ list(
 )
 
 # tar_make(store = "~/scratch/Census_final_run/split_h5ad_based_on_sample_id_target_store/",
-#          script = "~/git_control/CuratedAtlasQueryR/dev/split_census_anndata_base_on_sample_id.R",
+#          script = "~/git_control/cellNexus/dev/split_census_anndata_base_on_sample_id.R",
 #          reporter = "summary")
 
-# Note: dataset_id "99950e99-2758-41d2-b2c9-643edcdf6d82" and "9fcb0b73-c734-40a5-be9c-ace7eea401c9" 
-#       from Census does not contain any meaningful data (no observation_joinid in colData), thus produced 
-#       not meaningful samples (0 cells). They need to be deleted.
+# tar_errored(store = "~/scratch/Census_final_run/split_h5ad_based_on_sample_id_target_store/")
+# tar_meta(store = "~/scratch/Census_final_run/split_h5ad_based_on_sample_id_target_store/") |>
+#   filter(!is.na(error)) |> pull(error)
 
