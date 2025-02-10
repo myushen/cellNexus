@@ -18,7 +18,7 @@ import_one_sce(
 }
 \arguments{
 \item{sce_obj}{A SingleCellExperiment object, the metadata slot of which
-must contain \code{cell_} and \code{dataset_id}}
+must contain \code{cell_id} and \code{dataset_id}}
 
 \item{atlas_name}{A character string specifying the name of the atlas to import.}
 
@@ -34,7 +34,7 @@ your local system to a directory (not a file) that will be used to store
 \code{atlas_metadata.parquet}}
 
 \item{pseudobulk}{Optional character. Set to TRUE for generating and importing pseudobulk,
-the metadata slot of which must contain \code{file_id}, \code{cell_type_harmonised} and \code{sample_}}
+the metadata slot of which must contain \code{file_id_cellNexus_single_cell}, \code{cell_type_harmonised} and \code{sample_}}
 }
 \value{
 An user-defined atlas metadata.parquet from the SingleCellExperiment object.

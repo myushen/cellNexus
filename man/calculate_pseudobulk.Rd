@@ -14,7 +14,7 @@ calculate_pseudobulk(
 }
 \arguments{
 \item{sce_data}{A SingleCellExperiment object, the metadata slot of which
-must contain \code{cell_} and \code{dataset_id}}
+must contain \code{cell_id} and \code{dataset_id}}
 
 \item{atlas_name}{A character string specifying the name of the atlas to import.}
 
