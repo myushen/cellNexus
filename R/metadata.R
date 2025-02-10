@@ -94,7 +94,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' metadata. The data for which the column `organism_name` included "Homo
 #' sapiens" was collected collected from `cellxgenedp`.
 #'
-#' The columns `dataset_id` and `file_id` link the datasets explorable through
+#' The columns `dataset_id` and `file_id_cellNexus_single_cell` link the datasets explorable through
 #' `cellNexus` and `cellxgenedp`to the CELLxGENE portal.
 #'
 #' Our representation, harmonises the metadata at dataset, sample and cell
@@ -102,7 +102,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #'
 #' Dataset-specific columns (definitions available at cellxgene.cziscience.com):
 #' `cell_count`, `collection_id`, `created_at.x`, `created_at.y`,
-#' `dataset_deployments`, `dataset_id`, `file_id`, `filename`, `filetype`,
+#' `dataset_deployments`, `dataset_id`, `file_id_cellNexus_single_cell`, `filename`, `filetype`,
 #' `is_primary_data.y`, `is_valid`, `linked_genesets`, `mean_genes_per_cell`,
 #' `name`, `published`, `published_at`, `revised_at`, `revision`, `s3_uri`,
 #' `schema_version`, `tombstone`, `updated_at.x`, `updated_at.y`,
