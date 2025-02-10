@@ -17,7 +17,7 @@ down to some cells of interest}
   Arguments passed on to \code{\link[=get_unharmonised_dataset]{get_unharmonised_dataset}}
   \describe{
     \item{\code{dataset_id}}{A character vector, where each entry is a dataset ID
-obtained from the \verb{$file_id} column of the table returned from
+obtained from the \verb{$file_id_cellNexus_single_cell} column of the table returned from
 \code{\link[=get_metadata]{get_metadata()}}}
     \item{\code{cells}}{An optional character vector of cell IDs. If provided, only
 metadata for those cells will be returned.}
@@ -33,7 +33,7 @@ the unharmonised metadata files.}
 \value{
 A tibble with two columns:
 \itemize{
-\item \code{file_id}: the same \code{file_id} as the main metadata table obtained from
+\item \code{file_id_cellNexus_single_cell}: the same \code{file_id_cellNexus_single_cell} as the main metadata table obtained from
 \code{\link[=get_metadata]{get_metadata()}}
 \item \code{unharmonised}: a nested tibble, with one row per cell in the input
 \code{metadata}, containing unharmonised metadata
