@@ -17,7 +17,7 @@ UNHARMONISED_URL <- single_line_str(
 #' utility that allows easy fetching of this data if necessary.
 #'
 #' @param dataset_id A character vector, where each entry is a dataset ID
-#'   obtained from the `$file_id` column of the table returned from
+#'   obtained from the `$file_id_cellNexus_single_cell` column of the table returned from
 #'   [get_metadata()]
 #' @param cells An optional character vector of cell IDs. If provided, only
 #'   metadata for those cells will be returned.
@@ -40,10 +40,10 @@ UNHARMONISED_URL <- single_line_str(
 #' \dontrun{
 #' dataset <- "838ea006-2369-4e2c-b426-b2a744a2b02b"
 #' harmonised_meta <- get_metadata() |> 
-#'     dplyr::filter(file_id == dataset) |> dplyr::collect()
+#'     dplyr::filter(file_id_cellNexus_single_cell == dataset) |> dplyr::collect()
 #' unharmonised_meta <- get_unharmonised_dataset(dataset)
 #' unharmonised_tbl <- dplyr::collect(unharmonised_meta[[dataset]])
-#' dplyr::left_join(harmonised_meta, unharmonised_tbl, by=c("file_id", "cell_"))
+#' dplyr::left_join(harmonised_meta, unharmonised_tbl, by=c("file_id_cellNexus_single_cell", "cell_id"))
 #' }
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
@@ -70,7 +70,7 @@ get_unharmonised_dataset <- function(
         )
     
     read_parquet(conn, local_path) |>
-        filter(.data$cell_ %in% cells)
+        filter(.data$cell_id %in% cells)
 }
 
 #' Returns unharmonised metadata for a metadata query
@@ -79,7 +79,7 @@ get_unharmonised_dataset <- function(
 #'   down to some cells of interest
 #' @inheritDotParams get_unharmonised_dataset
 #' @return A tibble with two columns:
-#'  * `file_id`: the same `file_id` as the main metadata table obtained from
+#'  * `file_id_cellNexus_single_cell`: the same `file_id_cellNexus_single_cell` as the main metadata table obtained from
 #'    [get_metadata()]
 #'  * `unharmonised`: a nested tibble, with one row per cell in the input
 #'    `metadata`, containing unharmonised metadata
@@ -99,11 +99,11 @@ get_unharmonised_metadata <- function(metadata, ...){
     args <- list(...)
     metadata |>
         collect() |>
-        group_by(.data$file_id) |>
+        group_by(.data$file_id_cellNexus_single_cell) |>
         summarise(
             unharmonised = list(
-              dataset_id=.data$file_id[[1]],
-              cells=.data$cell_,
+              dataset_id=.data$file_id_cellNexus_single_cell[[1]],
+              cells=.data$cell_id,
               conn=remote_con(metadata)
             ) |>
                 c(args) |> 

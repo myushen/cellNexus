@@ -31,18 +31,18 @@ assert_single_cell_metadata <- function(sce_obj,
          "Counts for SingleCellExperiment cannot be negative.")
   
   
-  # Check the metadata contains cell_, file_id_cellNexus, sample_ with correct types
-  check_true("cell_" %in% colnames(metadata_tbl))
-  check_true("file_id_cellNexus" %in% names(metadata_tbl)) 
-  pull(metadata_tbl, .data$cell_) |> class() |> check_character()
-  select(metadata_tbl, .data$file_id_cellNexus) |> class() |> check_character()
+  # Check the metadata contains cell_id, file_id_cellNexus_single_cell, sample_ with correct types
+  check_true("cell_id" %in% colnames(metadata_tbl))
+  check_true("file_id_cellNexus_single_cell" %in% names(metadata_tbl)) 
+  pull(metadata_tbl, .data$cell_id) |> class() |> check_character()
+  select(metadata_tbl, .data$file_id_cellNexus_single_cell) |> class() |> check_character()
   
-  # Check cell_ values in metadata_tbl is unique
-  (anyDuplicated(metadata_tbl$cell_) == 0 ) |> assert("Cell names (cell_) in the metadata must be unique.")
+  # Check cell_id values in metadata_tbl is unique
+  (anyDuplicated(metadata_tbl$cell_id) == 0 ) |> assert("Cell names (cell_id) in the metadata must be unique.")
   
-  # Check cell_ values are not duplicated when join with parquet
-  cells <- select(get_metadata(cache_directory = cache_dir), .data$cell_) |> as_tibble()
-  if ((any(metadata_tbl$cell_ %in% cells$cell_))) 
+  # Check cell_id values are not duplicated when join with parquet
+  cells <- select(get_metadata(cache_directory = cache_dir), .data$cell_id) |> as_tibble()
+  if ((any(metadata_tbl$cell_id %in% cells$cell_id))) 
     cli_alert_warning(
       single_line_str(
         "Import API says:
@@ -68,16 +68,16 @@ assert_pseudobulk_metadata <- function(sce_obj,
       all(pseudobulk_sample %in% (colData(sce_obj) |> colnames()) ),
       "Sample_ and cell_type_harmonised columns must be in the SingleCellExperiment colData")
     
-    assert(c(pseudobulk_sample, "file_id") %in% (names(metadata_tbl)) |> all() ,
+    assert(c(pseudobulk_sample, "file_id_cellNexus_single_cell") %in% (names(metadata_tbl)) |> all() ,
            "SingleCellExperiment metadata must at least contain sample_, cell_type_harmonised,
-           file_id for pseudobulk generation"
+           file_id_cellNexus_single_cell for pseudobulk generation"
     ) }
 }
 
 #' Import and process metadata and counts for a SingleCellExperiment object
 #'
 #' @param sce_obj A SingleCellExperiment object, the metadata slot of which
-#' must contain `cell_` and `dataset_id`
+#' must contain `cell_id` and `dataset_id`
 #' @param atlas_name A character string specifying the name of the atlas to import.
 #' @param import_date A character vector that specifies the date of the import.
 #' The date should be in the international format 'YYYY-MM-DD' for clarity and consistency.
@@ -88,7 +88,7 @@ assert_pseudobulk_metadata <- function(sce_obj,
 #'   your local system to a directory (not a file) that will be used to store
 #'   `atlas_metadata.parquet`
 #' @param pseudobulk Optional character. Set to TRUE for generating and importing pseudobulk,
-#' the metadata slot of which must contain `file_id`, `cell_type_harmonised` and `sample_`
+#' the metadata slot of which must contain `file_id_cellNexus_single_cell`, `cell_type_harmonised` and `sample_`
 #' @export
 #' @return 
 #' An user-defined atlas metadata.parquet from the SingleCellExperiment object. 
@@ -134,10 +134,10 @@ import_one_sce <- function(
   # Convert to tibble if not provided
   metadata_tbl <- metadata_tbl |> as_tibble()
   
-  # Create file_id_cellNexus from dataset_id
-  file_id_cellNexus <- metadata_tbl$dataset_id |> unique() |> openssl::md5() |> as.character()
+  # Create file_id_cellNexus_single_cell from dataset_id
+  file_id_cellNexus_single_cell <- metadata_tbl$dataset_id |> unique() |> openssl::md5() |> as.character()
   metadata_tbl <-
-    metadata_tbl |> mutate(file_id_cellNexus = paste0(file_id_cellNexus, extension))
+    metadata_tbl |> mutate(file_id_cellNexus_single_cell = paste0(file_id_cellNexus_single_cell, extension))
   metadata(sce_obj)$data_to_import <- metadata_tbl
   
   # Remove existing reducedDim slot to enable get_SCE API functionality 
@@ -157,7 +157,7 @@ import_one_sce <- function(
   if (!dir.exists(cpm_dir)) dir.create(cpm_dir, recursive = TRUE)
   
   # Check whether count H5 directory has been generated
-  if (any(file_id_cellNexus %in% dir(original_dir))) {
+  if (any(file_id_cellNexus_single_cell %in% dir(original_dir))) {
     cli_alert_warning(
       single_line_str(
         "Import API says: The file you are trying to import is already present in the cache directory. "
@@ -166,11 +166,11 @@ import_one_sce <- function(
   }
   
   # Create counts file name
-  counts_file_path <- file.path(original_dir, basename(file_id_cellNexus)) |> paste0(extension)
-  cpm_file_path <- file.path(cpm_dir, basename(file_id_cellNexus)) |> paste0(extension)
+  counts_file_path <- file.path(original_dir, basename(file_id_cellNexus_single_cell)) |> paste0(extension)
+  cpm_file_path <- file.path(cpm_dir, basename(file_id_cellNexus_single_cell)) |> paste0(extension)
 
   # Generate cpm from counts
-  cli_alert_info("Generating cpm from {file_id_cellNexus}. ")
+  cli_alert_info("Generating cpm from {file_id_cellNexus_single_cell}. ")
   get_counts_per_million(sce_obj,
                          counts_file_path, 
                          cpm_file_path)
@@ -190,7 +190,7 @@ import_one_sce <- function(
 
 #' Generate pseudobulk counts and quantile_normalised counts
 #' @param sce_data A SingleCellExperiment object, the metadata slot of which
-#' must contain `cell_` and `dataset_id`
+#' must contain `cell_id` and `dataset_id`
 #' @param atlas_name A character string specifying the name of the atlas to import.
 #' @param import_date A character vector that specifies the date of the import.
 #' The date should be in the international format 'YYYY-MM-DD' for clarity and consistency.
@@ -216,7 +216,7 @@ calculate_pseudobulk <- function(sce_data,
   pseudobulk_directory = file.path(cache_dir, atlas_name, import_date, cell_aggregation)
   
   metadata_tbl <- metadata(sce_data)$data
-  file_id <- metadata_tbl$file_id |> unique() |> as.character()
+  file_id_cellNexus_single_cell <- metadata_tbl$file_id_cellNexus_single_cell |> unique() |> as.character()
   
   original_dir <- file.path(pseudobulk_directory, assay_map["counts"])
   quantile_normalised_dir <- file.path(pseudobulk_directory, assay_map["quantile_normalised"])
@@ -224,7 +224,7 @@ calculate_pseudobulk <- function(sce_data,
   if (!dir.exists(original_dir)) dir.create(original_dir, recursive = TRUE)
   if (!dir.exists(quantile_normalised_dir)) dir.create(quantile_normalised_dir, recursive = TRUE)
   
-  cli_alert_info("Generating pseudobulk from {file_id}. ")
+  cli_alert_info("Generating pseudobulk from {file_id_cellNexus_single_cell}. ")
   
   pseudobulk <- scuttle::aggregateAcrossCells(
     sce_data, 
@@ -253,8 +253,8 @@ calculate_pseudobulk <- function(sce_data,
   assay(normalised_pseudobulk, assay_name) <- NULL
   names(assays(normalised_pseudobulk)) <- "quantile_normalised"
 
-  counts_file_path <- file.path(original_dir, basename(file_id)) |> paste0(extension)
-  qnorm_file_path <- file.path(quantile_normalised_dir, basename(file_id)) |> paste0(extension)
+  counts_file_path <- file.path(original_dir, basename(file_id_cellNexus_single_cell)) |> paste0(extension)
+  qnorm_file_path <- file.path(quantile_normalised_dir, basename(file_id_cellNexus_single_cell)) |> paste0(extension)
   
   # Save pseudobulk counts
   writeH5AD(pseudobulk, counts_file_path, compression = "gzip")
