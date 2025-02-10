@@ -65,7 +65,7 @@ Harmonised data is stored in the ARDC Nectar Research Cloud, and most
 `cellNexus` functions interact with Nectar via web requests, so a 
 network connection is required for most functionality.
 
-```{r, echo=TRUE, eval=FALSE, out.height = c("139px"), out.width = "120x" }
+```{r, echo=FALSE, eval=FALSE, out.height = c("139px"), out.width = "120x" }
 find_figure("logo.png") |> knitr::include_graphics()
 ```
 
@@ -244,22 +244,9 @@ The `H5AD` format is the HDF5 disk representation of the AnnData object and is w
 
 However this `.h5ad` saving strategy has a bottleneck of handling columns with only NA values of a `SingleCellExperiment` metadata. 
 
-```{r echo=FALSE}
-# ! IMPORTANT if you save 200K+ cells
-DelayedArray::setAutoBlockSize(size = 1e+09) 
-
-single_cell_counts |> select(cell_id,
-                             sample_id,
-                             dataset_id,
-                             cell_type_unified_ensemble) |>
-  zellkonverter::writeH5AD("single_cell_counts.h5ad", 
-                           compression = "gzip",
-                           verbose = TRUE)
-```
-
 ```{r eval=FALSE}
 # ! IMPORTANT if you save 200K+ cells
-DelayedArray::setAutoBlockSize(size = 1e+09) 
+HDF5Array::setAutoBlockSize(size = 1e+09) 
 
 single_cell_counts |> zellkonverter::writeH5AD("single_cell_counts.h5ad", 
                                                compression = "gzip",
@@ -276,7 +263,7 @@ We can gather all CD14 monocytes cells and plot the distribution of HLA-A across
 counts <- metadata |>
   # Filter and subset
   dplyr::filter(cell_type_unified_ensemble == "cd14 mono") |>
-  dplyr::filter(file_id_db != "c5a05f23f9784a3be3bfa651198a48eb") |> 
+  dplyr::filter(file_id_cellNexus_single_cell != "c5a05f23f9784a3be3bfa651198a48eb") |> 
   
   # Get counts per million for HCA-A gene
   get_single_cell_experiment(assays = "cpm", features = "HLA-A") |> 
@@ -344,16 +331,15 @@ and `atlas_id` (e.g cellxgene/dd-mm-yy) columns in the metadata.
 local_cache = tempdir()
 meta_path = paste0(local_cache,"/my_metadata.parquet")
 sce_path = paste0(local_cache, "/my_sce.h5ad")
-cellNexus::sample_sce_obj |> metadata() |> purrr::pluck("data") |> arrow::write_parquet(meta_path)
+cellNexus::sample_sce_obj |> S4Vectors::metadata() |> purrr::pluck("data") |> arrow::write_parquet(meta_path)
 cellNexus::sample_sce_obj |> zellkonverter::writeH5AD(file = sce_path,
-                                                      compression = "gzip",
-                                                      verbose = TRUE)
+                                                      compression = "gzip")
 ```
 
 ``` {r}
 file_id_from_cloud <- "68aea852584d77f78e5c91204558316d___1.h5ad"
 get_metadata(local_metadata = meta_path) |>
-    filter(file_id_cellNexus_single_cell %in% c("my_sce.h5ad",
+    dplyr::filter(file_id_cellNexus_single_cell %in% c("my_sce.h5ad",
                                                 file_id_from_cloud)) |>
     get_single_cell_experiment()
     
@@ -392,9 +378,11 @@ Through harmonisation and curation we introduced custom column, not present in t
 
 # RNA abundance
 
-The `raw` assay includes RNA abundance in the positive real scale (not transformed with non-linear functions, e.g. log sqrt). Originally CELLxGENE include a mix of scales and transformations specified in the `x_normalization` column.
+The `counts` assay includes RNA abundance in the positive real scale (not transformed with non-linear functions, e.g. log sqrt). Originally CELLxGENE include a mix of scales and transformations specified in the `x_normalization` column.
 
 The `cpm` assay includes counts per million.
+
+The `rank` assay includes cells rank based on their total transcript count.
 
 # Session Info
 ```{r}
