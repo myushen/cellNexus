@@ -80,8 +80,12 @@ job::job({
       ) |> 
       
       # seudobulk file id
-      mutate(file_id_cellNexus_pseudobulk = file_id_cellNexus_single_cell
-      )
+      mutate(file_id_cellNexus_pseudobulk = file_id_cellNexus_single_cell)
+      
+      # # dealing with NA cell type
+      # mutate(cell_type_unified_ensemble = ifelse(is.na(cell_type_unified_ensemble), "Unknown", cell_type_unified_ensemble))
+      # 
+    
   }
   
   
@@ -89,7 +93,7 @@ job::job({
   
   get_file_ids(
     "/vast/scratch/users/shen.m/Census_final_run/cell_annotation.parquet",
-    "/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown.parquet"
+    "/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown_2.parquet"
   )  |> 
     write_parquet("/vast/scratch/users/shen.m/Census_final_run/file_id_cellNexus_single_cell.parquet")
   
@@ -111,7 +115,7 @@ job::job({
   dbExecute(con, "
   CREATE VIEW cell_consensus AS
   SELECT *
-  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown.parquet')
+  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown_2.parquet')
 ")
   
   dbExecute(con, "
@@ -217,8 +221,7 @@ tar_script({
             cpus_per_task = c(2, 2, 5, 10, 20), 
             time_minutes = c(30, 30, 30, 60*4, 60*24),
             verbose = T
-          ),
-          slurm_time_minutes = 240
+          )
         ),
         
         crew_controller_slurm(
@@ -229,8 +232,7 @@ tar_script({
           tasks_max = 50,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30,
-          slurm_time_minutes = 240
+          seconds_idle = 30
         ),
         
         crew_controller_slurm(
@@ -241,8 +243,7 @@ tar_script({
           tasks_max = 10,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30,
-          slurm_time_minutes = 240
+          seconds_idle = 30
         ),
         crew_controller_slurm(
           name = "tier_3",
@@ -252,8 +253,7 @@ tar_script({
           tasks_max = 10,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30,
-          slurm_time_minutes = 240
+          seconds_idle = 30
         ),
         crew_controller_slurm(
           name = "tier_4",
@@ -266,8 +266,7 @@ tar_script({
             cpus_per_task = c(2), 
             time_minutes = c(60*24),
             verbose = T
-          ),
-          slurm_time_minutes = 240
+          )
         ),
         crew_controller_slurm(
           name = "tier_5",
@@ -277,8 +276,7 @@ tar_script({
           tasks_max = 10,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30,
-          slurm_time_minutes = 240
+          seconds_idle = 30
         )
       )
     ), 
@@ -615,7 +613,10 @@ tar_script({
       
       # Step 5: Combine all 'sce' objects within each group into a single 'sce' object
       group_by(file_id_cellNexus_single_cell) |> 
-      summarise( sce =  list(do.call(cbind, args = sce) ) ) 
+      summarise( sce =  list(do.call(cbind, args = sce) ),
+                 
+                 # A steo to check missing cells 
+                 cells = list(do.call(rbind, args = cells))) 
     
     # mutate(sce = map(sce,
     #                  ~ { .x = 
@@ -855,15 +856,15 @@ tar_script({
     ),
     
     # This target was run for retrieving missing cells analysis only
-    tar_target(
-      missing_cells_tbl,
-      cbind_sce_by_dataset_id_get_missing_cells(target_name_grouped_by_dataset_id, cell_metadata, my_store = my_store),
-      pattern = map(target_name_grouped_by_dataset_id),
-      packages = c("tidySingleCellExperiment", "SingleCellExperiment", "tidyverse", "glue", "digest", "HPCell", "digest", "scater", "arrow", "dplyr", "duckdb",  "BiocParallel", "parallelly"),
-      resources = tar_resources(
-        crew = tar_resources_crew(controller = "tier_4")
-      )
-    ),
+    # tar_target(
+    #   missing_cells_tbl,
+    #   cbind_sce_by_dataset_id_get_missing_cells(target_name_grouped_by_dataset_id, cell_metadata, my_store = my_store),
+    #   pattern = map(target_name_grouped_by_dataset_id),
+    #   packages = c("tidySingleCellExperiment", "SingleCellExperiment", "tidyverse", "glue", "digest", "HPCell", "digest", "scater", "arrow", "dplyr", "duckdb",  "BiocParallel", "parallelly"),
+    #   resources = tar_resources(
+    #     crew = tar_resources_crew(controller = "tier_4")
+    #   )
+    # ),
     
     
     tar_target(
