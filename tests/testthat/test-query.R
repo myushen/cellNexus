@@ -117,7 +117,7 @@ test_that("get_seurat() returns the appropriate data in Seurat format", {
 test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
     atlas_id = "cellxgene/19-12-2024"
     id = "a65bcc2d-4243-44c1-a262-ab7dcddfcf86"
-    file_id <- "7ddd6775d704d6826539abaee8d22f65___1.h5ad"
+    file_id_cellNexus_single_cell <- "7ddd6775d704d6826539abaee8d22f65___1.h5ad"
     
     # Force the file to be cached
     get_metadata() |>
@@ -126,7 +126,7 @@ test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
     
     # Load the SCE from cache directly
     assay_1 = cellNexus:::get_default_cache_dir() |>
-        file.path(atlas_id, "counts", file_id ) |>
+        file.path(atlas_id, "counts", file_id_cellNexus_single_cell ) |>
         zellkonverter::readH5AD(reader = "R", use_hdf5 = TRUE) |>
         assay("counts") |>
         as.matrix()
@@ -136,7 +136,7 @@ test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
         assay_1 |>
         colnames() |>
         tibble::tibble(
-            file_id_cellNexus_single_cell = file_id,
+            file_id_cellNexus_single_cell = file_id_cellNexus_single_cell,
             dataset_id = id,
             cell_id = _,
             atlas_id = atlas_id
@@ -276,7 +276,7 @@ test_that("get_pseudobulk() syncs appropriate files", {
 #     unharmonised <- get_unharmonised_metadata(harmonised)
 #     
 #     unharmonised |> is.data.frame() |> expect_true()
-#     expect_setequal(colnames(unharmonised), c("file_id", "unharmonised"))
+#     expect_setequal(colnames(unharmonised), c("file_id_cellNexus_single_cell", "unharmonised"))
 #     
 #     # The number of cells in both harmonised and unharmonised should be the same
 #     expect_equal(
@@ -286,7 +286,7 @@ test_that("get_pseudobulk() syncs appropriate files", {
 #     
 #     # The number of datasets in both harmonised and unharmonised should be the same
 #     expect_equal(
-#         harmonised |> dplyr::group_by(file_id) |> dplyr::n_groups(),
+#         harmonised |> dplyr::group_by(file_id_cellNexus_single_cell) |> dplyr::n_groups(),
 #         nrow(unharmonised)
 #     )
 # })
@@ -307,7 +307,7 @@ test_that("get_pseudobulk() syncs appropriate files", {
 #                     dplyr::pull()) |>
 #     expect(failure_message = "The correct metadata was not created")
 #   
-#   sme <- get_metadata(cache_directory = temp) |> filter(file_id == "id1") |>
+#   sme <- get_metadata(cache_directory = temp) |> filter(file_id_cellNexus_single_cell == "id1") |>
 #     get_pseudobulk(cache_directory = file.path(temp, "pseudobulk"))
 #   sme |>
 #     row.names() |>

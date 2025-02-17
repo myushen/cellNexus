@@ -58,7 +58,7 @@ The metadata was collected from the Bioconductor package \code{cellxgenedp}.
 metadata. The data for which the column \code{organism_name} included "Homo
 sapiens" was collected collected from \code{cellxgenedp}.
 
-The columns \code{dataset_id} and \code{file_id} link the datasets explorable through
+The columns \code{dataset_id} and \code{file_id_cellNexus_single_cell} link the datasets explorable through
 \code{cellNexus} and \code{cellxgenedp}to the CELLxGENE portal.
 
 Our representation, harmonises the metadata at dataset, sample and cell
@@ -66,7 +66,7 @@ levels, in a unique coherent database table.
 
 Dataset-specific columns (definitions available at cellxgene.cziscience.com):
 \code{cell_count}, \code{collection_id}, \code{created_at.x}, \code{created_at.y},
-\code{dataset_deployments}, \code{dataset_id}, \code{file_id}, \code{filename}, \code{filetype},
+\code{dataset_deployments}, \code{dataset_id}, \code{file_id_cellNexus_single_cell}, \code{filename}, \code{filetype},
 \code{is_primary_data.y}, \code{is_valid}, \code{linked_genesets}, \code{mean_genes_per_cell},
 \code{name}, \code{published}, \code{published_at}, \code{revised_at}, \code{revision}, \code{s3_uri},
 \code{schema_version}, \code{tombstone}, \code{updated_at.x}, \code{updated_at.y},

@@ -596,12 +596,12 @@ sync_assay_files <- function(
       !file.exists(.data$output_file)
     )
   
-  report_file_sizes(files$full_url)
+  if (nrow(files) > 0) report_file_sizes(files$full_url)
   
   pmap_chr(files, function(full_url, output_dir, output_file) {
     sync_remote_file(full_url, output_file)
     output_file
-  }, .progress = list(name = "Downloading files"))
+    }, .progress = list(name = "Downloading files"))
 }
 
 #' Checks whether genes in a list of SummarizedExperiment objects overlap

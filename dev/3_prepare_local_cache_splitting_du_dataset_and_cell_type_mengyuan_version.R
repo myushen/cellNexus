@@ -81,11 +81,6 @@ job::job({
       
       # seudobulk file id
       mutate(file_id_cellNexus_pseudobulk = file_id_cellNexus_single_cell
-             
-             # glue::glue("{dataset_id}___{sample_chunk}___{cell_chunk}") |> 
-             # sapply(digest::digest) |> 
-             # paste0(".h5ad") 
-             
       )
   }
   
@@ -134,7 +129,7 @@ job::job({
   dbExecute(con, "
   CREATE VIEW file_id_cellNexus_single_cell AS
   SELECT dataset_id, sample_chunk, cell_chunk, cell_type_unified_ensemble, sample_id, file_id_cellNexus_single_cell, file_id_cellNexus_pseudobulk
-  FROM read_parquet('//vast/scratch/users/shen.m/Census_final_run/file_id_cellNexus_single_cell.parquet')
+  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/file_id_cellNexus_single_cell.parquet')
 ")
   
   # Perform the left join and save to Parquet
@@ -166,7 +161,7 @@ job::job({
         AND file_id_cellNexus_single_cell.dataset_id = cell_consensus.dataset_id
         AND file_id_cellNexus_single_cell.cell_type_unified_ensemble = cell_consensus.cell_type_unified_ensemble
       
-  ) TO '/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_6_mengyuan.parquet'
+  ) TO '/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_9_mengyuan.parquet'
   (FORMAT PARQUET, COMPRESSION 'gzip');
 "
   
@@ -181,17 +176,15 @@ job::job({
   print("Done.")
 })
 
-
 cell_metadata = 
   tbl(
     dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
-    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_6_mengyuan.parquet')")
-  ) 
-
-
+    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_9_mengyuan.parquet')")
+  )
+  
 library(targets)
 library(tidyverse)
-store_file_cellNexus = "/vast/scratch/users/shen.m/targets_prepare_database_split_datasets_chunked_1_0_8"
+store_file_cellNexus = "/vast/scratch/users/shen.m/targets_prepare_database_split_datasets_chunked_1_0_10_single_cell"
 
 tar_script({
   library(dplyr)
@@ -224,7 +217,8 @@ tar_script({
             cpus_per_task = c(2, 2, 5, 10, 20), 
             time_minutes = c(30, 30, 30, 60*4, 60*24),
             verbose = T
-          )
+          ),
+          slurm_time_minutes = 240
         ),
         
         crew_controller_slurm(
@@ -235,7 +229,8 @@ tar_script({
           tasks_max = 50,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30
+          seconds_idle = 30,
+          slurm_time_minutes = 240
         ),
         
         crew_controller_slurm(
@@ -246,7 +241,8 @@ tar_script({
           tasks_max = 10,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30
+          seconds_idle = 30,
+          slurm_time_minutes = 240
         ),
         crew_controller_slurm(
           name = "tier_3",
@@ -256,7 +252,8 @@ tar_script({
           tasks_max = 10,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30
+          seconds_idle = 30,
+          slurm_time_minutes = 240
         ),
         crew_controller_slurm(
           name = "tier_4",
@@ -269,7 +266,8 @@ tar_script({
             cpus_per_task = c(2), 
             time_minutes = c(60*24),
             verbose = T
-          )
+          ),
+          slurm_time_minutes = 240
         ),
         crew_controller_slurm(
           name = "tier_5",
@@ -279,7 +277,8 @@ tar_script({
           tasks_max = 10,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30
+          seconds_idle = 30,
+          slurm_time_minutes = 240
         )
       )
     ), 
@@ -301,6 +300,7 @@ tar_script({
     
     .x = dataset_id_sce |> pull(sce) |> _[[1]]
     .y = dataset_id_sce |> pull(file_id_cellNexus_single_cell) |> _[[1]] |> str_remove("\\.h5ad")
+    #.y = dataset_id_sce |> pull(file_id_cellNexus_pseudobulk) |> _[[1]] |> str_remove("\\.h5ad")
     
     .x |> assays() |> names() = "counts"
     
@@ -487,7 +487,8 @@ tar_script({
     # 
     
     .x = dataset_id_sce |> pull(sce) |> _[[1]]
-    .y = dataset_id_sce |> pull(file_id_cellNexus_single_cell) |> _[[1]] |> str_remove("\\.h5ad")
+     .y = dataset_id_sce |> pull(file_id_cellNexus_single_cell) |> _[[1]] |> str_remove("\\.h5ad")
+    #.y = dataset_id_sce |> pull(file_id_cellNexus_pseudobulk) |> _[[1]] |> str_remove("\\.h5ad")
     
     # Check if the 'sce' has only one cell (column)
     if(ncol(assay(.x)) == 1) {
@@ -696,7 +697,7 @@ tar_script({
     
   }
   
-    cbind_sce_by_dataset_id_get_missing_genes = function(target_name_grouped_by_dataset_id, file_id_db_file, my_store){
+    cbind_sce_by_dataset_id_get_missing_cells = function(target_name_grouped_by_dataset_id, file_id_db_file, my_store){
     
     my_dataset_id = unique(target_name_grouped_by_dataset_id$dataset_id) 
     
@@ -794,13 +795,13 @@ tar_script({
   list(
     
     # The input DO NOT DELETE
-    tar_target(my_store, "/vast/scratch/users/shen.m/Census_final_run/target_store", deployment = "main"),
-    tar_target(cache_directory, "/vast/scratch/users/shen.m/cellNexus/cellxgene/19-12-2024", deployment = "main"),
+    tar_target(my_store, "/vast/scratch/users/shen.m/Census_final_run/target_store_for_pseudobulk", deployment = "main"),
+    tar_target(cache_directory, "/vast/scratch/users/shen.m/cellNexus/cellxgene/06-02-2025", deployment = "main"),
     # This is the store for retrieving missing cells between cellnexus metadata and sce. A different store as it was done separately
     #tar_target(cache_directory, "/vast/scratch/users/shen.m/debug2/cellxgene/19-12-2024", deployment = "main"),
     tar_target(
       cell_metadata,
-      "/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_6_mengyuan.parquet", 
+      "/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_9_mengyuan.parquet", 
       packages = c( "arrow","dplyr","duckdb")
       
     ),
@@ -856,7 +857,7 @@ tar_script({
     # This target was run for retrieving missing cells analysis only
     tar_target(
       missing_cells_tbl,
-      cbind_sce_by_dataset_id_get_missing_genes(target_name_grouped_by_dataset_id, cell_metadata, my_store = my_store),
+      cbind_sce_by_dataset_id_get_missing_cells(target_name_grouped_by_dataset_id, cell_metadata, my_store = my_store),
       pattern = map(target_name_grouped_by_dataset_id),
       packages = c("tidySingleCellExperiment", "SingleCellExperiment", "tidyverse", "glue", "digest", "HPCell", "digest", "scater", "arrow", "dplyr", "duckdb",  "BiocParallel", "parallelly"),
       resources = tar_resources(
@@ -894,19 +895,7 @@ tar_script({
         crew = tar_resources_crew(controller = "tier_4")
       )
     )
-    
-    # tar_target(
-    #   get_pseudobulk,
-    #   save_anndata_cpm(dataset_id_sce, paste0(cache_directory, "/single_cell/cpm")),
-    #   pattern = map(dataset_id_sce),
-    #   packages = c("tidySingleCellExperiment", "SingleCellExperiment", "tidyverse", "glue", "digest", "HPCell", "digest", "scater", "arrow", "dplyr", "duckdb", "BiocParallel", "parallelly"),
-    #   resources = tar_resources(
-    #     crew = tar_resources_crew(controller = "tier_4")
-    #   )
-    # )
   )
-  
-  
   
 }, script = paste0(store_file_cellNexus, "_target_script.R"), ask = FALSE)
 
@@ -920,30 +909,6 @@ job::job({
   
 })
 
-# Create a missing cells parquet
-write_parquet_to_parquet = function(data_tbl, output_parquet, compression = "gzip") {
-  
-  # Establish connection to DuckDB in-memory database
-  con_write <- dbConnect(duckdb::duckdb(), dbdir = ":memory:")
-  
-  # Register `data_tbl` within the DuckDB connection (this doesn't load it into memory)
-  duckdb::duckdb_register(con_write, "data_tbl_view", data_tbl)
-  
-  # Use DuckDB's COPY command to write `data_tbl` directly to Parquet with compression
-  copy_query <- paste0("
-  COPY data_tbl_view TO '", output_parquet, "' (FORMAT PARQUET, COMPRESSION '", compression, "');
-  ")
-  
-  # Execute the COPY command
-  dbExecute(con_write, copy_query)
-  
-  # Unregister the temporary view
-  duckdb::duckdb_unregister(con_write, "data_tbl_view")
-  
-  # Disconnect from the database
-  dbDisconnect(con_write, shutdown = TRUE)
-}
-
 missing_cells_tbl = tar_read(missing_cells_tbl, store = store_file_cellNexus)
 missing_cells_tbl <- map(missing_cells_tbl$missing_cells, ~ {.x}) |> bind_rows()
 missing_cells <- missing_cells_tbl |> pull(cell_id)
@@ -953,13 +918,14 @@ cell_metadata |> filter(!cell_id %in% missing_cells) |>
   # (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
   filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9")) |>
   
-  write_parquet_to_parquet("/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_7_mengyuan.parquet")
+  # This method of save parquet to parquet is faster 
+  cellNexus:::duckdb_write_parquet(path = "/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_8_mengyuan.parquet")
 
 
 # Copy files from scratch to vast project
 files_to_copy <- c("annotation_tbl_light.parquet", "cell_annotation_new_substitute_cell_type_na_to_unknown.parquet", "cell_annotation_new.parquet",
                    "cell_annotation.parquet", "cell_metadata_cell_type_consensus_v1_0_6_mengyuan.parquet",
-                   "cell_metadata_cell_type_consensus_v1_0_7_mengyuan.parquet",
+                   "cell_metadata_cell_type_consensus_v1_0_8_mengyuan.parquet",
                    "cell_metadata.parquet",
                    "file_id_cellNexus_single_cell.parquet")
 
