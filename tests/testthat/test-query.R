@@ -250,6 +250,19 @@ test_that("get_single_cell_experiment() expect to get local counts only", {
   expect_equal(n_cell_in_sce, 2)
 })
 
+test_that("get_pseudobulk() syncs appropriate files", {
+  temp <- tempfile()
+  id <- "4329386e014727c59bcc66ed974e654c___1.h5ad"
+  meta <- get_metadata(cache_directory = temp) |> filter(file_id_cellNexus_pseudobulk == id)
+  
+  # The remote dataset should have many genes
+  sme <- get_pseudobulk(meta, cache_directory = temp)
+  sme |>
+    row.names() |>
+    length() |>
+    expect_gt(1)
+})
+
 # unharmonised_data is not implemented yet
 # test_that("get_unharmonised_dataset works with one ID", {
 #     dataset_id = "838ea006-2369-4e2c-b426-b2a744a2b02b"
@@ -302,42 +315,6 @@ test_that("get_single_cell_experiment() expect to get local counts only", {
 #     expect_gt(1)
 # })
 # 
-# test_that("get_pseudobulk() syncs appropriate files", {
-#   temp <- tempfile()
-#   id <- "0273924c-0387-4f44-98c5-2292dbaab11e"
-#   meta <- get_metadata(cache_directory = temp) |> filter(file_id == id)
-#   
-#   # The remote dataset should have many genes
-#   sme <- get_pseudobulk(meta, cache_directory = temp)
-#   sme |>
-#     row.names() |>
-#     length() |>
-#     expect_gt(1)
-# })
-# 
-# test_that("get_pseudobulk() syncs appropriate fixed file", {
-#   temp <- tempfile()
-#   ids <- c(
-#     "b50b15f1-bf19-4775-ab89-02512ec941a6",
-#     "bffedc04-5ba1-46d4-885c-989a294bedd4",
-#     "cc3ff54f-7587-49ea-b197-1515b6d98c4c",
-#     "0af763e1-0e2f-4de6-9563-5abb0ad2b01e",
-#     "51f114ae-232a-4550-a910-934e175db814",
-#     "327927c7-c365-423c-9ebc-07acb09a0c1a",
-#     "3ae36927-c188-4511-88cc-572ee1edf906",
-#     "6ed2cdc2-dda8-4908-ad6c-cead9afee85e",
-#     "56e0359f-ee8d-4ba5-a51d-159a183643e5",
-#     "5c64f247-5b7c-4842-b290-65c722a65952"
-#   )
-#   meta <- get_metadata(cache_directory = temp) |> dplyr::filter(file_id %in% ids)
-#   
-#   # The remote dataset should have many genes
-#   sme <- get_pseudobulk(meta, cache_directory = temp)
-#   sme |>
-#     row.names() |>
-#     length() |>
-#     expect_gt(1)
-# })
 # 
 # test_that("get_single_cell_experiment() syncs prostate atlas", {
 #   temp <- tempfile()

@@ -10,7 +10,7 @@
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 url_file_size <- function(urls){
     map_dbl(urls, function(url){
-        as.integer(
+        as.numeric(
             HEAD(url)$headers$`content-length` 
         ) / 10^9
     })

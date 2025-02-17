@@ -22,13 +22,6 @@ COUNTS_URL <- single_line_str(
     AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata"
 )
 
-#' Base URL pointing to the pseudobulk counts at the current version
-#' @noRd
-pseudobulk_url <- single_line_str(
-  "https://object-store.rc.nectar.org.au/v1/
-  AUTH_06d6e008e3e642da99d806ba3ea629c5/pseudobulk-0.1.1"
-)
-
 #' @inherit get_single_cell_experiment
 #' @inheritDotParams get_single_cell_experiment
 #' @importFrom cli cli_alert_warning
@@ -509,6 +502,8 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     
     new_coldata <- df |>
       select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
+      # Remove metacell annotations in pseudobulk
+      select(-contains("metacell")) |> 
       distinct() |>
       mutate(
         sample_identifier = glue("{sample_id}___{cell_type_unified_ensemble}"),
@@ -532,23 +527,6 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
    
   }
 }
-
-#' A temporary solution for get_pseudobulk duplicated rownames due to column
-#' `disease` and `is_primary_data` columns are not included in `sample_id` in the metadata.
-#' @noRd
-# file_ids that are corrupted
-file_ids <- c(
-  "b50b15f1-bf19-4775-ab89-02512ec941a6",
-  "bffedc04-5ba1-46d4-885c-989a294bedd4",
-  "cc3ff54f-7587-49ea-b197-1515b6d98c4c",
-  "0af763e1-0e2f-4de6-9563-5abb0ad2b01e",
-  "51f114ae-232a-4550-a910-934e175db814",
-  "327927c7-c365-423c-9ebc-07acb09a0c1a",
-  "3ae36927-c188-4511-88cc-572ee1edf906",
-  "6ed2cdc2-dda8-4908-ad6c-cead9afee85e",
-  "56e0359f-ee8d-4ba5-a51d-159a183643e5",
-  "5c64f247-5b7c-4842-b290-65c722a65952"
-)
 
 #' Synchronises one or more remote assays with a local copy
 #' @param url A character vector of length one. The base HTTP URL from which to
@@ -605,6 +583,7 @@ sync_assay_files <- function(
       output_file = file.path(
         cache_dir,
         .data$atlas_name,
+        .data$cell_aggregation,
         .data$subdir,
         .data$sample_id
       )
