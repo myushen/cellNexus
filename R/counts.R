@@ -22,13 +22,6 @@ COUNTS_URL <- single_line_str(
     AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata"
 )
 
-#' Base URL pointing to the pseudobulk counts at the current version
-#' @noRd
-pseudobulk_url <- single_line_str(
-  "https://object-store.rc.nectar.org.au/v1/
-  AUTH_06d6e008e3e642da99d806ba3ea629c5/pseudobulk-0.1.1"
-)
-
 #' @inherit get_single_cell_experiment
 #' @inheritDotParams get_single_cell_experiment
 #' @importFrom cli cli_alert_warning
@@ -289,7 +282,6 @@ get_pseudobulk <- function(data,
         versioned_cache_directory,
         current_subdir
       )
-      
       experiment_list <- raw_data |>
         mutate(dir_prefix = dir_prefix) |>
         dplyr::group_by(.data[[grouping_column]], dir_prefix) |>
@@ -499,20 +491,22 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   else if (grouping_column == "file_id_cellNexus_pseudobulk") {
     # Process specific to Pseudobulk
     # remove cell-level annotations
-    cell_level_anno <- c("cell_id", "cell_type", "confidence_class", "file_id_cellNexus_single_cell",
+    cell_level_anno <- c("cell_id", "cell_type", "file_id_cellNexus_single_cell",
                          "cell_annotation_blueprint_singler",
                          "cell_annotation_monaco_singler", 
                          "cell_annotation_azimuth_l2",
                          "cell_type_ontology_term_id",
-                         "sample_id_db")
+                         "observation_joinid", "ensemble_joinid",
+                         "nFeature_RNA", "data_driven_ensemble", "cell_type_unified",
+                         "empty_droplet")
     
     new_coldata <- df |>
       select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
+      # Remove metacell annotations in pseudobulk
+      select(-contains("metacell")) |> 
       distinct() |>
       mutate(
-        sample_identifier = ifelse(file_id_cellNexus_pseudobulk %in% file_ids,
-                                   glue("{sample_id}___{cell_type_harmonised}___{disease}___{is_primary_data_x}"),
-                                   glue("{sample_id}___{cell_type_harmonised}")),
+        sample_identifier = glue("{sample_id}___{cell_type_unified_ensemble}"),
         original_sample_id = .data$sample_identifier
       ) |>
       column_to_rownames("original_sample_id")
@@ -529,27 +523,10 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         `colData<-`(value = DataFrame(new_coldata))
     
     # Force renaming type class since zellkonverter::writeH5AD cannot save `SummarizedExperiment` object.
-    experiment <- as(experiment, "SummarizedExperiment")
+    experiment <- as(experiment, "SingleCellExperiment")
    
   }
 }
-
-#' A temporary solution for get_pseudobulk duplicated rownames due to column
-#' `disease` and `is_primary_data` columns are not included in `sample_id` in the metadata.
-#' @noRd
-# file_ids that are corrupted
-file_ids <- c(
-  "b50b15f1-bf19-4775-ab89-02512ec941a6",
-  "bffedc04-5ba1-46d4-885c-989a294bedd4",
-  "cc3ff54f-7587-49ea-b197-1515b6d98c4c",
-  "0af763e1-0e2f-4de6-9563-5abb0ad2b01e",
-  "51f114ae-232a-4550-a910-934e175db814",
-  "327927c7-c365-423c-9ebc-07acb09a0c1a",
-  "3ae36927-c188-4511-88cc-572ee1edf906",
-  "6ed2cdc2-dda8-4908-ad6c-cead9afee85e",
-  "56e0359f-ee8d-4ba5-a51d-159a183643e5",
-  "5c64f247-5b7c-4842-b290-65c722a65952"
-)
 
 #' Synchronises one or more remote assays with a local copy
 #' @param url A character vector of length one. The base HTTP URL from which to
@@ -606,6 +583,7 @@ sync_assay_files <- function(
       output_file = file.path(
         cache_dir,
         .data$atlas_name,
+        .data$cell_aggregation,
         .data$subdir,
         .data$sample_id
       )
