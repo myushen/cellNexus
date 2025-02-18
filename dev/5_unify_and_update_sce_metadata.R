@@ -19,10 +19,10 @@ library(stringr)
 library(targets)
 library(purrr)
 
-DATE = "19-12-2024"
+DATE = "06-02-2025"
 # read cellxgene
 metadata <- tbl(dbConnect(duckdb::duckdb(), dbdir = ":memory:"),  
-    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_7_mengyuan.parquet')") )
+    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_9_1_mengyuan.parquet')") )
 
 # Function of supporting Read parquet by duckdb, then do something, then write parquet. This avoids converting to tibble
 # @example
@@ -92,25 +92,80 @@ metadata <- metadata |> select(
   dplyr::rename(cell_annotation_blueprint_singler = blueprint_first_labels_fine,
          cell_annotation_monaco_singler = monaco_first_labels_fine,
          cell_annotation_azimuth_l2 = azimuth_predicted_celltype_l2) |> 
-  mutate(feature_count = as.integer(feature_count))
-
-store_file_cellNexus = "/vast/scratch/users/shen.m/targets_prepare_database_split_datasets_chunked_1_0_8"
-missing_cells_tbl = tar_read(missing_cells, store = store_file_cellNexus)
-missing_cells_tbl <- map(missing_cells_tbl$missing_cells, ~ {.x}) |> bind_rows()
-missing_cells <- missing_cells_tbl |> pull(cell_id)
+  mutate(feature_count = as.integer(feature_count),
+         published_at = as.character(published_at),
+         revised_at = as.character(revised_at))
 
 # (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
-metadata = metadata |> filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9")) |> 
-  filter(!cell_id %in% missing_cells)
-  
-metadata_path = "/vast/scratch/users/shen.m/cellNexus/metadata.1.0.8.parquet"
+metadata = metadata |> filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9"))
+
+metadata_path = "/vast/scratch/users/shen.m/cellNexus/metadata.1.0.9.parquet"
 
 metadata |> mutate(atlas_id = paste0(atlas_id, "/", DATE) ) |>
   duckdb_write_parquet(path = metadata_path,
                        con = dbConnect(duckdb::duckdb(), dbdir = ":memory:"))
 
+# store_file_cellNexus = "/vast/scratch/users/shen.m/targets_prepare_database_split_datasets_chunked_1_0_8"
+# missing_cells_tbl = tar_read(missing_cells, store = store_file_cellNexus)
+# missing_cells_tbl <- map(missing_cells_tbl$missing_cells, ~ {.x}) |> bind_rows()
+# missing_cells <- missing_cells_tbl |> pull(cell_id)
+
+# Exclude missing_cells
+job::job({
+  con <- dbConnect(duckdb::duckdb(), dbdir = ":memory:")
+  
+  dbExecute(con, "
+  CREATE VIEW current_metadata AS
+  SELECT *
+  FROM read_parquet('/vast/scratch/users/shen.m/cellNexus/metadata.1.0.9.parquet')
+")
+  
+  dbExecute(con, "
+  CREATE VIEW old_metadata_without_missing_cells AS
+  SELECT *
+  FROM read_parquet('/vast/scratch/users/shen.m/cache_temp/metadata.1.0.8.parquet')
+")
+  
+  # Perform the left join and save to Parquet
+  copy_query <- "
+  COPY (
+     SELECT 
+        current_metadata.*,
+        old_metadata_without_missing_cells.cell_id AS cell_id_2
+      FROM current_metadata
+      LEFT JOIN old_metadata_without_missing_cells
+      ON current_metadata.cell_id = old_metadata_without_missing_cells.cell_id 
+      AND current_metadata.sample_id = old_metadata_without_missing_cells.sample_id
+
+      
+  ) TO '/vast/scratch/users/shen.m/cellNexus/metadata.1.0.9_excluded_missing_cells.parquet'
+  (FORMAT PARQUET, COMPRESSION 'gzip');
+"
+  
+  # Execute the final query to write the result to a Parquet file
+  dbExecute(con, copy_query)
+  
+  # Disconnect from the database
+  dbDisconnect(con, shutdown = TRUE)
+  
+  print("Done.")
+  
+})
+
+metadata = tbl(
+  dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
+  sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/cellNexus/metadata.1.0.9_excluded_missing_cells.parquet')")
+) |>filter(!is.na(cell_id_2)) |> select(-cell_id_2)
+
+
+metadata |> 
+  duckdb_write_parquet(path = metadata_path,
+                       con = dbConnect(duckdb::duckdb(), dbdir = ":memory:"))
+
 file.copy(metadata_path,
-          to = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/metadata.1.0.8.parquet")
+          to = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/metadata.1.0.9.parquet")
+
+
 
 # Repeat similar steps for the fibrosis atlas
 fibrosis <- tbl(dbConnect(duckdb::duckdb(), dbdir = ":memory:"),  

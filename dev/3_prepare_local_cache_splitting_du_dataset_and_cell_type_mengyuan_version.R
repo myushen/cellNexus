@@ -80,8 +80,12 @@ job::job({
       ) |> 
       
       # seudobulk file id
-      mutate(file_id_cellNexus_pseudobulk = file_id_cellNexus_single_cell
-      )
+      mutate(file_id_cellNexus_pseudobulk = file_id_cellNexus_single_cell)
+      
+      # # dealing with NA cell type
+      # mutate(cell_type_unified_ensemble = ifelse(is.na(cell_type_unified_ensemble), "Unknown", cell_type_unified_ensemble))
+      # 
+    
   }
   
   
@@ -89,7 +93,7 @@ job::job({
   
   get_file_ids(
     "/vast/scratch/users/shen.m/Census_final_run/cell_annotation.parquet",
-    "/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown.parquet"
+    "/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown_2.parquet"
   )  |> 
     write_parquet("/vast/scratch/users/shen.m/Census_final_run/file_id_cellNexus_single_cell.parquet")
   
@@ -111,7 +115,7 @@ job::job({
   dbExecute(con, "
   CREATE VIEW cell_consensus AS
   SELECT *
-  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown.parquet')
+  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown_2.parquet')
 ")
   
   dbExecute(con, "
@@ -130,6 +134,13 @@ job::job({
   CREATE VIEW file_id_cellNexus_single_cell AS
   SELECT dataset_id, sample_chunk, cell_chunk, cell_type_unified_ensemble, sample_id, file_id_cellNexus_single_cell, file_id_cellNexus_pseudobulk
   FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/file_id_cellNexus_single_cell.parquet')
+")
+  
+  # This DF is needed to filter out unmatched sample-cell-type combo. Otherwise, cellNexus get_pseudobulk will slice cell names out of bounds.
+  dbExecute(con, "
+  CREATE VIEW sample_cell_type_combo AS
+  SELECT dataset_id, sample_id, cell_type_unified_ensemble
+  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_type_concensus_tbl_from_hpcell.parquet')
 ")
   
   # Perform the left join and save to Parquet
@@ -161,6 +172,15 @@ job::job({
         AND file_id_cellNexus_single_cell.dataset_id = cell_consensus.dataset_id
         AND file_id_cellNexus_single_cell.cell_type_unified_ensemble = cell_consensus.cell_type_unified_ensemble
       
+      LEFT JOIN sample_cell_type_combo
+        ON sample_cell_type_combo.sample_id = cell_consensus.sample_id
+        AND sample_cell_type_combo.dataset_id = cell_consensus.dataset_id
+        AND sample_cell_type_combo.cell_type_unified_ensemble = cell_consensus.cell_type_unified_ensemble
+        
+      WHERE sample_cell_type_combo.dataset_id IS NOT NULL 
+        -- (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
+        AND cell_metadata.dataset_id NOT IN ('99950e99-2758-41d2-b2c9-643edcdf6d82', '9fcb0b73-c734-40a5-be9c-ace7eea401c9') 
+        
   ) TO '/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_9_mengyuan.parquet'
   (FORMAT PARQUET, COMPRESSION 'gzip');
 "
@@ -217,8 +237,7 @@ tar_script({
             cpus_per_task = c(2, 2, 5, 10, 20), 
             time_minutes = c(30, 30, 30, 60*4, 60*24),
             verbose = T
-          ),
-          slurm_time_minutes = 240
+          )
         ),
         
         crew_controller_slurm(
@@ -229,8 +248,7 @@ tar_script({
           tasks_max = 50,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30,
-          slurm_time_minutes = 240
+          seconds_idle = 30
         ),
         
         crew_controller_slurm(
@@ -241,8 +259,7 @@ tar_script({
           tasks_max = 10,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30,
-          slurm_time_minutes = 240
+          seconds_idle = 30
         ),
         crew_controller_slurm(
           name = "tier_3",
@@ -252,8 +269,7 @@ tar_script({
           tasks_max = 10,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30,
-          slurm_time_minutes = 240
+          seconds_idle = 30
         ),
         crew_controller_slurm(
           name = "tier_4",
@@ -266,8 +282,7 @@ tar_script({
             cpus_per_task = c(2), 
             time_minutes = c(60*24),
             verbose = T
-          ),
-          slurm_time_minutes = 240
+          )
         ),
         crew_controller_slurm(
           name = "tier_5",
@@ -277,8 +292,7 @@ tar_script({
           tasks_max = 10,
           verbose = T,
           crashes_error = 5, 
-          seconds_idle = 30,
-          slurm_time_minutes = 240
+          seconds_idle = 30
         )
       )
     ), 
@@ -615,7 +629,11 @@ tar_script({
       
       # Step 5: Combine all 'sce' objects within each group into a single 'sce' object
       group_by(file_id_cellNexus_single_cell) |> 
-      summarise( sce =  list(do.call(cbind, args = sce) ) ) 
+      summarise( sce =  list(do.call(cbind, args = sce) ),
+                 
+                 # A steo to check missing cells 
+                 cells = list(do.call(rbind, args = cells))) 
+    
     
     # mutate(sce = map(sce,
     #                  ~ { .x = 
@@ -697,97 +715,24 @@ tar_script({
     
   }
   
-    cbind_sce_by_dataset_id_get_missing_cells = function(target_name_grouped_by_dataset_id, file_id_db_file, my_store){
+    cbind_sce_by_dataset_id_get_missing_cells = function(dataset_id_sce){
     
-    my_dataset_id = unique(target_name_grouped_by_dataset_id$dataset_id) 
-    
-    file_id_db = 
-      tbl(
-        dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
-        sql(glue("SELECT * FROM read_parquet('{file_id_db_file}')"))
-      ) |> 
-      filter(dataset_id == my_dataset_id) |>
-      select(cell_id, sample_id, dataset_id, file_id_cellNexus_single_cell) 
-    # |> 
-    #   
-    #   # Drop extension because it is added later 
-    #   mutate(file_id_cellNexus_single_cell = file_id_cellNexus_single_cell |> str_remove("\\.h5ad")) |> 
-    #   as_tibble()
-    
-    file_id_db = 
-      target_name_grouped_by_dataset_id |> 
-      left_join(file_id_db, copy = TRUE)
-    
-    
-    # Parallelise
-    cores = as.numeric(Sys.getenv("SLURM_CPUS_PER_TASK", unset = 1))
-    bp <- MulticoreParam(workers = cores , progressbar = TRUE)  # Adjust the number of workers as needed
-    
-    # Begin processing the data pipeline with the initial dataset 'target_name_grouped_by_dataset_id'
-    sce_df = 
-      file_id_db |> 
-      nest(cells = cell_id) |> 
-      # Step 1: Read raw data for each 'target_name' and store it in a new column 'sce'
-      mutate(
-        sce = bplapply(
-          target_name,
-          FUN = function(x) tar_read_raw(x, store = my_store),  # Read the raw SingleCellExperiment object
-          BPPARAM = bp  # Use the defined parallel backend
-        )
-      ) |>
-      
-      # This should not be needed, but there are some data sets with zero cells 
-      filter(!map_lgl(sce, is.null)) |> 
-      
-      mutate(sce = map2(sce, cells, ~ .x |> filter(.cell %in% .y$cell_id) |>
-                          
-                          # TEMPORARY FIX. NEED TO INVESTIGATE WHY THE SUFFIX HAPPENS
-                          mutate(sample_id = stringr::str_replace(sample_id, ".h5ad$","")),
-                        
-                        .progress = TRUE))
-    
-    
-    
-    if(nrow(sce_df) == 0) {
-      warning("this chunk has no rows for somereason.")
-      return(NULL)
-    }
-    
-    # plan(multisession, workers = 20)
-    sce_df = sce_df |> 
-      
-      # # Step 4: Group the data by 'dataset_id' and 'tar_group' for further summarization
-      # group_by(dataset_id, tar_group, chunk) |>
-      # 
-      
-      # FORCEFULLY drop all but counts and metadata 
-      # int_colData(.x) = DataFrame(row.names = colnames(.x))
-      # Creates error
-      # THIS SHOULD HAVE BEEN DONE IN THE TRANFORM HPCell
-      mutate(sce = map(sce, ~  SingleCellExperiment(assay = assays(.x), colData = colData(.x)) ),
-             cells = map(cells, ~ {.x |> select(cell_id)})) |> 
-      
-      # Step 5: Combine all 'sce' objects within each group into a single 'sce' object
-      group_by(file_id_cellNexus_single_cell) |> 
-      summarise( sce =  list(do.call(cbind, args = sce) ),
-                 cells = list(do.call(rbind, args = cells))) 
-    
-    sce_df |>
-      mutate(
-        missing_cells = map2(
-          sce, 
-          cells, 
-          ~{
-            cells_in_sce <- .x |> colnames() |> sort()
-            
-            cells_in_query <- .y$cell_id |> unique() |> sort()
-            
-            # Find differences
-            tibble(cell_id = setdiff(cells_in_query, cells_in_sce))
-          }
-        )
-      ) |> 
-      select(file_id_cellNexus_single_cell, missing_cells)
+      dataset_id_sce |>
+        mutate(
+          missing_cells = map2(
+            sce, 
+            cells, 
+            ~{
+              cells_in_sce <- .x |> colnames() |> sort()
+              
+              cells_in_query <- .y$cell_id |> unique() |> sort()
+              
+              # Find differences
+              tibble(cell_id = setdiff(cells_in_query, cells_in_sce))
+            }
+          )
+        ) |> 
+        select(file_id_cellNexus_single_cell, missing_cells)
     
   }
   
@@ -857,9 +802,9 @@ tar_script({
     # This target was run for retrieving missing cells analysis only
     tar_target(
       missing_cells_tbl,
-      cbind_sce_by_dataset_id_get_missing_cells(target_name_grouped_by_dataset_id, cell_metadata, my_store = my_store),
+      cbind_sce_by_dataset_id_get_missing_cells(dataset_id_sce),
       pattern = map(target_name_grouped_by_dataset_id),
-      packages = c("tidySingleCellExperiment", "SingleCellExperiment", "tidyverse", "glue", "digest", "HPCell", "digest", "scater", "arrow", "dplyr", "duckdb",  "BiocParallel", "parallelly"),
+      packages = c("tidySingleCellExperiment", "SingleCellExperiment", "tidyverse", "glue", "digest", "HPCell", "digest", "scater", "arrow", "dplyr", "duckdb",  "BiocParallel", "parallelly", "purrr"),
       resources = tar_resources(
         crew = tar_resources_crew(controller = "tier_4")
       )
@@ -868,7 +813,7 @@ tar_script({
     
     tar_target(
       save_anndata,
-      insistent_save_anndata(dataset_id_sce, paste0(cache_directory, "/single_cell/counts")),
+      insistent_save_anndata(dataset_id_sce, paste0(cache_directory, "/counts")),
       pattern = map(dataset_id_sce),
       packages = c("tidySingleCellExperiment", "SingleCellExperiment", "tidyverse", "glue", "digest", "HPCell", "digest", "scater", "arrow", "dplyr", "duckdb", "BiocParallel", "parallelly"),
       resources = tar_resources(
@@ -878,7 +823,7 @@ tar_script({
     
     tar_target(
       saved_dataset_cpm,
-      insistent_save_anndata_cpm(dataset_id_sce, paste0(cache_directory, "/single_cell/cpm")),
+      insistent_save_anndata_cpm(dataset_id_sce, paste0(cache_directory, "/cpm")),
       pattern = map(dataset_id_sce),
       packages = c("tidySingleCellExperiment", "SingleCellExperiment", "tidyverse", "glue", "digest", "HPCell", "digest", "scater", "arrow", "dplyr", "duckdb", "BiocParallel", "parallelly"),
       resources = tar_resources(
@@ -888,7 +833,7 @@ tar_script({
 
     tar_target(
       saved_dataset_rank,
-      insistent_save_rank_per_cell(dataset_id_sce, paste0(cache_directory, "/single_cell/rank")),
+      insistent_save_rank_per_cell(dataset_id_sce, paste0(cache_directory, "/rank")),
       pattern = map(dataset_id_sce),
       packages = c("tidySingleCellExperiment", "SingleCellExperiment", "tidyverse", "glue", "digest", "HPCell", "digest", "scater", "arrow", "dplyr", "duckdb", "BiocParallel", "parallelly", "HDF5Array"),
       resources = tar_resources(
