@@ -13,12 +13,13 @@ get_SingleCellExperiment(...)
 \item{...}{
   Arguments passed on to \code{\link[=get_single_cell_experiment]{get_single_cell_experiment}}
   \describe{
-    \item{\code{data}}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus_single_cell} columns,
-which correspond to a single cell ID, file subdivision for internal use.
+    \item{\code{data}}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus_single_cell}
+and \code{atlas_id} columns, which correspond to a single cell ID, file subdivision for internal use,
+and atlas name in format (e.g cellxgene/06-02-2025) for internal use.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
     \item{\code{assays}}{A character vector specifying the desired assay(s) to be requested.
 Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or
-"counts" and "quantile_normalised" for pseudobulk analyses.
+"counts" for pseudobulk analyses.
 The default setting retrieves only the counts assay.
 If your analysis involves a smaller set of genes, consider using the "cpm" assay.
 The "rank" assay is suited for signature calculations across millions of cells.}

@@ -18,13 +18,14 @@ validate_data(
 }
 \arguments{
 \item{data}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus_single_cell}
-and/or \code{file_id_cellNexus_pseudobulk} column, which correspond to a single cell ID,
-file subdivision for internal use for single_cell and/or pseudobulk level.
+and/or \code{file_id_cellNexus_pseudobulk}, and \code{atlas_id} column, which correspond to a single cell ID,
+file subdivision for internal use for single_cell and/or pseudobulk level, and
+atlas name in format (e.g cellxgene/06-02-2025) for internal use.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 
 \item{assays}{A character vector specifying the desired assay(s) to be requested.
 Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or
-"counts" and "quantile_normalised" for pseudobulk analyses.
+"counts" for pseudobulk analyses.
 The default setting retrieves only the counts assay.
 If your analysis involves a smaller set of genes, consider using the "cpm" assay.
 The "rank" assay is suited for signature calculations across millions of cells.}

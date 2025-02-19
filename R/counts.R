@@ -11,8 +11,7 @@ NULL
 assay_map <- c(
   counts = "counts",
   cpm = "cpm",
-  rank = "rank",
-  quantile_normalised = "quantile_normalised"
+  rank = "rank"
 )
 
 #' Base URL pointing to the count data at the current version
@@ -44,12 +43,13 @@ get_SingleCellExperiment <- function(...){
 #' Given a data frame of Curated Atlas metadata obtained from [get_metadata()],
 #' returns a [`SingleCellExperiment::SingleCellExperiment-class`] object
 #' corresponding to the samples in that data frame
-#' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_single_cell` columns, 
-#'   which correspond to a single cell ID, file subdivision for internal use.
+#' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_single_cell` 
+#'   and `atlas_id` columns, which correspond to a single cell ID, file subdivision for internal use,
+#'   and atlas name in format (e.g cellxgene/06-02-2025) for internal use.
 #'   They can be obtained from the [get_metadata()] function.
 #' @param assays A character vector specifying the desired assay(s) to be requested. 
 #'   Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or 
-#'   "counts" and "quantile_normalised" for pseudobulk analyses. 
+#'   "counts" for pseudobulk analyses. 
 #'   The default setting retrieves only the counts assay.
 #'   If your analysis involves a smaller set of genes, consider using the "cpm" assay. 
 #'   The "rank" assay is suited for signature calculations across millions of cells.
@@ -91,7 +91,7 @@ get_single_cell_experiment <- function(data,
   raw_data <- collect(data)
   assert_that(
     inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_id", "file_id_cellNexus_single_cell"))
+    has_name(raw_data, c("cell_id", "file_id_cellNexus_single_cell", "atlas_id"))
   )
   
   atlas_name <- raw_data |> distinct(atlas_id) |> pull()
@@ -182,15 +182,13 @@ get_single_cell_experiment <- function(data,
 #' corresponding to the samples in that data frame
 #' 
 #' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_pseudobulk`, 
-#'   `sample_id`, `cell_type_unified_ensemble` columns, which correspond to a single cell ID,
-#'   file subdivision for internal use, a singlel cell sample ID and harmonised cell type. 
-#'   They can be obtained from the [get_metadata()] function.
-#' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_pseudobulk` columns, 
-#'   which correspond to a single cell ID, file subdivision for internal use.
+#'   `sample_id`, `cell_type_unified_ensemble`, `atlas_id` columns, which correspond to a single cell ID,
+#'   file subdivision for internal use, a singlel cell sample ID, harmonised cell type, 
+#'   and atlas name in format (e.g cellxgene/06-02-2025) for internal use.
 #'   They can be obtained from the [get_metadata()] function.
 #' @param assays A character vector specifying the desired assay(s) to be requested. 
 #'   Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or 
-#'   "counts" and "quantile_normalised" for pseudobulk analyses. 
+#'   "counts" for pseudobulk analyses. 
 #'   The default setting retrieves only the counts assay.
 #'   If your analysis involves a smaller set of genes, consider using the "cpm" assay. 
 #'   The "rank" assay is suited for signature calculations across millions of cells.
@@ -234,7 +232,8 @@ get_pseudobulk <- function(data,
   raw_data <- collect(data)
   assert_that(
     inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_id", "file_id_cellNexus_pseudobulk", "sample_id", "cell_type_unified_ensemble"))
+    has_name(raw_data, c("cell_id", "file_id_cellNexus_pseudobulk", "sample_id", "cell_type_unified_ensemble",
+                         "atlas_id"))
   )
   atlas_name <- raw_data |> distinct(atlas_id) |> pull()
   parameter_validation_list <- 
@@ -321,12 +320,13 @@ get_pseudobulk <- function(data,
 #' Given a data frame of Curated Atlas metadata obtained from [get_metadata()],
 #' returns a list of parameters being validated.
 #' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_single_cell` 
-#'   and/or `file_id_cellNexus_pseudobulk` column, which correspond to a single cell ID, 
-#'   file subdivision for internal use for single_cell and/or pseudobulk level.
+#'   and/or `file_id_cellNexus_pseudobulk`, and `atlas_id` column, which correspond to a single cell ID, 
+#'   file subdivision for internal use for single_cell and/or pseudobulk level, and 
+#'   atlas name in format (e.g cellxgene/06-02-2025) for internal use.
 #'   They can be obtained from the [get_metadata()] function.
 #' @param assays A character vector specifying the desired assay(s) to be requested. 
 #'   Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or 
-#'   "counts" and "quantile_normalised" for pseudobulk analyses. 
+#'   "counts" for pseudobulk analyses. 
 #'   The default setting retrieves only the counts assay.
 #'   If your analysis involves a smaller set of genes, consider using the "cpm" assay. 
 #'   The "rank" assay is suited for signature calculations across millions of cells.
@@ -367,7 +367,7 @@ validate_data <- function(
     all() |>
     assert_that(
       msg = 'assays must be a character vector containing counts and/or
-            "cpm" and/or "rank" and/or "quantile_normalised"(exclusive to pseudobulk)'
+            "cpm" and/or "rank"'
     )
   assert_that(
     !anyDuplicated(assays),
