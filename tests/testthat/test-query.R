@@ -38,7 +38,8 @@ test_that("get_SingleCellExperiment() syncs appropriate files", {
     meta <- get_metadata() |> head(2)
 
     # The remote dataset should have many genes
-    sce <- get_SingleCellExperiment(meta, cache_directory = temp)
+    sce <- get_SingleCellExperiment(meta, cache_directory = temp) |> 
+      filter(file_id_cellNexus_single_cell == test_file)
     sce |>
         row.names() |>
         length() |>
@@ -91,7 +92,7 @@ test_that("The features argument to get_SingleCellExperiment subsets genes", {
     expect_gt(sce_full, 1)
 
     # The subset dataset should only have one gene
-    sce_subset <- get_SingleCellExperiment(meta, features = "ENSG00000254123") |>
+    sce_subset <- get_SingleCellExperiment(meta, features = "ENSG00000010610") |>
         row.names() |>
         length()
     expect_equal(sce_subset, 1)
@@ -102,8 +103,8 @@ test_that("The features argument to get_SingleCellExperiment subsets genes", {
 test_that("get_seurat() returns the appropriate data in Seurat format", {
     meta <- get_metadata() |> head(2)
 
-    sce <- get_SingleCellExperiment(meta, features = "ENSG00000254123")
-    seurat <- get_seurat(meta, features = "ENSG00000254123")
+    sce <- get_SingleCellExperiment(meta, features = "ENSG00000010610")
+    seurat <- get_seurat(meta, features = "ENSG00000010610")
 
     # The output should be a Seurat object
     expect_s4_class(seurat, "Seurat")
@@ -115,9 +116,12 @@ test_that("get_seurat() returns the appropriate data in Seurat format", {
 })
 
 test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
-    atlas_id = "cellxgene/19-12-2024"
     id = "a65bcc2d-4243-44c1-a262-ab7dcddfcf86"
     file_id_cellNexus_single_cell <- "7ddd6775d704d6826539abaee8d22f65___1.h5ad"
+    
+    # Retrieve atlas_id from metadata
+    atlas_id = get_metadata() |>
+      filter(dataset_id == id) |> distinct(atlas_id) |> pull()
     
     # Force the file to be cached
     get_metadata() |>
@@ -216,8 +220,10 @@ test_that("get_single_cell_experiment() expect to combine local and cloud counts
   file_path <- file.path(cache, atlas_name, assay)
   
   if (!dir.exists(file_path)) dir.create(file_path, recursive = TRUE)
-  sample_sce_obj |> writeH5AD(glue("{cache}/{atlas_name}/{assay}/sample_sce_obj.h5ad"), 
-                              compression = "gzip")
+  sample_sce_obj |> 
+    zellkonverter::writeH5AD(glue("{cache}/{atlas_name}/{assay}/sample_sce_obj.h5ad"), 
+                             compression = "gzip",
+                             verbose = FALSE)
   
   sce = get_metadata(local_metadata = glue("{cache}/my_metadata.parquet")) |>
     filter(file_id_cellNexus_single_cell %in% c("sample_sce_obj.h5ad",
@@ -239,8 +245,10 @@ test_that("get_single_cell_experiment() expect to get local counts only", {
   file_path <- file.path(cache, atlas_name, assay)
   
   if (!dir.exists(file_path)) dir.create(file_path, recursive = TRUE)
-  sample_sce_obj |> writeH5AD(glue("{cache}/{atlas_name}/{assay}/sample_sce_obj.h5ad"), 
-                              compression = "gzip")
+  sample_sce_obj |> 
+    zellkonverter::writeH5AD(glue("{cache}/{atlas_name}/{assay}/sample_sce_obj.h5ad"), 
+                             compression = "gzip",
+                             verbose = FALSE)
   
   n_cell_in_sce = get_metadata(local_metadata = glue("{cache}/my_metadata.parquet"),
                      cloud_metadata = NULL) |> 

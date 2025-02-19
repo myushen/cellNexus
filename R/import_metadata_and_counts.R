@@ -2,8 +2,7 @@
 assay_map <- c(
   counts = "counts",
   cpm = "cpm",
-  rank = "rank",
-  quantile_normalised = "quantile_normalised"
+  rank = "rank"
 )
 
 # File extension

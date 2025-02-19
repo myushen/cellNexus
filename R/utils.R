@@ -184,11 +184,24 @@ duckdb_write_parquet <- function(.tbl_sql,
 #' @noRd
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 clean_and_report_NA_columns <- function(df) {
-  column_names <- df |> dplyr::select_if(~any(is.na(.))) |> colnames()
+  na_column_names <- df |> select(where(~all(is.na(.)))) |> names()
   
-  "Dropping {column_names} as they all contain only NA values" |>
+  "Dropping {na_column_names} as they all contain only NA values" |>
     cli_alert_info()
-  df |> select(-all_of(column_names))
+  df |> select(-all_of(na_column_names))
+}
+
+#' Save anndata
+#' @return `NULL`, invisible
+#' @noRd
+#' @keywords internal
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+write_h5ad <- function(sce,
+                       path) {
+  selected_columns <- sce |> SummarizedExperiment::colData() |> 
+    as.data.frame() |> clean_and_report_NA_columns()
+  sce[, selected_columns] |>
+    zellkonverter::writeH5AD(path, compression = "gzip", verbose = FALSE)
 }
 
 
