@@ -199,9 +199,47 @@ clean_and_report_NA_columns <- function(df) {
 write_h5ad <- function(sce,
                        path) {
   selected_columns <- sce |> SummarizedExperiment::colData() |> 
-    as.data.frame() |> clean_and_report_NA_columns()
-  sce[, selected_columns] |>
-    zellkonverter::writeH5AD(path, compression = "gzip", verbose = FALSE)
+    as.data.frame() |> clean_and_report_NA_columns() |> names()
+  
+  colData_subset = colData(sce)[, selected_columns]
+  colData(sce) <- colData_subset
+  
+  if (ncol(SummarizedExperiment::assay(sce)) == 1) sce = sce |> duplicate_single_column_assay()
+  
+  sce |> zellkonverter::writeH5AD(path, compression = "gzip", verbose = FALSE)
 }
 
-
+#' Duplicate Single-Column Assay in SingleCellExperiment Object
+#'
+#' This function handles SingleCellExperiment (SCE) objects where a specified assay 
+#' contains only one column. It duplicates the single-column assay to avoid potential 
+#' errors during saving or downstream analysis that require at least two columns. 
+#' The duplicated column is marked with a prefix `DUMMY___` to distinguish it. 
+#' Corresponding entries in the column metadata (`colData`) are also duplicated.
+#'
+#' @param sce A `SingleCellExperiment` object.
+#' @noRd
+#' @importFrom SummarizedExperiment assay assays colData
+#' @importFrom SingleCellExperiment SingleCellExperiment
+#' @importFrom rlang set_names
+#' @keywords internal
+duplicate_single_column_assay <- function(sce) {
+  
+  assay_name = sce |> assays() |> names() |> magrittr::extract2(1)
+  
+  if(ncol(assay(sce)) == 1) {
+    
+    # Duplicate the assay to prevent saving errors due to single-column matrices
+    my_assay = cbind(assay(sce), assay(sce))
+    # Rename the second column to distinguish it
+    colnames(my_assay)[2] = paste0("DUMMY", "___", colnames(my_assay)[2])
+    
+    cd = colData(sce)
+    cd = cd |> rbind(cd)
+    rownames(cd)[2] = paste0("DUMMY", "___", rownames(cd)[2])
+    
+    sce =  SingleCellExperiment(assay = list(my_assay) |> set_names(assay_name), colData = cd)
+    sce
+  } 
+  sce
+}
