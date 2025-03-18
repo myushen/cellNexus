@@ -27,14 +27,16 @@ library(duckdb)
 
 job::job({
   
-  get_file_ids = function(cell_annotation, cell_type_consensus_parquet){
+  get_file_ids = function(cell_annotation 
+                          #cell_type_consensus_parquet
+  ){
     
-    cell_consensus = 
-      tbl(
-        dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
-        sql(glue::glue("SELECT * FROM read_parquet('{cell_type_consensus_parquet}')"))
-      ) |>
-      select(cell_, dataset_id, cell_type_unified_ensemble, cell_type_unified) 
+    # cell_consensus = 
+    #   tbl(
+    #     dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
+    #     sql(glue::glue("SELECT * FROM read_parquet('{cell_type_consensus_parquet}')"))
+    #   ) |>
+    #   select(cell_, dataset_id, cell_type_unified_ensemble, cell_type_unified) 
     
     # This because f7c1c579-2dc0-47e2-ba19-8165c5a0e353 includes 13K samples
     # It affects only very few datasets
@@ -57,7 +59,13 @@ job::job({
       dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
       sql(glue::glue("SELECT * FROM read_parquet('{cell_annotation}')"))
     ) |> 
-      left_join(cell_consensus, copy=TRUE) |>
+      # left_join(cell_consensus, copy=TRUE) |>
+      
+      # Cells in cell_annotation could be more than cells in cell_consensus. In order to avoid NA happens in cell_consensus cell_type column
+      mutate(cell_type_unified_ensemble = ifelse(cell_type_unified_ensemble |> is.na(),
+                                                 "Unknown",
+                                                 cell_type_unified_ensemble)) |>
+      
       left_join(sample_chunk_df |> select(dataset_id, sample_chunk, cell_chunk, sample_id), copy=TRUE) |> 
       # # Make sure I cover cell type even if consensus of harmonisation is not present (it should be the vast minority)
       # mutate(temp_cell_type_label_for_file_id = if_else(cell_type_unified_ensemble |> is.na(), cell_type, cell_type_unified)) |> 
@@ -81,10 +89,6 @@ job::job({
       
       # seudobulk file id
       mutate(file_id_cellNexus_pseudobulk = file_id_cellNexus_single_cell)
-      
-      # # dealing with NA cell type
-      # mutate(cell_type_unified_ensemble = ifelse(is.na(cell_type_unified_ensemble), "Unknown", cell_type_unified_ensemble))
-      # 
     
   }
   
@@ -92,10 +96,10 @@ job::job({
   # FOR MENGYUAN CELL_METADATA COULD BE BIGGER THAN CELL_ANNOTATION
   
   get_file_ids(
-    "/vast/scratch/users/shen.m/Census_final_run/cell_annotation.parquet",
-    "/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown_2.parquet"
+    "/vast/scratch/users/shen.m/cellNexus_run/cell_annotation.parquet"
+    # "/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown_2.parquet"
   )  |> 
-    write_parquet("/vast/scratch/users/shen.m/Census_final_run/file_id_cellNexus_single_cell.parquet")
+    write_parquet("/vast/scratch/users/shen.m/cellNexus_run/file_id_cellNexus_single_cell.parquet")
   
   gc()
   
@@ -108,40 +112,40 @@ job::job({
     CONCAT(cell_, '___', dataset_id) AS cell_,
     dataset_id,
     *
-  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_metadata.parquet')
+  FROM read_parquet('/vast/scratch/users/shen.m/cellNexus_run/cell_metadata.parquet')
 ")
   
   # Create views for other tables
-  dbExecute(con, "
-  CREATE VIEW cell_consensus AS
-  SELECT *
-  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown_2.parquet')
-")
+  #   dbExecute(con, "
+  #   CREATE VIEW cell_consensus AS
+  #   SELECT *
+  #   FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_annotation_new_substitute_cell_type_na_to_unknown_2.parquet')
+  # ")
   
   dbExecute(con, "
   CREATE VIEW cell_annotation AS
   SELECT cell_, blueprint_first_labels_fine, monaco_first_labels_fine, azimuth_predicted_celltype_l2
-  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/annotation_tbl_light.parquet')
+  FROM read_parquet('/vast/scratch/users/shen.m/cellNexus_run/annotation_tbl_light.parquet')
 ")
   
   dbExecute(con, "
   CREATE VIEW empty_droplet_df AS
-  SELECT cell_, dataset_id, empty_droplet
-  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_annotation.parquet')
+  SELECT *
+  FROM read_parquet('/vast/scratch/users/shen.m/cellNexus_run/cell_annotation.parquet')
 ")
   
   dbExecute(con, "
   CREATE VIEW file_id_cellNexus_single_cell AS
   SELECT dataset_id, sample_chunk, cell_chunk, cell_type_unified_ensemble, sample_id, file_id_cellNexus_single_cell, file_id_cellNexus_pseudobulk
-  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/file_id_cellNexus_single_cell.parquet')
+  FROM read_parquet('/vast/scratch/users/shen.m/cellNexus_run/file_id_cellNexus_single_cell.parquet')
 ")
   
-  # This DF is needed to filter out unmatched sample-cell-type combo. Otherwise, cellNexus get_pseudobulk will slice cell names out of bounds.
-  dbExecute(con, "
-  CREATE VIEW sample_cell_type_combo AS
-  SELECT dataset_id, sample_id, cell_type_unified_ensemble
-  FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_type_concensus_tbl_from_hpcell.parquet')
-")
+  #   # This DF is needed to filter out unmatched sample-cell-type combo. Otherwise, cellNexus get_pseudobulk will slice cell names out of bounds.
+  #   dbExecute(con, "
+  #   CREATE VIEW sample_cell_type_combo AS
+  #   SELECT dataset_id, sample_id, cell_type_unified_ensemble
+  #   FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_type_concensus_tbl_from_hpcell.parquet')
+  # ")
   
   # Perform the left join and save to Parquet
   copy_query <- "
@@ -150,7 +154,6 @@ job::job({
         cell_metadata.cell_ AS cell_id, -- Rename cell_ to cell_id
         cell_metadata.*,              -- Include all other columns from cell_metadata
         cell_annotation.*,            -- Include all columns from cell_annotation
-        cell_consensus.*,             -- Include all columns from cell_consensus
         empty_droplet_df.*,           -- Include all columns from empty_droplet_df
         file_id_cellNexus_single_cell.*, -- Include all columns from file_id_cellNexus_single_cell
         atlas_id                      -- Specify the atlas name 
@@ -158,30 +161,19 @@ job::job({
     
       LEFT JOIN cell_annotation
         ON cell_annotation.cell_ = cell_metadata.cell_
-    
-      LEFT JOIN cell_consensus
-        ON cell_consensus.cell_ = cell_metadata.cell_
-        AND cell_consensus.dataset_id = cell_metadata.dataset_id
         
       LEFT JOIN empty_droplet_df
         ON empty_droplet_df.cell_ = cell_metadata.cell_
         AND empty_droplet_df.dataset_id = cell_metadata.dataset_id
     
       LEFT JOIN file_id_cellNexus_single_cell
-        ON file_id_cellNexus_single_cell.sample_id = cell_consensus.sample_id
-        AND file_id_cellNexus_single_cell.dataset_id = cell_consensus.dataset_id
-        AND file_id_cellNexus_single_cell.cell_type_unified_ensemble = cell_consensus.cell_type_unified_ensemble
-      
-      LEFT JOIN sample_cell_type_combo
-        ON sample_cell_type_combo.sample_id = cell_consensus.sample_id
-        AND sample_cell_type_combo.dataset_id = cell_consensus.dataset_id
-        AND sample_cell_type_combo.cell_type_unified_ensemble = cell_consensus.cell_type_unified_ensemble
+        ON file_id_cellNexus_single_cell.sample_id = empty_droplet_df.sample_id
+        AND file_id_cellNexus_single_cell.dataset_id = empty_droplet_df.dataset_id
+        AND file_id_cellNexus_single_cell.cell_type_unified_ensemble = empty_droplet_df.cell_type_unified_ensemble
         
-      WHERE sample_cell_type_combo.dataset_id IS NOT NULL 
-        -- (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
-        AND cell_metadata.dataset_id NOT IN ('99950e99-2758-41d2-b2c9-643edcdf6d82', '9fcb0b73-c734-40a5-be9c-ace7eea401c9') 
+      WHERE cell_metadata.dataset_id NOT IN ('99950e99-2758-41d2-b2c9-643edcdf6d82', '9fcb0b73-c734-40a5-be9c-ace7eea401c9')  -- (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
         
-  ) TO '/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_9_mengyuan.parquet'
+  ) TO '/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_10_mengyuan.parquet'
   (FORMAT PARQUET, COMPRESSION 'gzip');
 "
   
@@ -199,12 +191,12 @@ job::job({
 cell_metadata = 
   tbl(
     dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
-    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_9_mengyuan.parquet')")
+    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_10_mengyuan.parquet')")
   )
-  
+
 library(targets)
 library(tidyverse)
-store_file_cellNexus = "/vast/scratch/users/shen.m/targets_prepare_database_split_datasets_chunked_1_0_10_single_cell"
+store_file_cellNexus = "/vast/scratch/users/shen.m/targets_prepare_database_split_datasets_chunked_1_0_11_single_cell"
 
 tar_script({
   library(dplyr)
@@ -314,7 +306,6 @@ tar_script({
     
     .x = dataset_id_sce |> pull(sce) |> _[[1]]
     .y = dataset_id_sce |> pull(file_id_cellNexus_single_cell) |> _[[1]] |> str_remove("\\.h5ad")
-    #.y = dataset_id_sce |> pull(file_id_cellNexus_pseudobulk) |> _[[1]] |> str_remove("\\.h5ad")
     
     .x |> assays() |> names() = "counts"
     
@@ -501,7 +492,7 @@ tar_script({
     # 
     
     .x = dataset_id_sce |> pull(sce) |> _[[1]]
-     .y = dataset_id_sce |> pull(file_id_cellNexus_single_cell) |> _[[1]] |> str_remove("\\.h5ad")
+    .y = dataset_id_sce |> pull(file_id_cellNexus_single_cell) |> _[[1]] |> str_remove("\\.h5ad")
     #.y = dataset_id_sce |> pull(file_id_cellNexus_pseudobulk) |> _[[1]] |> str_remove("\\.h5ad")
     
     # Check if the 'sce' has only one cell (column)
@@ -634,7 +625,6 @@ tar_script({
                  # A steo to check missing cells 
                  cells = list(do.call(rbind, args = cells))) 
     
-    
     # mutate(sce = map(sce,
     #                  ~ { .x = 
     #                    .x  |> 
@@ -681,58 +671,25 @@ tar_script({
       )
   }
   
-  get_pseudobulk = 	function(dataset_id_sce, cache_directory) {
-    
-    # Parallelise
-    cores = as.numeric(Sys.getenv("SLURM_CPUS_PER_TASK", unset = 1))
-    bp <- MulticoreParam(workers = cores , progressbar = TRUE)  # Adjust the number of workers as needed
-    
-    
-    sce_df |>
-      
-      
-      mutate(data = map2(
-        data, number_of_cells,
-        ~ {
-          pseudobulk = 
-            aggregateAcrossCells(
-              .x, 
-              colData(.x)[,c("sample_id", "cell_type_unified_ensemble")], 
-              BPPARAM = bp
-            )
-          colnames(pseudobulk) = paste0(colData(pseudobulk)$sample_id, "___", colData(pseudobulk)$cell_type_unified_ensemble)
-          
-          pseudobulk |> select(.cell, sample_id, file_id_cellNexus_pseudobulk, cell_type_unified_ensemble)
-          
-          # Decrease size
-          # We will reattach rowames later
-          assay(pseudobulk) = assay(pseudobulk) |>  as("sparseMatrix")
-          
-          
-          
-        }
-      ))
-    
-  }
   
-    cbind_sce_by_dataset_id_get_missing_cells = function(dataset_id_sce){
+  cbind_sce_by_dataset_id_get_missing_cells = function(dataset_id_sce){
     
-      dataset_id_sce |>
-        mutate(
-          missing_cells = map2(
-            sce, 
-            cells, 
-            ~{
-              cells_in_sce <- .x |> colnames() |> sort()
-              
-              cells_in_query <- .y$cell_id |> unique() |> sort()
-              
-              # Find differences
-              tibble(cell_id = setdiff(cells_in_query, cells_in_sce))
-            }
-          )
-        ) |> 
-        select(file_id_cellNexus_single_cell, missing_cells)
+    dataset_id_sce |>
+      mutate(
+        missing_cells = map2(
+          sce, 
+          cells, 
+          ~{
+            cells_in_sce <- .x |> colnames() |> sort()
+            
+            cells_in_query <- .y$cell_id |> unique() |> sort()
+            
+            # Find differences
+            tibble(cell_id = setdiff(cells_in_query, cells_in_sce))
+          }
+        )
+      ) |> 
+      select(file_id_cellNexus_single_cell, missing_cells)
     
   }
   
@@ -741,12 +698,12 @@ tar_script({
     
     # The input DO NOT DELETE
     tar_target(my_store, "/vast/scratch/users/shen.m/Census_final_run/target_store_for_pseudobulk", deployment = "main"),
-    tar_target(cache_directory, "/vast/scratch/users/shen.m/cellNexus/cellxgene/06-02-2025", deployment = "main"),
+    tar_target(cache_directory, "/vast/scratch/users/shen.m/cellNexus/cellxgene/24-02-2025", deployment = "main"),
     # This is the store for retrieving missing cells between cellnexus metadata and sce. A different store as it was done separately
     #tar_target(cache_directory, "/vast/scratch/users/shen.m/debug2/cellxgene/19-12-2024", deployment = "main"),
     tar_target(
       cell_metadata,
-      "/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_9_mengyuan.parquet", 
+      "/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_10_mengyuan.parquet", 
       packages = c( "arrow","dplyr","duckdb")
       
     ),
@@ -803,7 +760,7 @@ tar_script({
     tar_target(
       missing_cells_tbl,
       cbind_sce_by_dataset_id_get_missing_cells(dataset_id_sce),
-      pattern = map(target_name_grouped_by_dataset_id),
+      pattern = map(dataset_id_sce),
       packages = c("tidySingleCellExperiment", "SingleCellExperiment", "tidyverse", "glue", "digest", "HPCell", "digest", "scater", "arrow", "dplyr", "duckdb",  "BiocParallel", "parallelly", "purrr"),
       resources = tar_resources(
         crew = tar_resources_crew(controller = "tier_4")
@@ -830,7 +787,7 @@ tar_script({
         crew = tar_resources_crew(controller = "tier_4")
       )
     ),
-
+    
     tar_target(
       saved_dataset_rank,
       insistent_save_rank_per_cell(dataset_id_sce, paste0(cache_directory, "/rank")),
@@ -860,11 +817,8 @@ missing_cells <- missing_cells_tbl |> pull(cell_id)
 
 cell_metadata |> filter(!cell_id %in% missing_cells) |> 
   
-  # (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
-  filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9")) |>
-  
   # This method of save parquet to parquet is faster 
-  cellNexus:::duckdb_write_parquet(path = "/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_8_mengyuan.parquet")
+  cellNexus:::duckdb_write_parquet(path = "/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_10_filtered_missing_cells_mengyuan.parquet")
 
 
 # Copy files from scratch to vast project
@@ -882,24 +836,3 @@ sapply(files_to_copy, function(file) {
   file.copy(from = paste0(source_dir, file), 
             to = paste0(destination_dir, file))
 })
-
-
-
-
-tar_make(script = paste0(store_file_cellNexus, "_target_script.R"), store = store_file_cellNexus, callr_function = NULL)
-
-x = tar_read(dataset_id_sample_id, store = store_file_cellNexus)
-y = tar_read(target_name_grouped_by_dataset_id, store = store_file_cellNexus)
-
-
-tar_meta(store = store_file_cellNexus) |> 
-  arrange(desc(time)) |>
-  filter(!error |> is.na()) |> 
-  select(name, error, warnings, time)
-
-tar_workspace(save_anndata_e071de369d576e66, store = store_file_cellNexus, script = paste0(store_file_cellNexus, "_target_script.R"))
-
-tar_invalidate(starts_with("save_anndata"), store = store_file_cellNexus)
-tar_delete(starts_with("save_anndata"), , store = store_file_cellNexus)
-
-target_name_grouped_by_dataset_id =tar_read(target_name_grouped_by_dataset_id, store = store_file_cellNexus)

@@ -271,6 +271,18 @@ test_that("get_pseudobulk() syncs appropriate files", {
     expect_gt(1)
 })
 
+test_that("get_metacell() syncs appropriate files", {
+  cache = tempfile()
+  id = "009b708ad5032c0b9a91165013999d5f___2.h5ad"
+  sce = get_metadata() |> filter(!is.na(metacell_64), 
+                           file_id_cellNexus_single_cell == "id") |> 
+    get_metacell(cache_directory = cache,
+                 cell_aggregation = "metacell_64")
+  
+  sce |> colnames() |> length() |> expect_gt(1)
+  
+})
+
 # unharmonised_data is not implemented yet
 # test_that("get_unharmonised_dataset works with one ID", {
 #     dataset_id = "838ea006-2369-4e2c-b426-b2a744a2b02b"
