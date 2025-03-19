@@ -315,10 +315,10 @@ get_pseudobulk <- function(data,
   experiment
 }
 
-#' Gets a Pseudobulk from curated metadata
+#' Gets a Metacell from curated metadata
 #' 
 #' Given a data frame of Curated Atlas metadata obtained from [get_metadata()],
-#' returns a [`SummarizedExperiment::SummarizedExperiment-class`] object
+#' returns a [`SingleCellExperiment::SingleCellExperiment-class`] object
 #' corresponding to the samples in that data frame
 #' 
 #' @param data A data frame containing, at minimum, `sample_id`, `file_id_cellNexus_single_cell`, 
@@ -326,16 +326,10 @@ get_pseudobulk <- function(data,
 #'   file subdivision for internal use, atlas name in format (e.g cellxgene/06-02-2025) 
 #'   for internal use, and metacell column to be queried.
 #'   They can be obtained from the [get_metadata()] function.
-#' @param assays A character vector specifying the desired assay(s) to be requested. 
-#'   Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or 
-#'   "counts" for pseudobulk analyses. 
-#'   The default setting retrieves only the counts assay.
-#'   If your analysis involves a smaller set of genes, consider using the "cpm" assay. 
-#'   The "rank" assay is suited for signature calculations across millions of cells.
+#' @param assays A character vector of metacell counts. Default to "counts".
 #' @param cell_aggregation A character vector representing the level of metacell aggregation. 
-#'   By default, it is set to “metacell_2”, indicating that a group of cells 
-#'   can be divided into two metacells. Each metacell comprises a minimum of 
-#'   ten single cells by default.
+#'   It indicates a group of cells that can be divided into the number of metacells. 
+#'   Each metacell comprises a minimum of ten single cells by default.
 #' @param cache_directory An optional character vector of length one. If
 #'   provided, it should indicate a local file path where any remotely accessed
 #'   files should be copied.
@@ -366,7 +360,7 @@ get_pseudobulk <- function(data,
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_metacell <- function(data, 
                          assays = "counts",
-                         cell_aggregation = "metacell_2",
+                         cell_aggregation,
                          cache_directory = get_default_cache_dir(),
                          repository = COUNTS_URL,
                          features = NULL

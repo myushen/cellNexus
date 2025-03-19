@@ -2,7 +2,7 @@
 % Please edit documentation in R/counts.R
 \name{get_metacell}
 \alias{get_metacell}
-\title{Gets a Pseudobulk from curated metadata}
+\title{Gets a Metacell from curated metadata}
 \source{
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
 }
@@ -10,7 +10,7 @@
 get_metacell(
   data,
   assays = "counts",
-  cell_aggregation = "metacell_2",
+  cell_aggregation,
   cache_directory = get_default_cache_dir(),
   repository = COUNTS_URL,
   features = NULL
@@ -23,17 +23,11 @@ file subdivision for internal use, atlas name in format (e.g cellxgene/06-02-202
 for internal use, and metacell column to be queried.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 
-\item{assays}{A character vector specifying the desired assay(s) to be requested.
-Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or
-"counts" for pseudobulk analyses.
-The default setting retrieves only the counts assay.
-If your analysis involves a smaller set of genes, consider using the "cpm" assay.
-The "rank" assay is suited for signature calculations across millions of cells.}
+\item{assays}{A character vector of metacell counts. Default to "counts".}
 
 \item{cell_aggregation}{A character vector representing the level of metacell aggregation.
-By default, it is set to “metacell_2”, indicating that a group of cells
-can be divided into two metacells. Each metacell comprises a minimum of
-ten single cells by default.}
+It indicates a group of cells that can be divided into the number of metacells.
+Each metacell comprises a minimum of ten single cells by default.}
 
 \item{cache_directory}{An optional character vector of length one. If
 provided, it should indicate a local file path where any remotely accessed
@@ -47,7 +41,7 @@ the counts for. By default counts for all features will be returned.}
 }
 \description{
 Given a data frame of Curated Atlas metadata obtained from \code{\link[=get_metadata]{get_metadata()}},
-returns a \code{\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment::SummarizedExperiment}} object
+returns a \code{\link[SingleCellExperiment:SingleCellExperiment]{SingleCellExperiment::SingleCellExperiment}} object
 corresponding to the samples in that data frame
 }
 \examples{
