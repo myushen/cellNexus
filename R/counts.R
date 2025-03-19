@@ -356,7 +356,7 @@ get_pseudobulk <- function(data,
 #' @examples
 #' \dontrun{
 #' meta <- get_metadata() |> filter(tissue_harmonised == "lung")
-#' metacell <- meta |> get_metacell(cell_aggregation = "metacell_2")
+#' metacell <- meta |> filter(!is.na(metacell_2)) |> get_metacell(cell_aggregation = "metacell_2")
 #' }
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 

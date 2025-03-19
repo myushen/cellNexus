@@ -53,7 +53,7 @@ corresponding to the samples in that data frame
 \examples{
 \dontrun{
 meta <- get_metadata() |> filter(tissue_harmonised == "lung")
-metacell <- meta |> get_metacell(cell_aggregation = "metacell_2")
+metacell <- meta |> filter(!is.na(metacell_2)) |> get_metacell(cell_aggregation = "metacell_2")
 }
 }
 \references{
