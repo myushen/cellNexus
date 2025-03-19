@@ -274,8 +274,8 @@ test_that("get_pseudobulk() syncs appropriate files", {
 test_that("get_metacell() syncs appropriate files", {
   cache = tempfile()
   id = "009b708ad5032c0b9a91165013999d5f___2.h5ad"
-  sce = get_metadata() |> filter(!is.na(metacell_64), 
-                           file_id_cellNexus_single_cell == "id") |> 
+  sce = get_metadata(cache_directory = cache) |> filter(!is.na(metacell_64)) |> 
+    filter(file_id_cellNexus_single_cell == id) |> 
     get_metacell(cache_directory = cache,
                  cell_aggregation = "metacell_64")
   
