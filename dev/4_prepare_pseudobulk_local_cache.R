@@ -23,7 +23,7 @@
 library(targets)
 library(tidyverse)
 library(cellNexus)
-store_file_cellNexus = "/vast/scratch/users/shen.m/targets_prepare_database_split_datasets_chunked_1_0_10_pseudobulk"
+store_file_cellNexus = "/vast/scratch/users/shen.m/targets_prepare_database_split_datasets_chunked_1_0_11_pseudobulk"
 my_store = "/vast/scratch/users/shen.m/Census_final_run/target_store_for_pseudobulk"
 
 tar_script({
@@ -284,10 +284,10 @@ list(
   
   # The input DO NOT DELETE
   tar_target(my_store, "/vast/scratch/users/shen.m/Census_final_run/target_store_for_pseudobulk", deployment = "main"),
-  tar_target(cache_directory, "/vast/scratch/users/shen.m/cellNexus/cellxgene/06-02-2025/pseudobulk", deployment = "main"),
+  tar_target(cache_directory, "/vast/scratch/users/shen.m/cellNexus/cellxgene/24-02-2025/pseudobulk", deployment = "main"),
   tar_target(
     cell_metadata,
-    "/vast/scratch/users/shen.m/Census_final_run/cell_metadata_cell_type_consensus_v1_0_9_mengyuan.parquet", 
+    "/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_10_mengyuan.parquet", 
     packages = c( "arrow","dplyr","duckdb")
     
   ),

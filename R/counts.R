@@ -315,6 +315,148 @@ get_pseudobulk <- function(data,
   experiment
 }
 
+#' Gets a Metacell from curated metadata
+#' 
+#' Given a data frame of Curated Atlas metadata obtained from [get_metadata()],
+#' returns a [`SingleCellExperiment::SingleCellExperiment-class`] object
+#' corresponding to the samples in that data frame
+#' 
+#' @param data A data frame containing, at minimum, `sample_id`, `file_id_cellNexus_single_cell`, 
+#'   `atlas_id` and a metacell column (e.g `metacell_2`) columns, which correspond to sample ID
+#'   file subdivision for internal use, atlas name in format (e.g cellxgene/06-02-2025) 
+#'   for internal use, and metacell column to be queried.
+#'   They can be obtained from the [get_metadata()] function.
+#' @param assays A character vector of metacell counts. Default to "counts".
+#' @param cell_aggregation A character vector representing the level of metacell aggregation. 
+#'   It indicates a group of cells that can be divided into the number of metacells. 
+#'   Each metacell comprises a minimum of ten single cells by default.
+#' @param cache_directory An optional character vector of length one. If
+#'   provided, it should indicate a local file path where any remotely accessed
+#'   files should be copied.
+#' @param repository A character vector of length one. If provided, it should be
+#'   an HTTP URL pointing to the location where the single cell data is stored.
+#' @param features An optional character vector of features (ie genes) to return
+#'   the counts for. By default counts for all features will be returned.
+#' @importFrom dplyr pull filter as_tibble inner_join collect transmute
+#' @importFrom tibble column_to_rownames
+#' @importFrom purrr reduce map map_int imap 
+#' @importFrom BiocGenerics cbind
+#' @importFrom glue glue
+#' @importFrom SummarizedExperiment colData assayNames<-
+#' @importFrom assertthat assert_that
+#' @importFrom cli cli_alert_success cli_alert_info
+#' @importFrom rlang .data
+#' @importFrom S4Vectors DataFrame
+#' @examples
+#' \dontrun{
+#' meta <- get_metadata() |> filter(tissue_harmonised == "lung")
+#' metacell <- meta |> filter(!is.na(metacell_2)) |> get_metacell(cell_aggregation = "metacell_2")
+#' }
+#' @export
+#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
+#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
+#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
+#'   doi:10.1101/2023.06.08.542671.
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+get_metacell <- function(data, 
+                         assays = "counts",
+                         cell_aggregation,
+                         cache_directory = get_default_cache_dir(),
+                         repository = COUNTS_URL,
+                         features = NULL
+                         ) {
+  raw_data <- collect(data)
+  assert_that(
+    inherits(raw_data, "tbl"),
+    has_name(raw_data, c("sample_id", "file_id_cellNexus_single_cell", "atlas_id")),
+    any(grepl("^metacell", names(raw_data)))
+  )
+  raw_data = raw_data |> 
+    # This is to separate metacell and single_cell in group_to_data_container, also 
+    #    not to produce repetitive column in the metadata
+    mutate(file_id_cellNexus_metacell = file_id_cellNexus_single_cell)
+  
+  atlas_name <- raw_data |> distinct(atlas_id) |> pull()
+  parameter_validation_list <- 
+    validate_data(data, assays, cell_aggregation, cache_directory, 
+                  repository, features)
+  
+  versioned_cache_directory <- parameter_validation_list$cache_directory
+  atlas_name <- parameter_validation_list$atlas_name
+  grouping_column <- "file_id_cellNexus_metacell"
+  
+  subdirs <- assay_map[assays]
+  
+  # The repository is optional. If not provided we load only from the cache
+  if (!is.null(repository)) {
+    cli_alert_info("Synchronising files")
+    parsed_repo <- parse_url(repository)
+    parsed_repo$scheme |>
+      `%in%`(c("http", "https")) |>
+      assert_that()
+    
+    files_to_read <-
+      raw_data |> 
+      transmute(
+        files = .data[[grouping_column]], 
+        atlas_name = atlas_id, 
+        cache_dir = cache_directory
+      ) |> distinct() |>
+      pmap(function(files, atlas_name, cache_dir) {
+        sync_assay_files(
+          files = files,
+          atlas_name = atlas_name,
+          cache_dir = cache_dir,
+          url = parsed_repo,
+          cell_aggregation = cell_aggregation,
+          subdirs = subdirs
+        )
+      })
+  }
+  
+  cli_alert_info("Reading files.")
+  experiments <- subdirs |>
+    imap(function(current_subdir, current_assay) {
+      # Build up an experiment for each assay
+      dir_prefix <- file.path(
+        versioned_cache_directory,
+        current_subdir
+      )
+      experiment_list <- raw_data |>
+        mutate(dir_prefix = dir_prefix) |>
+        dplyr::group_by(.data[[grouping_column]], dir_prefix) |>
+        dplyr::summarise(experiments = list(
+          group_to_data_container(
+            dplyr::cur_group_id(),
+            dplyr::cur_data_all(),
+            unique(dir_prefix),
+            features,
+            grouping_column,
+            metacell_column = cell_aggregation
+          )
+        )) |>
+        dplyr::pull(experiments)
+      
+      commonGenes <- experiment_list |> check_gene_overlap()
+      experiment_list <- map(experiment_list, function(exp) {
+        exp[commonGenes,]
+      }) |>
+        do.call(cbind, args = _)
+    })
+  
+  cli_alert_info("Compiling Experiment.")
+  
+  # Combine all the assays
+  # Get a donor SCE
+  experiment <- experiments[[1]]
+  
+  SummarizedExperiment::assays(experiment) <- map(experiments, function(exp) {
+    SummarizedExperiment::assays(exp)[[1]]
+  })
+  
+  experiment
+}
+
 #' Validate data parameters
 #' 
 #' Given a data frame of Curated Atlas metadata obtained from [get_metadata()],
@@ -418,6 +560,7 @@ validate_data <- function(
 #'   segment
 #' @param features The list of genes/rows of interest
 #' @param grouping_column A character vector of metadata column for grouping
+#' @param metacell_column A character vector of metacell column (e.g. "metacell_2", "metacell_4") from metadata.
 #' @return A `SummarizedExperiment` object
 #' @importFrom dplyr mutate filter
 #' @importFrom zellkonverter readH5AD
@@ -428,7 +571,8 @@ validate_data <- function(
 #' @importFrom glue glue
 #' @importFrom stringr str_replace_all
 #' @noRd
-group_to_data_container <- function(i, df, dir_prefix, features, grouping_column) {
+group_to_data_container <- function(i, df, dir_prefix, features, grouping_column,
+                                    metacell_column = NULL) {
   # Set file name based on type
   experiment_path <- df[[grouping_column]] |>
     head(1) |>
@@ -498,7 +642,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
                          "cell_type_ontology_term_id",
                          "observation_joinid", "ensemble_joinid",
                          "nFeature_RNA", "data_driven_ensemble", "cell_type_unified",
-                         "empty_droplet")
+                         "empty_droplet", "observation_originalid")
     
     new_coldata <- df |>
       select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
@@ -525,6 +669,40 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     # Force renaming type class since zellkonverter::writeH5AD cannot save `SummarizedExperiment` object.
     experiment <- as(experiment, "SingleCellExperiment")
    
+  }
+  else if (grouping_column == "file_id_cellNexus_metacell") {
+    # Select relevant annotations to remove single-cell level annotations
+    annotations <- metacell_column |> 
+      c( "dataset_id", "sample_id", "assay", "assay_ontology_term_id", 
+         "development_stage", "development_stage_ontology_term_id", "disease", "disease_ontology_term_id", 
+         "donor_id", "experiment___", "explorer_url", "feature_count", "is_primary_data", 
+         "organism", "organism_ontology_term_id", "published_at", "raw_data_location", 
+         "revised_at", "sample_heuristic", "schema_version", "self_reported_ethnicity", 
+         "self_reported_ethnicity_ontology_term_id", "sex", "sex_ontology_term_id", "tissue", 
+         "tissue_ontology_term_id", "tissue_type", "title", "tombstone", "url", "age_days", 
+         "tissue_groups", "atlas_id", "sample_chunk", "file_id_cellNexus_single_cell", 
+         "file_id_cellNexus_metacell", "dir_prefix") 
+    
+    new_coldata <- df |>
+      select(annotations) |>
+      distinct() |>
+      mutate(
+        metacell_identifier = glue("{sample_id}___{.data[[metacell_column]]}"),
+        original_metacell_id = .data$metacell_identifier
+      ) |>
+      column_to_rownames("original_metacell_id")
+    
+    experiment <- `if`(
+      is.null(features),
+      experiment[, new_coldata$metacell_identifier],
+      {
+        # Optionally subset the genes
+        genes <- rownames(experiment) |> intersect(features)
+        experiment[genes, new_coldata$metacell_identifier]
+      }
+    ) |>
+      `colnames<-`(new_coldata$metacell_identifier) |>
+      `colData<-`(value = DataFrame(new_coldata))
   }
 }
 
