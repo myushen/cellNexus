@@ -65,7 +65,7 @@ Harmonised data is stored in the ARDC Nectar Research Cloud, and most
 `cellNexus` functions interact with Nectar via web requests, so a 
 network connection is required for most functionality.
 
-```{r, echo=FALSE, eval=FALSE, out.height = c("139px"), out.width = "120x" }
+```{r, echo=FALSE, out.height = c("139px"), out.width = "120x" }
 find_figure("logo.png") |> knitr::include_graphics()
 ```
 
@@ -150,8 +150,6 @@ single_cell_counts
 
 ### Query counts scaled per million
 
-This is helpful if just few genes are of interest, as they can be compared across samples.
-
 ```{r}
 single_cell_counts = 
     metadata |>
@@ -166,7 +164,41 @@ single_cell_counts =
 single_cell_counts
 ```
 
+### Query pseudobulk
+```{r}
+pseudobulk_counts = 
+   metadata |>
+    dplyr::filter(
+        self_reported_ethnicity == "African" &
+        assay |> stringr::str_like("%10x%") &
+        tissue == "lung parenchyma" &
+        cell_type |> stringr::str_like("%CD4%")
+    ) |>
+    get_pseudobulk()
+
+pseudobulk_counts
+```
+
+### Query metacell 
+The metadata includes a series of metacell aggregation levels, beginning with 2, 4, 8, and so on. For example, the value of metacell_2 represents a grouping of cells that can be split into two distinct metacells.
+```{r}
+metacell_counts = 
+   metadata |>
+    dplyr::filter(
+        self_reported_ethnicity == "African" &
+        assay |> stringr::str_like("%10x%") &
+        tissue == "lung parenchyma" &
+        cell_type |> stringr::str_like("%CD4%")
+    ) |>
+    dplyr::filter(!is.na(metacell_2)) |>
+    get_metacell(cell_aggregation = "metacell_2")
+
+metacell_counts
+```
+
 ### Extract only a subset of genes
+
+This is helpful if just few genes are of interest, as they can be compared across samples.
 
 ```{r}
 single_cell_counts = 
@@ -381,8 +413,6 @@ Through harmonisation and curation we introduced custom column, not present in t
 The `counts` assay includes RNA abundance in the positive real scale (not transformed with non-linear functions, e.g. log sqrt). Originally CELLxGENE include a mix of scales and transformations specified in the `x_normalization` column.
 
 The `cpm` assay includes counts per million.
-
-The `rank` assay includes cells rank based on their total transcript count.
 
 # Session Info
 ```{r}

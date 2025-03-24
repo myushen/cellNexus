@@ -593,7 +593,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     })
   
   # Load experiment
-  experiment <- readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE)
+  experiment <- readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
   
   # Fix for https://github.com/tidyverse/dplyr/issues/6746
   force(i)
