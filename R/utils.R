@@ -248,16 +248,16 @@ duplicate_single_column_assay <- function(sce) {
 #' 
 #' @description Downloads and caches assay files from a remote repository based on metadata specifications.
 #'
-#' @param data A data frame containing metadata with required columns `cell_id`, `atlas_id`, and a grouping column
+#' @param data A data frame or tbl_sql containing metadata with required columns `cell_id`, `atlas_id`, and a grouping column
 #' @param assays Character vector specifying which assays to sync
 #' @param repository URL of the remote repository containing the assay files
 #' @param cell_aggregation Character string specifying the cell aggregation strategy 
 #' @param grouping_column Column name in data used to group files for synchronization
 #' @param cache_directory Local directory path where files will be cached. Uses default cache if not specified
 #'
-#' @return A character vector of files that have been downloaded
+#' @return `NULL`, invisibly. Progress messages are displayed for the downloads.
 #' 
-#' @importFrom dplyr collect pull transmute distinct
+#' @importFrom dplyr pull transmute distinct
 #' @importFrom assertthat assert_that has_name
 #' @importFrom cli cli_alert_info
 #' @importFrom purrr pmap
@@ -271,13 +271,10 @@ sync_metadata_assay_files <- function(data,
                                       grouping_column,
                                       cache_directory = get_default_cache_dir()
 ) {
-  
-  raw_data <- collect(data)
   assert_that(
-    inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_id", "atlas_id", grouping_column))
+    all(c("cell_id", "atlas_id", grouping_column) %in% colnames(data))
   )
-  atlas_name <- raw_data |> pull(atlas_id) |> unique()
+  atlas_name <- data |> pull(atlas_id) |> unique()
   
   subdirs <- assay_map[assays]
   
@@ -289,12 +286,14 @@ sync_metadata_assay_files <- function(data,
       assert_that()
     
     files_to_read <-
-      raw_data |> 
+      data |> 
       transmute(
         files = .data[[grouping_column]], 
         atlas_name = atlas_id, 
         cache_dir = cache_directory
       ) |>  distinct() |> 
+      # Convert to tibble here to avoid breaking the memory after loading all metadata 
+      tibble::as_tibble() |> 
       pmap(function(files, atlas_name, cache_dir) {
         sync_assay_files(
           files = files,
