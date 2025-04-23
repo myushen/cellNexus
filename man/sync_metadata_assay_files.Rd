@@ -17,7 +17,7 @@ sync_metadata_assay_files(
 )
 }
 \arguments{
-\item{data}{A data frame containing metadata with required columns \code{cell_id}, \code{atlas_id}, and a grouping column}
+\item{data}{A data frame or tbl_sql containing metadata with required columns \code{cell_id}, \code{atlas_id}, and a grouping column}
 
 \item{assays}{Character vector specifying which assays to sync}
 
@@ -30,7 +30,7 @@ sync_metadata_assay_files(
 \item{cache_directory}{Local directory path where files will be cached. Uses default cache if not specified}
 }
 \value{
-A character vector of files that have been downloaded
+\code{NULL}, invisibly. Progress messages are displayed for the downloads.
 }
 \description{
 Downloads and caches assay files from a remote repository based on metadata specifications.
