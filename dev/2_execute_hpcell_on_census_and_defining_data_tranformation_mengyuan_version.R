@@ -414,6 +414,7 @@ cell_type_concensus_tbl = cell_type_concensus_tbl |> mutate(cell_type_unified_en
                                     ifelse(is.na(cell_type_unified_ensemble),
                                            "Unknown",
                                            cell_type_unified_ensemble)) 
+
 cell_type_concensus_tbl |> arrow::write_parquet("/vast/scratch/users/shen.m/cellNexus_run/cell_type_concensus_tbl_from_hpcell.parquet")
 
 # This command needs a big memory machine
@@ -438,6 +439,7 @@ cell_metadata_joined2 = cell_metadata_joined |> as_tibble() |>
   mutate(blueprint = ifelse(blueprint |> is.na(), "Other", blueprint)) |> 
   mutate(monaco = ifelse(monaco |> is.na(), "Other", monaco))
 
+# (!!!!) WHENEVER MAKE CHANGES, ALWAYS INCLUDE NEW Rhapsody DATA. Rhapsody TECH WERE UPDATED SEPARATELY in 2_1_rerun_hpcell_for_Rhapsody_targeted_panel.R. 
 cell_metadata_joined2 |>
   arrow::write_parquet("/vast/scratch/users/shen.m/cellNexus_run/cell_annotation.parquet")
 

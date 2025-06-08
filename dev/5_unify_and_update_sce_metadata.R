@@ -19,10 +19,10 @@ library(stringr)
 library(targets)
 library(purrr)
 
-DATE = "01-05-2025"
+DATE = "03-06-2025"
 # read cellxgene
 metadata <- tbl(dbConnect(duckdb::duckdb(), dbdir = ":memory:"),  
-    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_11_filtered_missing_cells_mengyuan.parquet')") )
+    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_12_filtered_missing_cells_updated_rhapsody.parquet')") )
 
 # Function of supporting Read parquet by duckdb, then do something, then write parquet. This avoids converting to tibble
 # @example
@@ -83,7 +83,8 @@ metadata <- metadata |> select(
                    -azimuth,
                    -blueprint,
                    -monaco,
-                   -matches("^scores")) |> 
+                   -matches("^scores"),
+                   -matches("coarse$")) |> 
   dplyr::rename(cell_annotation_blueprint_singler = blueprint_first_labels_fine,
          cell_annotation_monaco_singler = monaco_first_labels_fine,
          cell_annotation_azimuth_l2 = azimuth_predicted_celltype_l2) |> 
@@ -94,7 +95,7 @@ metadata <- metadata |> select(
 # (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
 metadata = metadata |> filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9"))
 
-metadata_path = "/vast/scratch/users/shen.m/cellNexus/metadata.1.0.11.parquet"
+metadata_path = "/vast/scratch/users/shen.m/cellNexus/metadata.1.0.12.parquet"
 
 metadata |> mutate(atlas_id = paste0(atlas_id, "/", DATE) ) |>
   duckdb_write_parquet(path = metadata_path,
