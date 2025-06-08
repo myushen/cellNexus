@@ -49,12 +49,30 @@ job::job({
       dplyr::count(dataset_id, sample_id, name = "cell_count") |>  # Ensure unique dataset_id and sample_id combinations
       distinct(dataset_id, sample_id, cell_count) |>  # Ensure unique dataset_id and sample_id combinations
       group_by(dataset_id) |> 
-      dbplyr::window_order(cell_count) |>  # Ensure dataset_id order
+      dbplyr::window_order(dataset_id, cell_count, sample_id) |>  # Ensure order. Note: order cell_count only is not enough because it needs a secondary tie-breaker
       mutate(sample_index = row_number()) |>  # Create sequential index within each dataset
       mutate(sample_chunk = (sample_index - 1) %/% 1000 + 1) |>  # Assign chunks (up to 1000 samples per chunk)
       mutate(sample_pseudobulk_chunk = (sample_index - 1) %/% 250 + 1) |> # Max combination of dataset_id, sample_pseudobulk_chunk and file_id_pseudobulk up to 10000
       mutate(cell_chunk = cumsum(cell_count) %/% 100000 + 1) |> # max 20K cells per sample
       ungroup() 
+    
+    # Test whether cell_chunk and sample_chunk are unique for this sample
+    run_chunk_once <- function(column_name, id) {
+      sample_chunk_df |> filter(sample_id == id) |> pull(!!column_name)
+    }
+    
+    sample_chunk_results <- replicate(20, run_chunk_once("sample_chunk", "d6e942a09a140ee8bb6f0c3da8defea4___exp7-human-150well."), simplify = FALSE)
+    sample_chunk_identical <- all(sapply(sample_chunk_results[-1], function(x) identical(x, sample_chunk_results[[1]])))
+    if (!sample_chunk_identical) {
+      stop("Inconsistent sample chunk value was generated in multiple runs, this will lead to file id changes")
+    }
+    
+    cell_chunk_results <- replicate(20, run_chunk_once("cell_chunk",  "d6e942a09a140ee8bb6f0c3da8defea4___exp7-human-150well."), simplify = FALSE)
+    cell_chunk_identical <- all(sapply(cell_chunk_results[-1], function(x) identical(x, cell_chunk_results[[1]])))
+    if (!cell_chunk_identical) {
+      stop("Inconsistent cell chunk value was generated in multiple runs, this will lead to file id changes")
+    }
+    
     
     tbl(
       dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
@@ -178,7 +196,8 @@ job::job({
         
       WHERE cell_metadata.dataset_id NOT IN ('99950e99-2758-41d2-b2c9-643edcdf6d82', '9fcb0b73-c734-40a5-be9c-ace7eea401c9')  -- (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
         
-  ) TO '/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_11_mengyuan.parquet'
+  ) TO  '/vast/scratch/users/shen.m/cellNexus_run/test.parquet'
+  -- '/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_12_mengyuan.parquet'
   (FORMAT PARQUET, COMPRESSION 'gzip');
 "
   
@@ -196,12 +215,12 @@ job::job({
 cell_metadata = 
   tbl(
     dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
-    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_11_mengyuan.parquet')")
+    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_12_mengyuan.parquet')")
   )
 
 library(targets)
 library(tidyverse)
-store_file_cellNexus = "/vast/scratch/users/shen.m/targets_prepare_database_split_datasets_chunked_1_0_11_single_cell"
+store_file_cellNexus = "/vast/scratch/users/shen.m/targets_prepare_database_split_datasets_chunked_1_0_12_single_cell"
 
 tar_script({
   library(dplyr)
@@ -703,12 +722,12 @@ tar_script({
     
     # The input DO NOT DELETE
     tar_target(my_store, "/vast/scratch/users/shen.m/Census_final_run/target_store_for_pseudobulk", deployment = "main"),
-    tar_target(cache_directory, "/vast/scratch/users/shen.m/cellNexus/cellxgene/01-05-2025", deployment = "main"),
+    tar_target(cache_directory, "/vast/scratch/users/shen.m/cellNexus/cellxgene/03-06-2025", deployment = "main"),
     # This is the store for retrieving missing cells between cellnexus metadata and sce. A different store as it was done separately
     #tar_target(cache_directory, "/vast/scratch/users/shen.m/debug2/cellxgene/19-12-2024", deployment = "main"),
     tar_target(
       cell_metadata,
-      "/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_11_mengyuan.parquet", 
+      "/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_12_mengyuan.parquet", 
       packages = c( "arrow","dplyr","duckdb")
       
     ),
@@ -823,13 +842,13 @@ missing_cells <- missing_cells_tbl |> pull(cell_id)
 cell_metadata |> filter(!cell_id %in% missing_cells) |> 
   
   # This method of save parquet to parquet is faster 
-  cellNexus:::duckdb_write_parquet(path = "/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_11_filtered_missing_cells_mengyuan.parquet")
+  cellNexus:::duckdb_write_parquet(path = "/vast/scratch/users/shen.m/cellNexus_run/cell_metadata_cell_type_consensus_v1_0_12_filtered_missing_cells_mengyuan.parquet")
 
 
 # Copy files from scratch to vast project
 files_to_copy <- c("annotation_tbl_light.parquet",
-                   "cell_annotation.parquet", "cell_metadata_cell_type_consensus_v1_0_11_mengyuan.parquet",
-                   "cell_metadata_cell_type_consensus_v1_0_11_filtered_missing_cells_mengyuan.parquet",
+                   "cell_annotation.parquet", "cell_metadata_cell_type_consensus_v1_0_12_mengyuan.parquet",
+                   "cell_metadata_cell_type_consensus_v1_0_12_filtered_missing_cells_mengyuan.parquet",
                    "cell_metadata.parquet",
                    "file_id_cellNexus_single_cell.parquet")
 
