@@ -276,6 +276,7 @@ The `H5AD` format is the HDF5 disk representation of the AnnData object and is w
 
 However this `.h5ad` saving strategy has a bottleneck of handling columns with only NA values of a `SingleCellExperiment` metadata. 
 
+
 ```{r eval=FALSE}
 # ! IMPORTANT if you save 200K+ cells
 HDF5Array::setAutoBlockSize(size = 1e+09) 
@@ -312,7 +313,7 @@ counts |>
   dplyr::with_groups(disease, ~ .x |> dplyr::mutate(median_count = median(`HLA.A`, rm.na=TRUE))) |> 
   
   # Plot
-  ggplot(aes(forcats::fct_reorder(disease, median_count,.desc = TRUE), `HLA.A`,color = file_id)) +
+  ggplot(aes(forcats::fct_reorder(disease, median_count,.desc = TRUE), `HLA.A`,color = file_id_cellNexus_single_cell)) +
   geom_jitter(shape=".") +
     
   # Style
@@ -351,6 +352,29 @@ counts |>
 find_figure("HLA_A_tissue_plot.png") |> knitr::include_graphics()
 ```
 
+
+```{r}
+metadata |> 
+    
+  # Filter and subset
+  dplyr::filter(cell_type_unified_ensemble=="nk") |> 
+
+  # Get counts per million for HCA-A gene 
+  get_single_cell_experiment(assays = "cpm", features = "HLA-A") |> 
+  suppressMessages() |>
+
+  # Plot
+  tidySingleCellExperiment::join_features("HLA-A", shape = "wide") |> 
+  ggplot(aes(tissue_harmonised, `HLA.A`, color = file_id_cellNexus_single_cell)) +
+  theme_bw() +
+  theme(
+      axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1),
+      legend.position = "none"
+  ) + 
+  geom_jitter(shape=".") + 
+  xlab("Tissue") + 
+  ggtitle("HLA-A in nk cells by tissue")
+```
 
 ## Integrate Cloud Metadata with Local Metadata
 CellNexus not only enables users to query our metadata but also allows integration with your local metadata. Additionally, users can integrate with your metadata stored in the cloud. 
