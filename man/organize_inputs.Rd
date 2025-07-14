@@ -36,7 +36,6 @@ nested inside a tabsetPanel.
 Organize arbitrary Shiny inputs into a grid layout
 }
 \examples{
-library(dittoVizModules)
 # Example 1: Basic usage with a simple grid
 ui.inputs <- tagList(
     textInput("name", "Name"),

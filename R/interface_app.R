@@ -40,7 +40,6 @@
 #'
 #' @author Jared Andrews
 #' @examples
-#' library(dittoVizModules)
 #' # Example 1: Basic usage with a simple grid
 #' ui.inputs <- tagList(
 #'     textInput("name", "Name"),
@@ -147,10 +146,10 @@ create_interface_app <- function(metadata) {
     cell_cols <- c(
         "cell_type_unified_ensemble",
         "cell_type",
-        "cell_type_unified", "data_driven_ensemble",
-        "cell_annotation_blueprint_singler", "cell_annotation_monaco_singler",
-        "cell_annotation_azimuth_l2",
-        "azimuth_predicted_celltype_l2_1", "is_immune", "empty_droplet"
+        "alive",
+        "scDblFinder.class",
+        "is_immune",
+        "empty_droplet"
     )
 
     # Make named list of options for each column in metadata
@@ -270,6 +269,31 @@ create_interface_app <- function(metadata) {
             .string_to_vector(input$features)
         })
 
+        full_code <- reactive({
+            filter_conditions <- list()
+
+            # Add filters to filter_conditions from input_filters()
+            input_list <- input_filters()
+            if (!is.null(input_list)) {
+                for (i in seq_along(input_list)) {
+                    input_id <- names(input_list)[i]
+                    input_val <- input_list[[i]]
+
+                    condition <- paste0(input_id, " %in% c(", paste(shQuote(input_val), collapse = ", "), ")")
+                    filter_conditions <- c(filter_conditions, condition)
+                }
+            }
+
+            code_lines <- c("my_data <- get_metadata() |>",
+                if (length(filter_conditions) > 0) {
+                    paste0("  dplyr::filter(", paste(filter_conditions, collapse = ",\n         "), ") |>")
+                },
+                retrieval_condition()
+            )
+
+            cat(paste(code_lines, collapse = "\n"))
+        })
+
         # Collect inputs as data.frame with each row as input_id and filter
         # Only include inputs that are not NULL, "", or with all values selected
         input_filters <- reactive({
@@ -296,53 +320,32 @@ create_interface_app <- function(metadata) {
             if (input$retrieval_type == "SingleCellExperiment") {
                 paste0("get_single_cell_experiment(",
                     if (length(features()) > 1 || all(features() != "")) {
-                        paste0("features = c(", paste0(shQuote(features()), collapse = ", "), "),")
+                        paste0("features = c(", paste0(shQuote(features()), collapse = ", "), "), ")
                     },
                     "assays = ", shQuote(input$assay), ")")
             } else if (input$retrieval_type == "pseudobulk") {
                 paste0("get_pseudobulk(",
                     if (length(features()) > 1 || all(features() != "")) {
-                        paste0("features = c(", paste0(shQuote(features()), collapse = ", "), "),")
+                        paste0("features = c(", paste0(shQuote(features()), collapse = ", "), "), ")
                     },
                     "assays = ", shQuote(input$assay), ")")
             } else if (input$retrieval_type == "Seurat") {
                 paste0("get_seurat(",
                     if (length(features()) > 1 || all(features() != "")) {
-                        paste0("features = c(", paste0(shQuote(features()), collapse = ", "), "),")
+                        paste0("features = c(", paste0(shQuote(features()), collapse = ", "), "), ")
                     },
                     "assays = ", shQuote(input$assay), ")")
             } else if (input$retrieval_type == "metacell") {
-                paste0("get_metacell(",
+                paste0("dplyr::filter(!is.na(", input$metacell_aggregation, ")) |> \nget_metacell(",
                     if (length(features()) > 1 || all(features() != "")) {
-                        paste0("features = c(", paste0(shQuote(features()), collapse = ", "), "),")
+                        paste0("features = c(", paste0(shQuote(features()), collapse = ", "), "), ")
                     },
                     "assays = ", shQuote(input$assay), ", cell_aggregation = ", shQuote(input$metacell_aggregation), ")")
             }
         })
 
         output$code_box <- renderPrint({
-            filter_conditions <- list()
-
-            # Add filters to filter_conditions from input_filters()
-            input_list <- input_filters()
-            if (!is.null(input_list)) {
-                for (i in seq_along(input_list)) {
-                    input_id <- names(input_list)[i]
-                    input_val <- input_list[[i]]
-
-                    condition <- paste0(input_id, " %in% c(", paste(shQuote(input_val), collapse = ", "), ")")
-                    filter_conditions <- c(filter_conditions, condition)
-                }
-            }
-
-            code_lines <- c("my_data <- get_metadata() |>",
-                if (length(filter_conditions) > 0) {
-                    paste0("  dplyr::filter(", paste(filter_conditions, collapse = ",\n         "), ") |>")
-                },
-                retrieval_condition()
-            )
-
-            cat(paste(code_lines, collapse = "\n"))
+            full_code()
         })
     }
 
