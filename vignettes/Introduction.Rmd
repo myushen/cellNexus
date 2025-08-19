@@ -115,13 +115,13 @@ metadata
 
 ```{r, echo=FALSE}
 # Note: a custom cache is used here ONLY for R CHECK compliance purposes. Users will NOT need to specify a custom cache
-metadata <- get_metadata(cache_directory = tempdir())
+metadata <- get_metadata(cache_directory = "~/scratch/cellNexus/")
 metadata
 ```
- 
 
 
 The `metadata` variable can then be re-used for all subsequent queries.
+
 
 ### Explore the tissue 
 
@@ -180,17 +180,22 @@ pseudobulk_counts
 ```
 
 ### Query metacell 
-The metadata includes a series of metacell aggregation levels, beginning with 2, 4, 8, and so on. For example, the value of metacell_2 represents a grouping of cells that can be split into two distinct metacells.
+
+The metadata includes a series of metacell aggregation levels, beginning with 2, 4, 8, and so on. For example, the value of metacell_2 represents a grouping of cells that can be split into two distinct metacells. Metacells are generated after quality control, which excludes empty droplets, dead cells and doublets.
+
 ```{r}
 metacell_counts = 
    metadata |>
+    dplyr::filter(empty_droplet == "FALSE",
+                  alive == "TRUE",
+                  scDblFinder.class != "doublet",
+                  !is.na(metacell_2)) |>
     dplyr::filter(
         self_reported_ethnicity == "African" &
         assay |> stringr::str_like("%10x%") &
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    dplyr::filter(!is.na(metacell_2)) |>
     get_metacell(cell_aggregation = "metacell_2")
 
 metacell_counts
@@ -198,7 +203,7 @@ metacell_counts
 
 ### Extract only a subset of genes
 
-This is helpful if just few genes are of interest, as they can be compared across samples.
+This is helpful if just few genes are of interest (e.g PUM1), as they can be compared across samples. cellNexus accepts ENSEMBL gene ID(s).
 
 ```{r}
 single_cell_counts = 
@@ -209,7 +214,7 @@ single_cell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_single_cell_experiment(assays = "cpm", features = "PUM1")
+    get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
 
 single_cell_counts
 ```
@@ -231,6 +236,34 @@ single_cell_counts_seurat =
 
 single_cell_counts_seurat
 ```
+
+
+By default, data is downloaded to `get_default_cache_dir()` output. If memory is a concern, users can specify a custom cache directory to metadata and counts functions:
+
+## Load metadata from the custom cache directory
+
+```{r eval=FALSE}
+metadata <- get_metadata(cache_directory = "/MY/CUSTOM/PATH")
+```
+
+
+## Query raw counts from the custom cache directory
+
+``` {r eval=FALSE}
+single_cell_counts = 
+    metadata |>
+    dplyr::filter(
+        self_reported_ethnicity == "African" &
+        assay |> stringr::str_like("%10x%") &
+        tissue == "lung parenchyma" &
+        cell_type |> stringr::str_like("%CD4%")
+    ) |>
+    get_single_cell_experiment(cache_directory = "/MY/CUSTOM/PATH")
+
+single_cell_counts
+```
+
+Same strategy can be applied for functions `get_pseuodbulk()`, `get_metacell()`, `get_seurat()` by passing your custom directory character to "cache_directory" parameter.
 
 ## Save your `SingleCellExperiment`
 
@@ -295,10 +328,9 @@ We can gather all CD14 monocytes cells and plot the distribution of HLA-A across
 counts <- metadata |>
   # Filter and subset
   dplyr::filter(cell_type_unified_ensemble == "cd14 mono") |>
-  dplyr::filter(file_id_cellNexus_single_cell != "c5a05f23f9784a3be3bfa651198a48eb") |> 
   
   # Get counts per million for HCA-A gene
-  get_single_cell_experiment(assays = "cpm", features = "HLA-A") |> 
+  get_single_cell_experiment(assays = "cpm", features = "ENSG00000206503", cache_directory = "~/scratch/cellNexus") |> 
   suppressMessages() |>
   
   # Add feature to table
