@@ -638,8 +638,8 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     cell_level_anno <- c("cell_id", "cell_type", "file_id_cellNexus_single_cell",
                          "cell_type_ontology_term_id",
                          "observation_joinid", "ensemble_joinid",
-                         "nFeature_RNA", "data_driven_ensemble", "cell_type_unified",
-                         "empty_droplet", "observation_originalid", "alive", "scDblFinder.class")
+                         "nFeature_expressed_in_sample", "nCount_RNA", "data_driven_ensemble", "cell_type_unified",
+                         "empty_droplet", "observation_originalid", "alive", "scDblFinder.class", "is_immune")
     
     new_coldata <- df |>
       select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
@@ -663,8 +663,8 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         `colnames<-`(new_coldata$sample_identifier) |>
         `colData<-`(value = DataFrame(new_coldata))
     
-    # Force renaming type class since zellkonverter::writeH5AD cannot save `SummarizedExperiment` object.
-    experiment <- as(experiment, "SingleCellExperiment")
+    # Force renaming type class since zellkonverter::writeH5AD cannot save `SummarizedExperiment` object
+    experiment <- experiment |> as("SingleCellExperiment")
    
   }
   else if (grouping_column == "file_id_cellNexus_metacell") {
