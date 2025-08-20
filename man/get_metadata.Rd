@@ -2,7 +2,7 @@
 % Please edit documentation in R/metadata.R
 \name{get_metadata}
 \alias{get_metadata}
-\title{Gets the Curated Atlas metadata as a data frame.}
+\title{Gets the CellNexus metadata as a data frame.}
 \source{
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
 }
