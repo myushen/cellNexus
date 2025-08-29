@@ -13,16 +13,25 @@ cache <- rlang::env(
 #' @param databases A character vector specifying the names of the metadata files. 
 #'   Download the specific metadata by defining the metadata version. The default is 
 #'   metadata.1.0.12.parquet
+#' @param use_split_files Logical. If TRUE, returns URLs for the three split metadata files 
+#'   instead of the single large file. Default is FALSE for backward compatibility.
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
 #' get_metadata_url("metadata.1.0.12.parquet")
+#' get_metadata_url(use_split_files = TRUE)
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata_url <- function(databases = c("metadata.1.0.12.parquet")) {
+get_metadata_url <- function(databases = c("metadata.1.0.12.parquet"), use_split_files = FALSE) {
+  if (use_split_files) {
+    # Return URLs for the three split files
+    databases <- c("sample_metadata.1.0.12.parquet", 
+                   "cell_metadata_census.1.0.12.parquet", 
+                   "cell_metadata_new.1.0.12.parquet")
+  }
   clear_old_metadata(updated_data = databases)
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}")
@@ -65,6 +74,9 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #'   function has been called before with the same parameters, then a cached
 #'   reference to the table will be returned. If `FALSE`, a new connection will
 #'   be created no matter what.
+#' @param use_split_files Optional logical scalar. If `TRUE`, downloads and joins
+#'   three smaller split files instead of one large file to reduce download size.
+#'   Default is `FALSE` for backward compatibility.
 #' @return A lazy data.frame subclass containing the metadata. You can interact
 #'   with this object using most standard dplyr functions. For string matching,
 #'   it is recommended that you use `stringr::str_like` to filter character
@@ -85,8 +97,9 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' @importFrom dplyr tbl
 #' @importFrom httr progress
 #' @importFrom cli cli_alert_info hash_sha256
-#' @importFrom glue glue
+#' @importFrom glue glue glue_sql
 #' @importFrom purrr walk
+#' @importFrom dbplyr sql
 #'
 #' @details
 #'
@@ -172,8 +185,14 @@ get_metadata <- function(
     local_metadata = NULL,
     cache_directory = get_default_cache_dir(),
     use_cache = TRUE,
+    use_split_files = FALSE,
     ...
 ) {
+  # Handle split files
+  if (use_split_files && missing(cloud_metadata)) {
+    cloud_metadata <- get_metadata_url(use_split_files = TRUE)
+  }
+  
   # Synchronize remote files
   walk(cloud_metadata, function(url) {
     # Calculate the file path from the URL
@@ -202,11 +221,61 @@ get_metadata <- function(
     cached_connection
   }
   else {
-    table <- duckdb() |>
-      dbConnect(drv = _, read_only = TRUE) |>
-      read_parquet(path = all_parquet, ...)
+    if (use_split_files && length(all_parquet) == 3) {
+      # Handle split files with left joins
+      table <- create_joined_metadata_table(all_parquet, ...)
+    } else {
+      # Handle single file or multiple files without joins
+      table <- duckdb() |>
+        dbConnect(drv = _, read_only = TRUE) |>
+        read_parquet(path = all_parquet, ...)
+    }
     cache$metadata_table[[hash]] <- table
     table
   }
+}
+
+#' Create joined metadata table from split parquet files
+#' @param parquet_files Character vector of paths to the three split parquet files
+#' @param ... Additional arguments passed to read_parquet
+#' @return A lazy data.frame subclass containing the joined metadata
+#' @importFrom DBI dbConnect dbExecute
+#' @importFrom duckdb duckdb
+#' @importFrom dplyr tbl
+#' @importFrom dbplyr sql
+#' @keywords internal
+create_joined_metadata_table <- function(parquet_files, ...) {
+  # Create DuckDB connection
+  conn <- duckdb() |> dbConnect(drv = _, read_only = TRUE)
+  
+  # Identify the files based on their names
+  sample_file <- parquet_files[grepl("sample_metadata", parquet_files)]
+  census_file <- parquet_files[grepl("cell_metadata_census", parquet_files)]
+  new_file <- parquet_files[grepl("cell_metadata_new", parquet_files)]
+  
+  # If we don't have the expected split files, fall back to regular behavior
+  if (length(sample_file) != 1 || length(census_file) != 1 || length(new_file) != 1) {
+    return(read_parquet(conn, parquet_files, ...))
+  }
+  
+  # Create the joined query using DuckDB SQL
+  joined_query <- glue::glue_sql("
+    SELECT 
+      census.*,
+      sample_meta.* EXCEPT (sample_id, dataset_id),
+      new_meta.* EXCEPT (cell_id, observation_joinid, sample_id, dataset_id)
+    FROM read_parquet({census_file}, union_by_name=true) AS census
+    LEFT JOIN read_parquet({sample_file}, union_by_name=true) AS sample_meta
+      ON census.sample_id = sample_meta.sample_id 
+      AND census.dataset_id = sample_meta.dataset_id
+    LEFT JOIN read_parquet({new_file}, union_by_name=true) AS new_meta
+      ON census.cell_id = new_meta.cell_id 
+      AND census.observation_joinid = new_meta.observation_joinid
+      AND census.sample_id = new_meta.sample_id 
+      AND census.dataset_id = new_meta.dataset_id
+  ", .con = conn)
+  
+  # Return the table
+  tbl(conn, sql(joined_query))
 }
 
