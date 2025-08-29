@@ -92,6 +92,9 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #'             cell_type %LIKE% "%CD4%"
 #'     )
 #'
+#' # Use split files for reduced download size (when available)
+#' metadata_split <- get_metadata(use_split_files = TRUE)
+#'
 #' @importFrom DBI dbConnect
 #' @importFrom duckdb duckdb
 #' @importFrom dplyr tbl
@@ -173,6 +176,21 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' get_metadata(cache_directory = path.expand('~'))
 #' ```
 #' 
+#' **Split files for reduced download size**
+#' 
+#' When `use_split_files = TRUE`, the function downloads three smaller parquet 
+#' files instead of one large file and performs left joins to reconstruct the 
+#' full metadata. This significantly reduces download size, making it suitable 
+#' for constrained networks and Shiny applications. The trade-off is slightly 
+#' slower metadata operations due to the join operations.
+#' 
+#' The three split files contain:
+#' - Sample metadata: sample_id, donor_id, dataset_id + sample-specific columns
+#' - Census cell metadata: cell_id, observation_joinid, sample_id, dataset_id + original census columns
+#' - New cell metadata: cell_id, observation_joinid, sample_id, dataset_id + harmonized/curated columns
+#' 
+#' Join keys used: `dataset_id`, `observation_joinid`, `sample_id`
+#' 
 #' @inheritDotParams read_parquet
 #' 
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
@@ -241,7 +259,7 @@ get_metadata <- function(
 #' @return A lazy data.frame subclass containing the joined metadata
 #' @importFrom DBI dbConnect dbExecute
 #' @importFrom duckdb duckdb
-#' @importFrom dplyr tbl
+#' @importFrom dplyr tbl left_join
 #' @importFrom dbplyr sql
 #' @keywords internal
 create_joined_metadata_table <- function(parquet_files, ...) {
@@ -258,24 +276,21 @@ create_joined_metadata_table <- function(parquet_files, ...) {
     return(read_parquet(conn, parquet_files, ...))
   }
   
-  # Create the joined query using DuckDB SQL
-  joined_query <- glue::glue_sql("
-    SELECT 
-      census.*,
-      sample_meta.* EXCEPT (sample_id, dataset_id),
-      new_meta.* EXCEPT (cell_id, observation_joinid, sample_id, dataset_id)
-    FROM read_parquet({census_file}, union_by_name=true) AS census
-    LEFT JOIN read_parquet({sample_file}, union_by_name=true) AS sample_meta
-      ON census.sample_id = sample_meta.sample_id 
-      AND census.dataset_id = sample_meta.dataset_id
-    LEFT JOIN read_parquet({new_file}, union_by_name=true) AS new_meta
-      ON census.cell_id = new_meta.cell_id 
-      AND census.observation_joinid = new_meta.observation_joinid
-      AND census.sample_id = new_meta.sample_id 
-      AND census.dataset_id = new_meta.dataset_id
-  ", .con = conn)
+  # For robustness, use a simpler join approach that works with any column structure
+  # First, load the census data as the base
+  census_table <- read_parquet(conn, census_file, ...)
   
-  # Return the table
-  tbl(conn, sql(joined_query))
+  # Get sample metadata
+  sample_table <- read_parquet(conn, sample_file, ...)
+  
+  # Get new metadata  
+  new_table <- read_parquet(conn, new_file, ...)
+  
+  # Perform left joins using dplyr syntax for better compatibility
+  result <- census_table |>
+    left_join(sample_table, by = c("sample_id", "dataset_id"), suffix = c("", "_sample")) |>
+    left_join(new_table, by = c("cell_id", "observation_joinid", "sample_id", "dataset_id"), suffix = c("", "_new"))
+  
+  return(result)
 }
 
