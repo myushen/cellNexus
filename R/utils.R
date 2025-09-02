@@ -307,3 +307,33 @@ sync_metadata_assay_files <- function(data,
   }
 }
 
+#' Keep high-quality cells based on QC columns
+#'
+#' @param data A data frame or tibble containing single-cell metadata.
+#' @param empty_droplet_col A string specifying the column name 
+#'   that indicates empty droplets (default: `"empty_droplet"`). 
+#'   Expected logical vector
+#' @param alive_col A string specifying the column name 
+#'   that indicates whether cells are alive (default: `"alive"`). 
+#'   Expected logical vector
+#' @param doublet_col A string specifying the column name 
+#'   that indicates doublets (default: `"scDblFinder.class"`). 
+#'   Expected character vector: `"doublet"` and/or `"singlet"` and/or `"unknown"`.
+#'
+#' @return A filtered data frame containing only cells that pass all QC checks.
+#' @export
+#' @importFrom rlang .data
+#' @importFrom dplyr filter
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+keep_quality_cells <- function(data,
+                               empty_droplet_col = "empty_droplet",
+                               alive_col = "alive",
+                               doublet_col = "scDblFinder.class") {
+  data |>
+    filter(
+      .data[[empty_droplet_col]] == FALSE,
+      .data[[alive_col]] == TRUE,
+      .data[[doublet_col]] != "doublet"
+    )
+}
+
