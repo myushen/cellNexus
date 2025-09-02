@@ -45,7 +45,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
     sample_metadata.0.2.3.parquet"
 )
 
-#' Gets the Curated Atlas metadata as a data frame.
+#' Gets the CellNexus metadata as a data frame.
 #'
 #' Downloads a parquet database of the Human Cell Atlas metadata to a local
 #' cache, and then opens it as a data frame. It can then be filtered and passed
