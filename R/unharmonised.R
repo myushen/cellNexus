@@ -87,9 +87,6 @@ get_unharmonised_dataset <- function(
 #' @importFrom dplyr group_by summarise filter collect
 #' @importFrom rlang .data
 #' @importFrom dbplyr remote_con
-#' @examples
-#' harmonised <- dplyr::filter(get_metadata(), tissue == "kidney blood vessel")
-#' unharmonised <- get_unharmonised_metadata(harmonised)
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.

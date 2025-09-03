@@ -127,7 +127,7 @@ The solution is to choose a different cache, for example
 library(dplyr)
 filtered_metadata <- get_metadata() |>
     filter(
-        ethnicity == "African" &
+        self_reported_ethnicity == "African" &
             assay \%LIKE\% "\%10x\%" &
             tissue == "lung parenchyma" &
             cell_type \%LIKE\% "\%CD4\%"

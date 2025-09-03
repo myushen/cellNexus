@@ -24,7 +24,7 @@ assert_single_cell_metadata <- function(sce_obj,
   genes <- rowData(sce_obj) |> rownames()
   assert(sce_obj |> inherits( "SingleCellExperiment"),
          "sce_obj is not identified as SingleCellExperiment object.")
-  assert(!grepl("^ENSG\\d+$", genes) |> all(), 
+  assert(grepl("^ENSG\\d+$", genes) |> all(), 
          "Genes in SingleCellExperiment object must be Ensembl gene ids.")
   assert(all(counts_matrix >= 0),
          "Counts for SingleCellExperiment cannot be negative.")
@@ -40,8 +40,8 @@ assert_single_cell_metadata <- function(sce_obj,
   (anyDuplicated(metadata_tbl$cell_id) == 0 ) |> assert("Cell names (cell_id) in the metadata must be unique.")
   
   # Check cell_id values are not duplicated when join with parquet
-  cells <- select(get_metadata(cache_directory = cache_dir), .data$cell_id) |> as_tibble()
-  if ((any(metadata_tbl$cell_id %in% cells$cell_id))) 
+  cells <- select(get_metadata(cache_directory = cache_dir), .data$cell_id)
+  if (cells |> filter(cell_id %in% metadata_tbl$cell_id) |> collect() |> nrow() > 0) 
     cli_alert_warning(
       single_line_str(
         "Import API says:
@@ -61,14 +61,14 @@ assert_pseudobulk_metadata <- function(sce_obj,
                                        pseudobulk = FALSE) {
   metadata_tbl <- metadata(sce_obj)$data
   # Pseudobulk checkpoint 
-  pseudobulk_sample <- c("sample_", "cell_type_harmonised")
+  pseudobulk_sample <- c("sample_id", "cell_type_unified_ensemble")
   if (isTRUE(pseudobulk)) {
     assert(
       all(pseudobulk_sample %in% (colData(sce_obj) |> colnames()) ),
-      "Sample_ and cell_type_harmonised columns must be in the SingleCellExperiment colData")
+      "sample_id and cell_type_unified_ensemble columns must be in the SingleCellExperiment colData")
     
     assert(c(pseudobulk_sample, "file_id_cellNexus_single_cell") %in% (names(metadata_tbl)) |> all() ,
-           "SingleCellExperiment metadata must at least contain sample_, cell_type_harmonised,
+           "SingleCellExperiment metadata must at least contain sample_id, cell_type_unified_ensemble,
            file_id_cellNexus_single_cell for pseudobulk generation"
     ) }
 }
@@ -227,9 +227,9 @@ calculate_pseudobulk <- function(sce_data,
   
   pseudobulk <- scuttle::aggregateAcrossCells(
     sce_data, 
-    colData(sce_data)[,c("sample_","cell_type_harmonised")] |>
+    colData(sce_data)[,c("sample_id","cell_type_unified_ensemble")] |>
       as_tibble(rownames = ".cell") |> 
-      mutate(aggregated_cells = paste(sample_, cell_type_harmonised, sep = "___")) |> 
+      mutate(aggregated_cells = paste(sample_id, cell_type_unified_ensemble, sep = "___")) |> 
       pull(aggregated_cells), 
     BPPARAM = BiocParallel::MulticoreParam(workers = 10)
   ) |> 

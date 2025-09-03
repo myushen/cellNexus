@@ -74,7 +74,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' library(dplyr)
 #' filtered_metadata <- get_metadata() |>
 #'     filter(
-#'         ethnicity == "African" &
+#'         self_reported_ethnicity == "African" &
 #'             assay %LIKE% "%10x%" &
 #'             tissue == "lung parenchyma" &
 #'             cell_type %LIKE% "%CD4%"

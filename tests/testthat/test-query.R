@@ -15,7 +15,7 @@ test_that("sync_assay_files() syncs appropriate files", {
     temp <- tempfile()
     test_file <- "4164d0eb972ad5e12719b6858c9559ea___1.h5ad"
     
-    atlas_name <- "cellxgene/19-12-2024"
+    atlas_name <- "cellxgene/21-08-2025"
 
     sync_assay_files(
       atlas_name = atlas_name,
@@ -38,8 +38,10 @@ test_that("get_SingleCellExperiment() syncs appropriate files", {
     meta <- get_metadata() |> head(2)
 
     # The remote dataset should have many genes
-    sce <- get_SingleCellExperiment(meta, cache_directory = temp) |> 
-      filter(file_id_cellNexus_single_cell == test_file)
+    sce <- get_SingleCellExperiment(meta, cache_directory = temp)
+    
+    sce <- sce[, sce$file_id_cellNexus_single_cell == test_file]
+
     sce |>
         row.names() |>
         length() |>
@@ -260,7 +262,7 @@ test_that("get_single_cell_experiment() expect to get local counts only", {
 
 test_that("get_pseudobulk() syncs appropriate files", {
   temp <- tempfile()
-  id <- "4329386e014727c59bcc66ed974e654c___1.h5ad"
+  id <- "017e1e042c4a35fe386e28e494a12767___1.h5ad"
   meta <- get_metadata(cache_directory = temp) |> 
     filter(empty_droplet == "FALSE",
            alive == "TRUE",
@@ -277,11 +279,11 @@ test_that("get_pseudobulk() syncs appropriate files", {
 
 test_that("get_metacell() syncs appropriate files", {
   cache = tempfile()
-  id = "009b708ad5032c0b9a91165013999d5f___2.h5ad"
-  sce = get_metadata(cache_directory = cache) |> filter(!is.na(metacell_64)) |> 
+  id = "4414dffc701125c467adad7977adcf21___1.h5ad"
+  sce = get_metadata(cache_directory = cache) |> filter(!is.na(metacell_8)) |> 
     filter(file_id_cellNexus_single_cell == id) |> 
     get_metacell(cache_directory = cache,
-                 cell_aggregation = "metacell_64")
+                 cell_aggregation = "metacell_8")
   
   sce |> colnames() |> length() |> expect_gt(1)
   
