@@ -110,19 +110,35 @@ subset_samples <- function(dataset_id, observation_joinid, sample_id) {
 #   data
 # }
 
+# computing_resources =  crew.cluster::crew_controller_slurm(
+#   name = "elastic",
+#   workers = 300,
+#   tasks_max = 20,
+#   seconds_idle = 30,
+#   crashes_error = 10,
+#   options_cluster = crew.cluster::crew_options_slurm(
+#     memory_gigabytes_required = c(25, 35, 40, 40, 70), 
+#     cpus_per_task = c(2, 2, 5, 10, 20), 
+#     time_minutes = c(60*4, 60*4, 60*4, 60*24, 60*24),
+#     verbose = T
+#   ))
+
 computing_resources = crew.cluster::crew_controller_slurm(
-  slurm_memory_gigabytes_per_cpu = 40, 
+  #slurm_memory_gigabytes_per_cpu = 40, 
+  slurm_memory_gigabytes_per_cpu = 25, 
   slurm_cpus_per_task = 1,
   workers = 100,
   verbose = TRUE
 )
+
 tar_option_set(
   memory = "transient",
   garbage_collection = TRUE,
   storage = "worker",
   retrieval = "worker",
   format = "qs",
-  cue = tar_cue(mode = "never"),
+  #cue = tar_cue(mode = "never"),
+  cue = tar_cue(mode = "thorough"),
   error = "continue",
   #debug = "sliced_sce_9c40d298d224bab6",
   controller = computing_resources
