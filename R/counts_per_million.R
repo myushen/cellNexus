@@ -11,7 +11,7 @@
 get_counts_per_million <- function(sce, input_file, output_file) {
 
   # Save SCE to the cache directory counts folder
-  sce |> writeH5AD(input_file, compression = "gzip")
+  sce |> zellkonverter::writeH5AD(input_file, compression = "gzip")
   
   # Avoid completely empty cells
   col_sums <- colSums(as.matrix(assay(sce)))
