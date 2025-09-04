@@ -100,8 +100,6 @@ assert_pseudobulk_metadata <- function(sce_obj,
 #' @importFrom SingleCellExperiment reducedDims rowData reducedDims<-
 #' @importFrom S4Vectors metadata metadata<-
 #' @importFrom SummarizedExperiment assay assay<-
-#' @importFrom stringr str_detect
-#' @importFrom zellkonverter writeH5AD
 #' @examples
 #' data(sample_sce_obj)
 #' import_one_sce(sample_sce_obj,
@@ -205,7 +203,6 @@ import_one_sce <- function(
 #' @importFrom cli cli_alert_info cli_alert_warning
 #' @importFrom S4Vectors metadata
 #' @importFrom SummarizedExperiment assay assay<- assays
-#' @importFrom tidybulk quantile_normalise_abundance
 calculate_pseudobulk <- function(sce_data,
                                  atlas_name,
                                  import_date,
@@ -242,7 +239,7 @@ calculate_pseudobulk <- function(sce_data,
   normalised_counts_best_distribution <- assay(pseudobulk, assay_name) |>
     preprocessCore::normalize.quantiles.determine.target()
   
-  normalised_pseudobulk <- pseudobulk |> quantile_normalise_abundance(
+  normalised_pseudobulk <- pseudobulk |> tidybulk::quantile_normalise_abundance(
     method="preprocesscore_normalize_quantiles_use_target",
     target_distribution = normalised_counts_best_distribution
   ) |> 
@@ -256,8 +253,8 @@ calculate_pseudobulk <- function(sce_data,
   qnorm_file_path <- file.path(quantile_normalised_dir, basename(file_id_cellNexus_single_cell)) |> paste0(extension)
   
   # Save pseudobulk counts
-  writeH5AD(pseudobulk, counts_file_path, compression = "gzip")
-  writeH5AD(normalised_pseudobulk, qnorm_file_path, compression = "gzip")
+  zellkonverter::writeH5AD(pseudobulk, counts_file_path, compression = "gzip")
+  zellkonverter::writeH5AD(normalised_pseudobulk, qnorm_file_path, compression = "gzip")
   
   cli_alert_info("pseudobulk are generated in {.path {pseudobulk_directory}}. ")
 }

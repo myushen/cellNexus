@@ -563,13 +563,11 @@ validate_data <- function(
 #' @param metacell_column A character vector of metacell column (e.g. "metacell_2", "metacell_4") from metadata.
 #' @return A `SummarizedExperiment` object
 #' @importFrom dplyr mutate filter
-#' @importFrom zellkonverter readH5AD
 #' @importFrom SummarizedExperiment colData<-
 #' @importFrom tibble column_to_rownames
 #' @importFrom utils head
 #' @importFrom cli cli_alert_warning cli_abort
 #' @importFrom glue glue
-#' @importFrom stringr str_replace_all
 #' @noRd
 group_to_data_container <- function(i, df, dir_prefix, features, grouping_column,
                                     metacell_column = NULL) {
@@ -593,7 +591,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     })
   
   # Load experiment
-  experiment <- readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
+  experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
   
   # Fix for https://github.com/tidyverse/dplyr/issues/6746
   force(i)
