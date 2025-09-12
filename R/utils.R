@@ -132,6 +132,68 @@ read_parquet <- function(conn, path, filename_column=FALSE){
     tbl(conn, from_clause)
 }
 
+#' Create join index from a parquet file path
+add_index_parquet <- function(conn, path, index_cols, table_name = NULL, filename_column = FALSE) {
+  if (is.null(table_name)) {
+    table_name <- tools::file_path_sans_ext(basename(path))
+  }
+  # Create table from parquet
+  query <- glue_sql("
+    CREATE TABLE {`table_name`} AS
+    SELECT * 
+    FROM read_parquet([{`path`*}], union_by_name=true, filename={filename_column})
+  ", .con = conn)
+  dbExecute(conn, query)
+  
+  # Add index
+  index_name <- paste0(table_name, "_idx_", paste(index_cols, collapse = "_"))
+  dbExecute(conn, glue_sql("
+    CREATE INDEX {`index_name`} ON {`table_name`} ({`index_cols`*})
+  ", .con = conn))
+  
+  message(sprintf("Indexed table '%s' created from parquet with index on %s", 
+                  table_name, paste(index_cols, collapse = ", ")))
+  
+  invisible(table_name)
+}
+
+#' Join registered databased based on index
+read_and_join_parquets <- function(conn, path, join_keys, filename_column = FALSE) {
+  
+  # Read one parquet directly
+  if (length(path) == 1) {
+    cli_alert_info("Joining one database is not practical.
+                   Did you mean to use {.code use_split_files = TRUE} and provide multiple parquet files?")
+    return(
+      read_parquet(conn, path, filename_column = filename_column)
+    )
+  }
+  
+  # Create database index for more than one parquet
+  if (length(path) >= 2) {
+    # Derive table names
+    table_names <- tools::file_path_sans_ext(basename(path))
+    
+    # Materialize + index each parquet
+    purrr::walk2(path, table_names, ~{
+      add_index_parquet(conn, .x, index_cols = join_keys, table_name = .y, filename_column = filename_column)
+    })
+    
+    # Handle version dot in parquet names for DuckDB
+    quoted_names <- DBI::dbQuoteIdentifier(conn, table_names)
+    
+    # Join by index
+    sql_join <- purrr::reduce(
+      quoted_names[-1],
+      ~ glue("{.x}\nLEFT JOIN {.y} USING ({paste(join_keys, collapse = ', ')})"),
+      .init = glue("SELECT * FROM {quoted_names[1]}")
+    )
+    
+    tbl(conn, sql(sql_join))
+  }
+}
+
+
 #' Deletes specific counts and metadata from cache
 #' @importFrom purrr map
 #' @importFrom dplyr filter distinct pull collect

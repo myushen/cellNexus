@@ -22,8 +22,22 @@ cache <- rlang::env(
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata_url <- function(databases = c("metadata.1.2.13.parquet")) {
-  clear_old_metadata(updated_data = databases)
+get_metadata_url <- function(databases  = "metadata.1.2.13.parquet", 
+                             use_split_files = FALSE,
+                             use_census = FALSE,
+                             use_metacell = FALSE) {
+  #clear_old_metadata(updated_data = databases)
+  if (use_split_files) {
+    # Return URLs for the three split files
+    databases <- c("cellnexus_cell_metadata.1.2.13.parquet",
+                   "sample_metadata.1.2.13.parquet")
+  }
+  if (use_split_files && use_census) {
+    databases <- databases |> c("census_cell_metadata.1.2.13.parquet")
+  }
+  if (use_split_files && use_metacell) {
+    databases <- databases |> c("metacell_metadata.1.2.13.parquet")
+  }
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}")
 }
@@ -160,29 +174,31 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' get_metadata(cache_directory = path.expand('~'))
 #' ```
 #' 
-#' @inheritDotParams read_parquet
+#' @inheritDotParams get_metadata_url
 #' 
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata <- function(
+get_metadata_base <- function(
     cloud_metadata = get_metadata_url(),
     local_metadata = NULL,
     cache_directory = get_default_cache_dir(),
     use_cache = TRUE,
+    use_split_files = FALSE,
     ...
 ) {
+  # Handle split files
+  if (isTRUE(use_split_files)) cloud_metadata <- get_metadata_url(use_split_files = TRUE, ...)
+  
   # Synchronize remote files
   walk(cloud_metadata, function(url) {
     # Calculate the file path from the URL
     path <- file.path(cache_directory, url |> basename())
     if (!file.exists(path)) {
       report_file_sizes(url)
-      sync_remote_file(url,
-                       path,
-                       progress(type = "down", con = stderr()))
+      sync_remote_file(url, path, progress(type = "down", con = stderr()))
     }
   })
   
@@ -197,16 +213,61 @@ get_metadata <- function(
     hash_sha256()
   cached_connection <- cache$metadata_table[[hash]]
   
-  if (!is.null(cached_connection) && isTRUE(use_cache)) {
-    # If the file list is identical, just re-use the database table
-    cached_connection
-  }
-  else {
-    table <- duckdb() |>
-      dbConnect(drv = _, read_only = TRUE) |>
-      read_parquet(path = all_parquet, ...)
-    cache$metadata_table[[hash]] <- table
-    table
-  }
+  list(
+    all_parquet = all_parquet,
+    hash = hash,
+    cached_connection = if (isTRUE(use_cache)) cached_connection else NULL
+  )
+  # if (!is.null(cached_connection) && isTRUE(use_cache)) {
+  #   # If the file list is identical, just re-use the database table
+  #   cached_connection
+  # }
+  # else {
+  #   table <- duckdb() |>
+  #     dbConnect(drv = _, read_only = TRUE) |>
+  #     read_and_join_parquets(path = all_parquet, 
+  #                            join_keys = c("sample_id", "dataset_id"),
+  #                            ...)
+  #   cache$metadata_table[[hash]] <- table
+  #   table
+  # }
+}
+
+#'
+#' @inheritDotParams get_metadata_base
+get_metadata <- function(..., join_keys = c("sample_id", "dataset_id")) {
+  base <- get_metadata_base(...)
+  if (!is.null(base$cached_connection)) return(base$cached_connection)
+  
+  table <- dbConnect(duckdb(), read_only = TRUE) |>
+    read_and_join_parquets(path = base$all_parquet,
+                           join_keys = c("sample_id", "dataset_id"))
+  cache$metadata_table[[base$hash]] <- table
+  table
+}
+
+#' Join original census metadata
+#' @inheritDotParams get_metadata_base
+join_census_table <- function(..., join_keys = c("sample_id", "dataset_id", "observation_joinid")) {
+  base <- get_metadata_base(..., use_split_files = TRUE, use_census = TRUE)
+  if (!is.null(base$cached_connection)) return(base$cached_connection)
+  
+  table <- dbConnect(duckdb(), read_only = TRUE) |>
+    read_and_join_parquets(path = base$all_parquet,
+                           join_keys = c("sample_id", "dataset_id", "cell_id", "observation_joinid"))
+  cache$metadata_table[[base$hash]] <- table
+  table
+}
+
+# Join metacell metadata
+join_metacell_table <- function(...) {
+  base <- get_metadata_base(...)
+  if (!is.null(base$cached_connection)) return(base$cached_connection)
+  
+  table <- dbConnect(duckdb(), read_only = TRUE) |>
+    read_and_join_parquets(path = base$all_parquet,
+                           join_keys = c("sample_id", "dataset_id", "cell_id"))
+  cache$metadata_table[[base$hash]] <- table
+  table
 }
 
