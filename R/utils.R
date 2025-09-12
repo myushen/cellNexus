@@ -132,8 +132,19 @@ read_parquet <- function(conn, path, filename_column=FALSE){
     tbl(conn, from_clause)
 }
 
-#' Create join index from a parquet file path
+#' Create indexed table from parquet file
+#' @param conn Database connection
+#' @param path Path to parquet file
+#' @param index_cols Columns to create index on
+#' @param table_name Name for the table (default: filename without extension)
+#' @param filename_column Whether to include filename column
+#' @return Table name (invisibly)
+#' @keywords internal
 add_index_parquet <- function(conn, path, index_cols, table_name = NULL, filename_column = FALSE) {
+  if (inherits(conn, "tbl_sql")) {
+    conn <- conn$src$con  # extract underlying DBIConnection
+  }
+  
   if (is.null(table_name)) {
     table_name <- tools::file_path_sans_ext(basename(path))
   }
@@ -157,8 +168,16 @@ add_index_parquet <- function(conn, path, index_cols, table_name = NULL, filenam
   invisible(table_name)
 }
 
-#' Join registered databased based on index
-read_and_join_parquets <- function(conn, path, join_keys, filename_column = FALSE) {
+#' Join multiple parquet files with indexing
+#' @param conn Database connection
+#' @param path Vector of parquet file paths
+#' @param join_keys Columns to join on
+#' @param filename_column Whether to include filename column
+#' @param ... Additional arguments
+#' @return Lazy SQL table
+#' @keywords internal
+read_and_join_parquets <- function(conn, path, join_keys, filename_column = FALSE,
+                                   ...) {
   
   # Read one parquet directly
   if (length(path) == 1) {
@@ -193,6 +212,17 @@ read_and_join_parquets <- function(conn, path, join_keys, filename_column = FALS
   }
 }
 
+#' Get the connection from a tbl_sql object
+#' @param tbl_or_conn A tbl_sql object or a connection object
+#' @return A connection object
+#' @keywords internal
+#' @noRd
+get_conn <- function(tbl_or_conn) {
+  if (inherits(tbl_or_conn, "tbl_sql")) {
+    return(tbl_or_conn$src$con)
+  }
+  tbl_or_conn
+}
 
 #' Deletes specific counts and metadata from cache
 #' @importFrom purrr map

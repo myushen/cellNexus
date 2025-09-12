@@ -2,10 +2,25 @@
 % Please edit documentation in R/utils.R
 \name{read_and_join_parquets}
 \alias{read_and_join_parquets}
-\title{Join registered databased based on index}
+\title{Join multiple parquet files with indexing}
 \usage{
-read_and_join_parquets(conn, path, join_keys, filename_column = FALSE)
+read_and_join_parquets(conn, path, join_keys, filename_column = FALSE, ...)
+}
+\arguments{
+\item{conn}{Database connection}
+
+\item{path}{Vector of parquet file paths}
+
+\item{join_keys}{Columns to join on}
+
+\item{filename_column}{Whether to include filename column}
+
+\item{...}{Additional arguments}
+}
+\value{
+Lazy SQL table
 }
 \description{
-Join registered databased based on index
+Join multiple parquet files with indexing
 }
+\keyword{internal}

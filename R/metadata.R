@@ -23,24 +23,28 @@ cache <- rlang::env(
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_metadata_url <- function(databases  = "metadata.1.2.13.parquet", 
-                             use_split_files = FALSE,
-                             use_census = FALSE,
-                             use_metacell = FALSE) {
+                             use_split_files = FALSE) {
   #clear_old_metadata(updated_data = databases)
   if (use_split_files) {
     # Return URLs for the three split files
     databases <- c("cellnexus_cell_metadata.1.2.13.parquet",
                    "sample_metadata.1.2.13.parquet")
   }
-  if (use_split_files && use_census) {
-    databases <- databases |> c("census_cell_metadata.1.2.13.parquet")
-  }
-  if (use_split_files && use_metacell) {
-    databases <- databases |> c("metacell_metadata.1.2.13.parquet")
-  }
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}")
 }
+
+#' Returns the URL for census metadata file
+get_census_metadata_url <- single_line_str(
+  "https://object-store.rc.nectar.org.au/v1/
+  AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/census_cell_metadata.1.2.13.parquet"
+  )
+
+#' Returns the URL for metacell metadata file
+get_metacell_metadata_url <- single_line_str(
+  "https://object-store.rc.nectar.org.au/v1/
+  AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/metacell_metadata.1.2.13.parquet"
+)
 
 #' URL pointing to the sample metadata file, which is smaller and for test,
 #' demonstration, and vignette purposes only
@@ -58,6 +62,71 @@ SAMPLE_DATABASE_URL <- single_line_str(
     AUTH_06d6e008e3e642da99d806ba3ea629c5/metadata/
     sample_metadata.0.2.3.parquet"
 )
+
+#' Internal function to prepare metadata for database connection
+#'
+#' This function handles the preparation of metadata files for database connection,
+#' including downloading remote files, managing cache, and preparing file paths.
+#' It's used internally by get_metadata() and is not intended for direct use.
+#'
+#' @param cloud_metadata Optional character vector of any length. HTTP URL/URLs pointing
+#'   to the name and location of parquet database/databases. By default, it points to 
+#'   cellNexus ARDC Nectar Research Cloud. Assign `NULL` to query local_metadata only 
+#'   if exists.
+#' @param local_metadata Optional character vector of any length representing the local
+#'   path of parquet database(s).
+#' @param cache_directory Optional character vector of length 1. A file path on
+#'   your local system to a directory (not a file) that will be used to store
+#'   metadata files.
+#' @param use_cache Optional logical scalar. If `TRUE` (the default), and this
+#'   function has been called before with the same parameters, then a cached
+#'   reference to the table will be returned. If `FALSE`, a new connection will
+#'   be created no matter what.
+#' @param use_split_files Optional logical scalar. If `TRUE`, uses split metadata files
+#'   instead of the single combined metadata file.
+#' @return A list containing:
+#'   \item{all_parquet}{Character vector of parquet file paths}
+#'   \item{hash}{SHA256 hash of the file list for caching}
+#'   \item{cached_connection}{Cached database connection if available and use_cache is TRUE}
+#' @keywords internal
+#' @noRd
+get_metadata_base <- function(
+    cloud_metadata = get_metadata_url(),
+    local_metadata = NULL,
+    cache_directory = get_default_cache_dir(),
+    use_cache = TRUE,
+    use_split_files = FALSE
+) {
+  # Handle split files
+  if (isTRUE(use_split_files)) cloud_metadata <- get_metadata_url(use_split_files = TRUE)
+  
+  # Synchronize remote files
+  walk(cloud_metadata, function(url) {
+    # Calculate the file path from the URL
+    path <- file.path(cache_directory, url |> basename())
+    if (!file.exists(path)) {
+      report_file_sizes(url)
+      sync_remote_file(url, path, progress(type = "down", con = stderr()))
+    }
+  })
+  
+  if (is.null(cloud_metadata)) all_parquet <- c(local_metadata)
+  if (!is.null(cloud_metadata)) all_parquet <- c(file.path(cache_directory, 
+                                                           cloud_metadata |> basename()), 
+                                                 local_metadata)
+  
+  # We try to avoid re-reading a set of parquet files 
+  # that is identical to a previous set by hashing the file list
+  hash <- all_parquet |> paste0(collapse="") |>
+    hash_sha256()
+  cached_connection <- cache$metadata_table[[hash]]
+  
+  list(
+    all_parquet = all_parquet,
+    hash = hash,
+    cached_connection = if (isTRUE(use_cache)) cached_connection else NULL
+  )
+}
 
 #' Gets the CellNexus metadata as a data frame.
 #'
@@ -79,6 +148,10 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #'   function has been called before with the same parameters, then a cached
 #'   reference to the table will be returned. If `FALSE`, a new connection will
 #'   be created no matter what.
+#' @param use_split_files Optional logical scalar. If `TRUE`, uses split metadata files
+#'   instead of the single combined metadata file.
+#' @param join_keys Character vector specifying the columns to join on when using
+#'   multiple parquet files. Default is c("sample_id", "dataset_id").
 #' @return A lazy data.frame subclass containing the metadata. You can interact
 #'   with this object using most standard dplyr functions. For string matching,
 #'   it is recommended that you use `stringr::str_like` to filter character
@@ -174,100 +247,127 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' get_metadata(cache_directory = path.expand('~'))
 #' ```
 #' 
-#' @inheritDotParams get_metadata_url
-#' 
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata_base <- function(
-    cloud_metadata = get_metadata_url(),
-    local_metadata = NULL,
-    cache_directory = get_default_cache_dir(),
-    use_cache = TRUE,
-    use_split_files = FALSE,
-    ...
-) {
-  # Handle split files
-  if (isTRUE(use_split_files)) cloud_metadata <- get_metadata_url(use_split_files = TRUE, ...)
+get_metadata <- function(cloud_metadata = get_metadata_url(),
+                         local_metadata = NULL,
+                         cache_directory = get_default_cache_dir(),
+                         use_cache = TRUE,
+                         use_split_files = FALSE,
+                         join_keys = c("sample_id", "dataset_id")) {
+  base <- get_metadata_base(cloud_metadata,
+                            local_metadata,
+                            cache_directory, 
+                            use_cache,
+                            use_split_files)
+  if (!is.null(base$cached_connection)) return(base$cached_connection)
   
-  # Synchronize remote files
-  walk(cloud_metadata, function(url) {
-    # Calculate the file path from the URL
-    path <- file.path(cache_directory, url |> basename())
-    if (!file.exists(path)) {
-      report_file_sizes(url)
-      sync_remote_file(url, path, progress(type = "down", con = stderr()))
-    }
+  table <- dbConnect(duckdb(), read_only = TRUE) |>
+    read_and_join_parquets(path = base$all_parquet,
+                           join_keys = join_keys)
+  cache$metadata_table[[base$hash]] <- table
+  table
+}
+
+#' Join census metadata with cellNexus metadata
+#'
+#' Downloads and joins the original census metadata with the provided cellNexus metadata.
+#' This function creates indexed tables for efficient joining and returns a data frame.
+#'
+#' @param tbl_or_conn A tbl_sql object (from get_metadata) or a database connection
+#' @return A lazy SQL table with census metadata joined to the cellNexus metadata
+#' @export
+#' @examples
+#' \dontrun{
+#' # Join census metadata with split files metadata
+#' get_metadata(use_split_files = TRUE) |> join_census_table()
+#' }
+join_census_table <- function(tbl_or_conn) {
+  conn <- get_conn(tbl_or_conn)
+
+  # Download metacell metadata if not exists
+  census_path <- file.path(get_default_cache_dir(), basename(get_census_metadata_url))
+  if (!file.exists(census_path)) {
+    report_file_sizes(get_census_metadata_url)
+    sync_remote_file(get_census_metadata_url, census_path, progress(type = "down", con = stderr()))
+  }
+  
+# Clean up any existing tables
+  tryCatch({
+    dbExecute(conn, "DROP TABLE IF EXISTS census_metadata")
+    dbExecute(conn, "DROP VIEW IF EXISTS temp_base_view")
+  }, error = function(e) {
+    # Ignore errors when dropping tables/views
   })
   
-  if (is.null(cloud_metadata)) all_parquet <- c(local_metadata)
-  if (!is.null(cloud_metadata)) all_parquet <- c(file.path(cache_directory, 
-                                                           cloud_metadata |> basename()), 
-                                                 local_metadata)
+  # Create indexed table from census parquet
+  add_index_parquet(conn, census_path,
+                    index_cols = c("sample_id", "dataset_id", "observation_joinid"),
+                    table_name = "census_metadata")
   
-  # We try to avoid re-reading a set of parquet files 
-  # that is identical to a previous set by hashing the file list
-  hash <- all_parquet |> paste0(collapse="") |>
-    hash_sha256()
-  cached_connection <- cache$metadata_table[[hash]]
+  # Create a temporary VIEW from the input tbl_sql (no materialisation)
+  sql_base <- dbplyr::sql_render(tbl_or_conn)
+  dbExecute(conn, paste0("CREATE TEMP VIEW temp_base_view AS ", sql_base))
   
-  list(
-    all_parquet = all_parquet,
-    hash = hash,
-    cached_connection = if (isTRUE(use_cache)) cached_connection else NULL
-  )
-  # if (!is.null(cached_connection) && isTRUE(use_cache)) {
-  #   # If the file list is identical, just re-use the database table
-  #   cached_connection
-  # }
-  # else {
-  #   table <- duckdb() |>
-  #     dbConnect(drv = _, read_only = TRUE) |>
-  #     read_and_join_parquets(path = all_parquet, 
-  #                            join_keys = c("sample_id", "dataset_id"),
-  #                            ...)
-  #   cache$metadata_table[[hash]] <- table
-  #   table
-  # }
+  # Join the temporary view with census metadata
+  sql_join <- "
+    SELECT *
+    FROM temp_base_view
+    LEFT JOIN census_metadata USING (sample_id, dataset_id, observation_joinid)
+  "
+  
+  tbl(conn, sql(sql_join))
 }
 
+#' Join metacell metadata with cellNexus metadata
 #'
-#' @inheritDotParams get_metadata_base
-get_metadata <- function(..., join_keys = c("sample_id", "dataset_id")) {
-  base <- get_metadata_base(...)
-  if (!is.null(base$cached_connection)) return(base$cached_connection)
+#' Downloads and joins the metacell metadata with the provided cellNexus metadata.
+#' This function creates indexed tables for efficient joining and returns a data frame.
+#'
+#' @param tbl_or_conn A tbl_sql object (from get_metadata) or a database connection
+#' @return A lazy SQL table with metacell metadata joined to the cellNexus metadata
+#' @export
+#' @examples
+#' \dontrun{
+#' # Join metacell metadata with split files metadata
+#' get_metadata(use_split_files = TRUE) |> join_metacell_table()
+#' }
+join_metacell_table <- function(tbl_or_conn) {
+  conn <- get_conn(tbl_or_conn)
   
-  table <- dbConnect(duckdb(), read_only = TRUE) |>
-    read_and_join_parquets(path = base$all_parquet,
-                           join_keys = c("sample_id", "dataset_id"))
-  cache$metadata_table[[base$hash]] <- table
-  table
-}
-
-#' Join original census metadata
-#' @inheritDotParams get_metadata_base
-join_census_table <- function(..., join_keys = c("sample_id", "dataset_id", "observation_joinid")) {
-  base <- get_metadata_base(..., use_split_files = TRUE, use_census = TRUE)
-  if (!is.null(base$cached_connection)) return(base$cached_connection)
+  # Download metacell metadata if not exists
+  metacell_path <- file.path(get_default_cache_dir(), basename(get_metacell_metadata_url))
+  if (!file.exists(metacell_path)) {
+    report_file_sizes(get_metacell_metadata_url)
+    sync_remote_file(get_metacell_metadata_url, metacell_path, progress(type = "down", con = stderr()))
+  }
   
-  table <- dbConnect(duckdb(), read_only = TRUE) |>
-    read_and_join_parquets(path = base$all_parquet,
-                           join_keys = c("sample_id", "dataset_id", "cell_id", "observation_joinid"))
-  cache$metadata_table[[base$hash]] <- table
-  table
-}
-
-# Join metacell metadata
-join_metacell_table <- function(...) {
-  base <- get_metadata_base(...)
-  if (!is.null(base$cached_connection)) return(base$cached_connection)
+  # Clean up any existing tables
+  tryCatch({
+    dbExecute(conn, "DROP TABLE IF EXISTS metacell_metadata")
+    dbExecute(conn, "DROP VIEW IF EXISTS temp_base_view")
+  }, error = function(e) {
+    # Ignore errors when dropping tables/views
+  })
   
-  table <- dbConnect(duckdb(), read_only = TRUE) |>
-    read_and_join_parquets(path = base$all_parquet,
-                           join_keys = c("sample_id", "dataset_id", "cell_id"))
-  cache$metadata_table[[base$hash]] <- table
-  table
+  # Create indexed table from metacell parquet
+  add_index_parquet(conn, metacell_path,
+                    index_cols = c("sample_id", "dataset_id", "cell_id"),
+                    table_name = "metacell_metadata")
+  
+  # Create a temporary VIEW from the input tbl_sql (no materialisation)
+  sql_base <- dbplyr::sql_render(tbl_or_conn)
+  dbExecute(conn, paste0("CREATE TEMP VIEW temp_base_view AS ", sql_base))
+  
+  # Join the temporary view with metacell metadata
+  sql_join <- "
+    SELECT *
+    FROM temp_base_view
+    LEFT JOIN metacell_metadata USING (sample_id, dataset_id, cell_id)
+  "
+  
+  tbl(conn, sql(sql_join))
 }
-

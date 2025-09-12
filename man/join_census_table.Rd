@@ -2,32 +2,23 @@
 % Please edit documentation in R/metadata.R
 \name{join_census_table}
 \alias{join_census_table}
-\title{Join original census metadata}
+\title{Join census metadata with cellNexus metadata}
 \usage{
-join_census_table(
-  ...,
-  join_keys = c("sample_id", "dataset_id", "observation_joinid")
-)
+join_census_table(tbl_or_conn)
 }
 \arguments{
-\item{...}{
-  Arguments passed on to \code{\link[=get_metadata_base]{get_metadata_base}}
-  \describe{
-    \item{\code{cloud_metadata}}{Optional character vector of any length. HTTP URL/URLs pointing
-to the name and location of parquet database/databases. By default, it points to
-cellNexus ARDC Nectar Research Cloud. Assign \code{NULL} to query local_metadata only
-if exists.}
-    \item{\code{local_metadata}}{Optional character vector of any length representing the local
-path of parquet database(s).}
-    \item{\code{cache_directory}}{Optional character vector of length 1. A file path on
-your local system to a directory (not a file) that will be used to store
-\code{metadata.parquet}}
-    \item{\code{use_cache}}{Optional logical scalar. If \code{TRUE} (the default), and this
-function has been called before with the same parameters, then a cached
-reference to the table will be returned. If \code{FALSE}, a new connection will
-be created no matter what.}
-  }}
+\item{tbl_or_conn}{A tbl_sql object (from get_metadata) or a database connection}
+}
+\value{
+A lazy SQL table with census metadata joined to the cellNexus metadata
 }
 \description{
-Join original census metadata
+Downloads and joins the original census metadata with the provided cellNexus metadata.
+This function creates indexed tables for efficient joining and returns a data frame.
+}
+\examples{
+\dontrun{
+# Join census metadata with split files metadata
+get_metadata(use_split_files = TRUE) |> join_census_table()
+}
 }

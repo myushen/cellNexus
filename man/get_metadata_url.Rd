@@ -9,9 +9,7 @@
 \usage{
 get_metadata_url(
   databases = "metadata.1.2.13.parquet",
-  use_split_files = FALSE,
-  use_census = FALSE,
-  use_metacell = FALSE
+  use_split_files = FALSE
 )
 }
 \arguments{

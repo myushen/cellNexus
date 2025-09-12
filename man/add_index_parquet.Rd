@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{add_index_parquet}
 \alias{add_index_parquet}
-\title{Create join index from a parquet file path}
+\title{Create indexed table from parquet file}
 \usage{
 add_index_parquet(
   conn,
@@ -12,6 +12,21 @@ add_index_parquet(
   filename_column = FALSE
 )
 }
-\description{
-Create join index from a parquet file path
+\arguments{
+\item{conn}{Database connection}
+
+\item{path}{Path to parquet file}
+
+\item{index_cols}{Columns to create index on}
+
+\item{table_name}{Name for the table (default: filename without extension)}
+
+\item{filename_column}{Whether to include filename column}
 }
+\value{
+Table name (invisibly)
+}
+\description{
+Create indexed table from parquet file
+}
+\keyword{internal}
