@@ -9,13 +9,24 @@
 \usage{
 get_metadata_url(
   databases = "metadata.1.2.13.parquet",
-  use_split_files = FALSE
+  use_split_files = FALSE,
+  use_census = FALSE,
+  use_metacell = FALSE
 )
 }
 \arguments{
 \item{databases}{A character vector specifying the names of the metadata files.
 Download the specific metadata by defining the metadata version. By default, it uses
 metadata.1.2.13.parquet}
+
+\item{use_split_files}{Logical, default \code{FALSE}. If \code{TRUE}, returns
+URLs for the split metadata files.}
+
+\item{use_census}{Logical, default \code{FALSE}. If \code{TRUE}, returns the URL
+for the census metadata file.}
+
+\item{use_metacell}{Logical, default \code{FALSE}. If \code{TRUE}, returns the URL
+for the metacell metadata file.}
 }
 \value{
 A character vector of URLs to parquet files to download

@@ -140,6 +140,7 @@ read_parquet <- function(conn, path, filename_column=FALSE){
 #' @param filename_column Whether to include filename column
 #' @return Table name (invisibly)
 #' @keywords internal
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 add_index_parquet <- function(conn, path, index_cols, table_name = NULL, filename_column = FALSE) {
   if (inherits(conn, "tbl_sql")) {
     conn <- conn$src$con  # extract underlying DBIConnection
@@ -173,20 +174,13 @@ add_index_parquet <- function(conn, path, index_cols, table_name = NULL, filenam
 #' @param path Vector of parquet file paths
 #' @param join_keys Columns to join on
 #' @param filename_column Whether to include filename column
-#' @param ... Additional arguments
 #' @return Lazy SQL table
 #' @keywords internal
-read_and_join_parquets <- function(conn, path, join_keys, filename_column = FALSE,
-                                   ...) {
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+read_and_join_parquets <- function(conn, path, join_keys, filename_column = FALSE) {
   
   # Read one parquet directly
-  if (length(path) == 1) {
-    cli_alert_info("Joining one database is not practical.
-                   Did you mean to use {.code use_split_files = TRUE} and provide multiple parquet files?")
-    return(
-      read_parquet(conn, path, filename_column = filename_column)
-    )
-  }
+  if (length(path) == 1) return(read_parquet(conn, path, filename_column = filename_column))
   
   # Create database index for more than one parquet
   if (length(path) >= 2) {

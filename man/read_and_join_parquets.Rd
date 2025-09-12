@@ -3,8 +3,11 @@
 \name{read_and_join_parquets}
 \alias{read_and_join_parquets}
 \title{Join multiple parquet files with indexing}
+\source{
+\href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
+}
 \usage{
-read_and_join_parquets(conn, path, join_keys, filename_column = FALSE, ...)
+read_and_join_parquets(conn, path, join_keys, filename_column = FALSE)
 }
 \arguments{
 \item{conn}{Database connection}
@@ -14,8 +17,6 @@ read_and_join_parquets(conn, path, join_keys, filename_column = FALSE, ...)
 \item{join_keys}{Columns to join on}
 
 \item{filename_column}{Whether to include filename column}
-
-\item{...}{Additional arguments}
 }
 \value{
 Lazy SQL table

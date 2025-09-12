@@ -13,6 +13,12 @@ cache <- rlang::env(
 #' @param databases A character vector specifying the names of the metadata files. 
 #'   Download the specific metadata by defining the metadata version. By default, it uses
 #'   metadata.1.2.13.parquet
+#' @param use_split_files Logical, default `FALSE`. If `TRUE`, returns 
+#'   URLs for the split metadata files.
+#' @param use_census Logical, default `FALSE`. If `TRUE`, returns the URL 
+#'   for the census metadata file.
+#' @param use_metacell Logical, default `FALSE`. If `TRUE`, returns the URL 
+#'   for the metacell metadata file.
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
@@ -23,28 +29,29 @@ cache <- rlang::env(
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_metadata_url <- function(databases  = "metadata.1.2.13.parquet", 
-                             use_split_files = FALSE) {
+                             use_split_files = FALSE,
+                             use_census = FALSE,
+                             use_metacell = FALSE) {
   #clear_old_metadata(updated_data = databases)
   if (use_split_files) {
     # Return URLs for the three split files
     databases <- c("cellnexus_cell_metadata.1.2.13.parquet",
                    "sample_metadata.1.2.13.parquet")
   }
+  
+  if (use_census) {
+    # Returns the URL for census metadata file
+    databases <- "census_cell_metadata.1.2.13.parquet"
+  }
+  
+  if (use_metacell) {
+    # Returns the URL for metacell metadata file
+    databases <- "metacell_metadata.1.2.13.parquet"
+  }
+
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}")
 }
-
-#' Returns the URL for census metadata file
-get_census_metadata_url <- single_line_str(
-  "https://object-store.rc.nectar.org.au/v1/
-  AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/census_cell_metadata.1.2.13.parquet"
-  )
-
-#' Returns the URL for metacell metadata file
-get_metacell_metadata_url <- single_line_str(
-  "https://object-store.rc.nectar.org.au/v1/
-  AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/metacell_metadata.1.2.13.parquet"
-)
 
 #' URL pointing to the sample metadata file, which is smaller and for test,
 #' demonstration, and vignette purposes only
@@ -288,34 +295,38 @@ get_metadata <- function(cloud_metadata = get_metadata_url(),
 join_census_table <- function(tbl_or_conn) {
   conn <- get_conn(tbl_or_conn)
 
+  # Extract census URL
+  census_url = get_metadata_url(use_census = T)
+  
   # Download metacell metadata if not exists
-  census_path <- file.path(get_default_cache_dir(), basename(get_census_metadata_url))
+  census_path <- file.path(get_default_cache_dir(), basename(census_url))
   if (!file.exists(census_path)) {
-    report_file_sizes(get_census_metadata_url)
-    sync_remote_file(get_census_metadata_url, census_path, progress(type = "down", con = stderr()))
+    report_file_sizes(census_url)
+    sync_remote_file(census_url, census_path, progress(type = "down", con = stderr()))
   }
   
 # Clean up any existing tables
   tryCatch({
-    dbExecute(conn, "DROP TABLE IF EXISTS census_metadata")
-    dbExecute(conn, "DROP VIEW IF EXISTS temp_base_view")
+    dbExecute(conn, "DROP VIEW IF EXISTS temp_sample_cellnexus_cell_metadata")
   }, error = function(e) {
-    # Ignore errors when dropping tables/views
+    # Ignore errors when dropping tables
   })
   
-  # Create indexed table from census parquet
-  add_index_parquet(conn, census_path,
-                    index_cols = c("sample_id", "dataset_id", "observation_joinid"),
-                    table_name = "census_metadata")
+  # Create indexed table from census parquet (only if not exists). This avoid memory breaks when running query multiple times.
+  if (!DBI::dbExistsTable(conn, "census_metadata")) {
+    add_index_parquet(conn, census_path,
+                      index_cols = c("sample_id", "dataset_id", "observation_joinid"),
+                      table_name = "census_metadata")
+  }
   
   # Create a temporary VIEW from the input tbl_sql (no materialisation)
   sql_base <- dbplyr::sql_render(tbl_or_conn)
-  dbExecute(conn, paste0("CREATE TEMP VIEW temp_base_view AS ", sql_base))
+  dbExecute(conn, paste0("CREATE TEMP VIEW temp_sample_cellnexus_cell_metadata AS ", sql_base))
   
   # Join the temporary view with census metadata
   sql_join <- "
     SELECT *
-    FROM temp_base_view
+    FROM temp_sample_cellnexus_cell_metadata
     LEFT JOIN census_metadata USING (sample_id, dataset_id, observation_joinid)
   "
   
@@ -338,34 +349,38 @@ join_census_table <- function(tbl_or_conn) {
 join_metacell_table <- function(tbl_or_conn) {
   conn <- get_conn(tbl_or_conn)
   
+  # Extract metacell URL
+  metacell_url = get_metadata_url(use_metacell = T)
+  
   # Download metacell metadata if not exists
-  metacell_path <- file.path(get_default_cache_dir(), basename(get_metacell_metadata_url))
+  metacell_path <- file.path(get_default_cache_dir(), basename(metacell_url))
   if (!file.exists(metacell_path)) {
-    report_file_sizes(get_metacell_metadata_url)
-    sync_remote_file(get_metacell_metadata_url, metacell_path, progress(type = "down", con = stderr()))
+    report_file_sizes(metacell_url)
+    sync_remote_file(metacell_url, metacell_path, progress(type = "down", con = stderr()))
   }
   
   # Clean up any existing tables
   tryCatch({
-    dbExecute(conn, "DROP TABLE IF EXISTS metacell_metadata")
-    dbExecute(conn, "DROP VIEW IF EXISTS temp_base_view")
+    dbExecute(conn, "DROP VIEW IF EXISTS temp_sample_cellnexus_cell_metadata")
   }, error = function(e) {
-    # Ignore errors when dropping tables/views
+    # Ignore errors when dropping tables
   })
   
-  # Create indexed table from metacell parquet
-  add_index_parquet(conn, metacell_path,
-                    index_cols = c("sample_id", "dataset_id", "cell_id"),
-                    table_name = "metacell_metadata")
+  # Create indexed table from metacell parquet (only if not exists). This avoid memory breaks when running query multiple times.
+  if (!DBI::dbExistsTable(conn, "metacell_metadata")) {
+    add_index_parquet(conn, metacell_path,
+                      index_cols = c("sample_id", "dataset_id", "cell_id"),
+                      table_name = "metacell_metadata")
+  }
   
   # Create a temporary VIEW from the input tbl_sql (no materialisation)
   sql_base <- dbplyr::sql_render(tbl_or_conn)
-  dbExecute(conn, paste0("CREATE TEMP VIEW temp_base_view AS ", sql_base))
+  dbExecute(conn, paste0("CREATE TEMP VIEW temp_sample_cellnexus_cell_metadata AS ", sql_base))
   
   # Join the temporary view with metacell metadata
   sql_join <- "
     SELECT *
-    FROM temp_base_view
+    FROM temp_sample_cellnexus_cell_metadata
     LEFT JOIN metacell_metadata USING (sample_id, dataset_id, cell_id)
   "
   
