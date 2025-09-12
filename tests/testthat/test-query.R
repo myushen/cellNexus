@@ -15,7 +15,7 @@ test_that("sync_assay_files() syncs appropriate files", {
     temp <- tempfile()
     test_file <- "4164d0eb972ad5e12719b6858c9559ea___1.h5ad"
     
-    atlas_name <- "cellxgene/19-12-2024"
+    atlas_name <- "cellxgene/21-08-2025"
 
     sync_assay_files(
       atlas_name = atlas_name,
@@ -38,8 +38,10 @@ test_that("get_SingleCellExperiment() syncs appropriate files", {
     meta <- get_metadata() |> head(2)
 
     # The remote dataset should have many genes
-    sce <- get_SingleCellExperiment(meta, cache_directory = temp) |> 
-      filter(file_id_cellNexus_single_cell == test_file)
+    sce <- get_SingleCellExperiment(meta, cache_directory = temp)
+    
+    sce <- sce[, sce$file_id_cellNexus_single_cell == test_file]
+
     sce |>
         row.names() |>
         length() |>
@@ -170,6 +172,150 @@ test_that("database_url() expect character ", {
     expect_s3_class("character")
 })
 
+test_that("get_metadata_url() with split files returns multiple URLs", {
+  urls <- get_metadata_url(use_split_files = TRUE)
+  expect_length(urls, 3)
+  expect_true(any(grepl("sample_metadata", urls)))
+  expect_true(any(grepl("cell_metadata_census", urls)))
+  expect_true(any(grepl("cell_metadata_new", urls)))
+})
+
+test_that("create_joined_metadata_table handles split files correctly", {
+  skip_on_cran()
+  skip_if_not_installed("arrow")
+  
+  # Create temporary test files
+  temp_dir <- tempdir()
+  
+  # Create mock sample metadata
+  sample_data <- data.frame(
+    sample_id = c("sample_1", "sample_2"),
+    dataset_id = c("dataset_A", "dataset_B"),
+    donor_id = c("donor_1", "donor_2"),
+    age_days = c(30*365, 25*365),
+    sex = c("female", "male"),
+    stringsAsFactors = FALSE
+  )
+  
+  # Create mock census cell metadata
+  census_data <- data.frame(
+    cell_id = c("cell_1", "cell_2"),
+    observation_joinid = c("obs_1", "obs_2"),
+    sample_id = c("sample_1", "sample_2"),
+    dataset_id = c("dataset_A", "dataset_B"),
+    cell_type = c("T cell", "B cell"),
+    stringsAsFactors = FALSE
+  )
+  
+  # Create mock new cell metadata
+  new_data <- data.frame(
+    cell_id = c("cell_1", "cell_2"),
+    observation_joinid = c("obs_1", "obs_2"),
+    sample_id = c("sample_1", "sample_2"),
+    dataset_id = c("dataset_A", "dataset_B"),
+    cell_annotation_new = c("CD4+ T", "CD19+ B"),
+    stringsAsFactors = FALSE
+  )
+  
+  # Write test files
+  sample_file <- file.path(temp_dir, "sample_metadata.1.0.12.parquet")
+  census_file <- file.path(temp_dir, "cell_metadata_census.1.0.12.parquet")
+  new_file <- file.path(temp_dir, "cell_metadata_new.1.0.12.parquet")
+  
+  arrow::write_parquet(sample_data, sample_file)
+  arrow::write_parquet(census_data, census_file)
+  arrow::write_parquet(new_data, new_file)
+  
+  # Test the create_joined_metadata_table function
+  files <- c(sample_file, census_file, new_file)
+  result_table <- cellNexus:::create_joined_metadata_table(files)
+  
+  # Verify the result
+  expect_s3_class(result_table, "tbl_duckdb_connection")
+  
+  # Check that we can query the table
+  result_df <- result_table |> as_tibble()
+  expect_equal(nrow(result_df), 2)
+  expect_true("cell_annotation_new" %in% colnames(result_df))
+  expect_true("age_days" %in% colnames(result_df))
+  expect_true("cell_type" %in% colnames(result_df))
+  
+  # Clean up
+  unlink(c(sample_file, census_file, new_file))
+})
+
+test_that("get_metadata() with split files works correctly when files exist", {
+  skip_on_cran()
+  skip_if_not_installed("arrow")
+  
+  # Create temporary test files and cache directory
+  temp_dir <- tempdir()
+  cache_dir <- file.path(temp_dir, "cache_test")
+  if (!dir.exists(cache_dir)) dir.create(cache_dir, recursive = TRUE)
+  
+  # Create mock sample metadata
+  sample_data <- data.frame(
+    sample_id = c("sample_1", "sample_2"),
+    dataset_id = c("dataset_A", "dataset_B"),
+    donor_id = c("donor_1", "donor_2"),
+    age_days = c(30*365, 25*365),
+    sex = c("female", "male"),
+    stringsAsFactors = FALSE
+  )
+  
+  # Create mock census cell metadata
+  census_data <- data.frame(
+    cell_id = c("cell_1", "cell_2"),
+    observation_joinid = c("obs_1", "obs_2"),
+    sample_id = c("sample_1", "sample_2"),
+    dataset_id = c("dataset_A", "dataset_B"),
+    cell_type = c("T cell", "B cell"),
+    stringsAsFactors = FALSE
+  )
+  
+  # Create mock new cell metadata
+  new_data <- data.frame(
+    cell_id = c("cell_1", "cell_2"),
+    observation_joinid = c("obs_1", "obs_2"),
+    sample_id = c("sample_1", "sample_2"),
+    dataset_id = c("dataset_A", "dataset_B"),
+    cell_annotation_new = c("CD4+ T", "CD19+ B"),
+    stringsAsFactors = FALSE
+  )
+  
+  # Write test files to cache directory (simulating downloaded files)
+  sample_file <- file.path(cache_dir, "sample_metadata.1.0.12.parquet")
+  census_file <- file.path(cache_dir, "cell_metadata_census.1.0.12.parquet")
+  new_file <- file.path(cache_dir, "cell_metadata_new.1.0.12.parquet")
+  
+  arrow::write_parquet(sample_data, sample_file)
+  arrow::write_parquet(census_data, census_file)
+  arrow::write_parquet(new_data, new_file)
+  
+  # Test get_metadata with local files and use_split_files
+  files <- c(sample_file, census_file, new_file)
+  result_table <- get_metadata(
+    cloud_metadata = NULL,
+    local_metadata = files,
+    cache_directory = cache_dir,
+    use_split_files = TRUE,
+    use_cache = FALSE
+  )
+  
+  # Verify the result
+  expect_s3_class(result_table, "tbl_duckdb_connection")
+  
+  # Check that we can query the table and join worked
+  result_df <- result_table |> as_tibble()
+  expect_equal(nrow(result_df), 2)
+  expect_true("cell_annotation_new" %in% colnames(result_df))
+  expect_true("age_days" %in% colnames(result_df))
+  expect_true("cell_type" %in% colnames(result_df))
+  
+  # Clean up
+  unlink(cache_dir, recursive = TRUE)
+})
+
 test_that("get_metadata() expect a unique cell_type `abnormal cell` is present", {
   n_cell <- get_metadata() |> filter(cell_type == 'abnormal cell') |> as_tibble() |> nrow()
   expect_true(n_cell > 0)
@@ -260,7 +406,7 @@ test_that("get_single_cell_experiment() expect to get local counts only", {
 
 test_that("get_pseudobulk() syncs appropriate files", {
   temp <- tempfile()
-  id <- "4329386e014727c59bcc66ed974e654c___1.h5ad"
+  id <- "017e1e042c4a35fe386e28e494a12767___1.h5ad"
   meta <- get_metadata(cache_directory = temp) |> 
     filter(empty_droplet == "FALSE",
            alive == "TRUE",
@@ -277,11 +423,11 @@ test_that("get_pseudobulk() syncs appropriate files", {
 
 test_that("get_metacell() syncs appropriate files", {
   cache = tempfile()
-  id = "009b708ad5032c0b9a91165013999d5f___2.h5ad"
-  sce = get_metadata(cache_directory = cache) |> filter(!is.na(metacell_64)) |> 
+  id = "4414dffc701125c467adad7977adcf21___1.h5ad"
+  sce = get_metadata(cache_directory = cache) |> filter(!is.na(metacell_8)) |> 
     filter(file_id_cellNexus_single_cell == id) |> 
     get_metacell(cache_directory = cache,
-                 cell_aggregation = "metacell_64")
+                 cell_aggregation = "metacell_8")
   
   sce |> colnames() |> length() |> expect_gt(1)
   

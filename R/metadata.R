@@ -168,19 +168,23 @@ get_metadata_base <- function(
 #' library(dplyr)
 #' filtered_metadata <- get_metadata() |>
 #'     filter(
-#'         ethnicity == "African" &
+#'         self_reported_ethnicity == "African" &
 #'             assay %LIKE% "%10x%" &
 #'             tissue == "lung parenchyma" &
 #'             cell_type %LIKE% "%CD4%"
 #'     )
+#'
+#' # Use split files for reduced download size (when available)
+#' metadata_split <- get_metadata(use_split_files = TRUE)
 #'
 #' @importFrom DBI dbConnect
 #' @importFrom duckdb duckdb
 #' @importFrom dplyr tbl
 #' @importFrom httr progress
 #' @importFrom cli cli_alert_info hash_sha256
-#' @importFrom glue glue
+#' @importFrom glue glue glue_sql
 #' @importFrom purrr walk
+#' @importFrom dbplyr sql
 #'
 #' @details
 #'

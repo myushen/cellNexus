@@ -368,7 +368,7 @@ counts |>
   ggtitle("FCN1 in CD14 monocytes by disease. Coloured by datasets") 
 ```
 
-```{r echo=FALSE, fig.width=}
+```{r echo=FALSE}
 find_figure("FCN1_disease_plot.png") |> knitr::include_graphics()
 ```
 
@@ -409,7 +409,7 @@ meta_path <- paste0(local_cache,"/my_metadata.parquet")
 
 # Extract the date from example sce metadata 
 date <- cellNexus::sample_sce_obj |> S4Vectors::metadata() |> 
-  purrr::pluck("data") |> pull(atlas_id) |> unique()
+  purrr::pluck("data") |> dplyr::pull(atlas_id) |> unique()
 
 # Create a directory for storing counts
 counts_path = file.path(local_cache, date, "counts")

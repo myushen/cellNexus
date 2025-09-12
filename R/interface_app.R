@@ -40,6 +40,7 @@
 #'
 #' @author Jared Andrews
 #' @examples
+#' library(shiny)
 #' # Example 1: Basic usage with a simple grid
 #' ui.inputs <- tagList(
 #'     textInput("name", "Name"),
@@ -59,7 +60,7 @@
 #'         sliderInput("volume", "Volume", min = 0, max = 100, value = 50)
 #'     )
 #' )
-#' organize_inputs(ui.inputs.tabs)
+#' organize_inputs(ui.inputs.tabs, columns = 2)
 #'
 #' # Example 3: Adding an additional UI element with 'tack'
 #' additional.ui <- actionButton("submit", "Submit")
