@@ -38,10 +38,9 @@ report_file_sizes <- function(urls){
 #' @return The same character vector, with newlines and subsequent whitespace
 #'   removed
 #' @keywords internal
-#' @importFrom stringr str_remove_all
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 single_line_str <- function(text){
-    str_remove_all(text, r"(\n\s*)")
+  stringr::str_remove_all(text, r"(\n\s*)")
 }
 
 #' Returns the default cache directory with a version number

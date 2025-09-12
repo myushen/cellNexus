@@ -12,26 +12,17 @@ cache <- rlang::env(
 #' Returns the URLs for all metadata files 
 #' @param databases A character vector specifying the names of the metadata files. 
 #'   Download the specific metadata by defining the metadata version. The default is 
-#'   metadata.1.0.12.parquet
-#' @param use_split_files Logical. If TRUE, returns URLs for the three split metadata files 
-#'   instead of the single large file. Default is FALSE for backward compatibility.
+#'   metadata.1.2.13.parquet
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
-#' get_metadata_url("metadata.1.0.12.parquet")
-#' get_metadata_url(use_split_files = TRUE)
+#' get_metadata_url("metadata.1.2.13.parquet")
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata_url <- function(databases = c("metadata.1.0.12.parquet"), use_split_files = FALSE) {
-  if (use_split_files) {
-    # Return URLs for the three split files
-    databases <- c("sample_metadata.1.0.12.parquet", 
-                   "cell_metadata_census.1.0.12.parquet", 
-                   "cell_metadata_new.1.0.12.parquet")
-  }
+get_metadata_url <- function(databases = c("metadata.1.2.13.parquet")) {
   clear_old_metadata(updated_data = databases)
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}")
@@ -54,7 +45,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
     sample_metadata.0.2.3.parquet"
 )
 
-#' Gets the Curated Atlas metadata as a data frame.
+#' Gets the CellNexus metadata as a data frame.
 #'
 #' Downloads a parquet database of the Human Cell Atlas metadata to a local
 #' cache, and then opens it as a data frame. It can then be filtered and passed
@@ -86,7 +77,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' library(dplyr)
 #' filtered_metadata <- get_metadata() |>
 #'     filter(
-#'         ethnicity == "African" &
+#'         self_reported_ethnicity == "African" &
 #'             assay %LIKE% "%10x%" &
 #'             tissue == "lung parenchyma" &
 #'             cell_type %LIKE% "%CD4%"
