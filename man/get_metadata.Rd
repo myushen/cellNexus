@@ -13,7 +13,7 @@ get_metadata(
   cache_directory = get_default_cache_dir(),
   use_cache = TRUE,
   use_split_files = FALSE,
-  join_keys = c("sample_id", "dataset_id")
+  ...
 )
 }
 \arguments{
@@ -26,8 +26,7 @@ if exists.}
 path of parquet database(s).}
 
 \item{cache_directory}{Optional character vector of length 1. A file path on
-your local system to a directory (not a file) that will be used to store
-\code{metadata.parquet}}
+your local system to a directory (not a file) that will be used to store metadata.}
 
 \item{use_cache}{Optional logical scalar. If \code{TRUE} (the default), and this
 function has been called before with the same parameters, then a cached
@@ -36,9 +35,6 @@ be created no matter what.}
 
 \item{use_split_files}{Optional logical scalar. If \code{TRUE}, uses split metadata files
 instead of the single combined metadata file.}
-
-\item{join_keys}{Character vector specifying the columns to join on when using
-multiple parquet files. Default is c("sample_id", "dataset_id").}
 }
 \value{
 A lazy data.frame subclass containing the metadata. You can interact

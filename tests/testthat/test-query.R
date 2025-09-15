@@ -444,7 +444,7 @@ test_that("get_metadata handles use_split_files correctly", {
   expect_s3_class(meta_split, "tbl_dbi")
   expect_gt(ncol(meta_split), 0)
   
-  expect_gt(ncol(meta_split), ncol(meta_single))
+  expect_gt(ncol(meta_single), ncol(meta_split))
 })
 
 test_that("join_census_table() returns an unique column",{
@@ -466,6 +466,31 @@ test_that("join_metacell_table() returns an unique column",{
   
   # Expect that metacell columns exist
   expect_true(length(metacell_cols) > 0)
+})
+
+test_that("keep_quality_cells() return high quality cells", {
+  cache = tempfile()
+  
+  empty_droplet_col = "empty_droplet"
+  alive_col = "alive"
+  doublet_col = "scDblFinder.class"
+  
+  meta_unfiltered <- get_metadata(use_split_files = T)
+  meta_filtered <- get_metadata(use_split_files = T) |> keep_quality_cells()
+  
+  # Filtered should have fewer rows
+  n_unfiltered <- meta_unfiltered |> count() |> collect() |> pull(n)
+  n_filtered   <- meta_filtered   |> count() |> collect() |> pull(n)
+  expect_gt(n_unfiltered, n_filtered)
+  
+  # No empty droplets remain
+  expect_true(meta_filtered |> distinct(.data[[empty_droplet_col]]) |> collect() |> pull() |> identical(FALSE))
+  
+  # All cells are alive
+  expect_true(meta_filtered |> distinct(.data[[alive_col]]) |> collect() |> pull() |> identical(TRUE))
+  
+  # No doublets present
+  expect_false("doublet" %in% (meta_filtered |> distinct(.data[[doublet_col]]) |> collect() |> pull()))
 })
 
 # unharmonised_data is not implemented yet
