@@ -77,7 +77,7 @@ clear_cache <- function() {
 #' @return `NULL`, invisibly
 #' @keywords internal
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-clear_old_metadata <- function(updated_data) {
+clear_old_metadata <- function(metadata) {
   cache_directory <- get_default_cache_dir()
   files_in_cache <- list.files(cache_directory)
   pattern <- "\\.parquet$"

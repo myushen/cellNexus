@@ -33,7 +33,7 @@ get_metadata_url <- function(databases  = "metadata.1.2.13.parquet",
                              use_split_files = FALSE,
                              use_census = FALSE,
                              use_metacell = FALSE) {
-  #clear_old_metadata(updated_data = databases)
+  #clear_old_metadata(databases)
   if (use_split_files) {
     # Return URLs for the three split files
     databases <- c("cellnexus_cell_metadata.1.2.13.parquet",
@@ -92,6 +92,8 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #'   be created no matter what.
 #' @param use_split_files Optional logical scalar. If `TRUE`, uses split metadata files
 #'   instead of the single combined metadata file.
+#' @param ... Additional arguments passed to [read_parquet()] or
+#'   [create_joined_metadata_table()].
 #' @return A lazy data.frame subclass containing the metadata. You can interact
 #'   with this object using most standard dplyr functions. For string matching,
 #'   it is recommended that you use `stringr::str_like` to filter character
@@ -260,6 +262,7 @@ get_metadata <- function(cloud_metadata = get_metadata_url(),
 #'   [get_default_cache_dir()].
 #' @param join_keys A character vector of column names used for the join.
 #'   Defaults to `c("sample_id", "dataset_id", "cell_id")`.
+#' @param ... Additional arguments passed to [read_parquet()].
 #' @return A lazy SQL table with metacell metadata joined to the cellNexus metadata.
 #' @export
 join_metacell_table <- function(tbl, 
@@ -298,6 +301,7 @@ join_metacell_table <- function(tbl,
 #'   [get_default_cache_dir()].
 #' @param join_keys A character vector of column names used for the join.
 #'   Defaults to `c("sample_id", "dataset_id", "observation_joinid")`.
+#' @param ... Additional arguments passed to [read_parquet()].
 #' @return A lazy SQL table with Census metadata joined to the cellNexus metadata.
 #' @export
 join_census_table <- function(tbl, 
