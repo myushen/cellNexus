@@ -132,6 +132,9 @@ filtered_metadata <- get_metadata() |>
             cell_type \%LIKE\% "\%CD4\%"
     )
 
+# Use split files for reduced download size (when available)
+metadata_split <- get_metadata(use_split_files = TRUE)
+
 }
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
