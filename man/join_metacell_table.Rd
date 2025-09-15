@@ -2,23 +2,29 @@
 % Please edit documentation in R/metadata.R
 \name{join_metacell_table}
 \alias{join_metacell_table}
-\title{Join metacell metadata with cellNexus metadata}
+\title{Join metacell metadata to an existing data frame}
 \usage{
-join_metacell_table(tbl_or_conn)
+join_metacell_table(
+  tbl,
+  cache_directory = get_default_cache_dir(),
+  join_keys = c("sample_id", "dataset_id", "cell_id"),
+  ...
+)
 }
 \arguments{
-\item{tbl_or_conn}{A tbl_sql object (from get_metadata) or a database connection}
+\item{tbl}{A \code{tbl_sql} object (from get_metadata) or a database connection}
+
+\item{cache_directory}{A character string specifying the local cache
+directory where remote parquet files will be stored. Defaults to
+\code{\link[=get_default_cache_dir]{get_default_cache_dir()}}.}
+
+\item{join_keys}{A character vector of column names used for the join.
+Defaults to \code{c("sample_id", "dataset_id", "cell_id")}.}
 }
 \value{
-A lazy SQL table with metacell metadata joined to the cellNexus metadata
+A lazy SQL table with metacell metadata joined to the cellNexus metadata.
 }
 \description{
-Downloads and joins the metacell metadata with the provided cellNexus metadata.
+Downloads and joins the metacell metadata with cellNexus metadata.
 This function creates indexed tables for efficient joining and returns a data frame.
-}
-\examples{
-\dontrun{
-# Join metacell metadata with split files metadata
-get_metadata(use_split_files = TRUE) |> join_metacell_table()
-}
 }

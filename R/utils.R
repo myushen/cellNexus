@@ -131,6 +131,42 @@ read_parquet <- function(conn, path, filename_column=FALSE){
     tbl(conn, from_clause)
 }
 
+#' Create a joined metadata table from parquet files
+#' This function reads metadata parquet files into DuckDB and joins them
+#' into a single lazy table. It is designed to handle split metadata files,
+#' specifically `sample_metadata` and `cellnexus_cell_metadata`. If both of
+#' these files are present, they will be joined on `sample_id` and `dataset_id`.
+#' Otherwise, all provided parquet files are read and returned without joining.
+#' @param parquet_files A character vector of file paths to parquet files.
+#'   Expected filenames include `"sample_metadata"` and
+#'   `"cellnexus_cell_metadata"`. If these are not present, the function falls
+#'   back to reading all files.
+#' @param ... Additional arguments passed to [read_parquet()].
+#' @return A DuckDB-backed lazy table (`tbl_dbi`) representing the joined
+#'   metadata. This table can be queried with dplyr verbs and evaluated
+#'   lazily by DuckDB.
+#' @export
+create_joined_metadata_table <- function(parquet_files, ...) {
+  # Create DuckDB connection
+  conn <- duckdb() |> dbConnect(drv = _, read_only = TRUE)
+  
+  # Identify the files based on their names
+  sample_file <- parquet_files[grepl("sample_metadata", parquet_files)]
+  new_file <- parquet_files[grepl("cellnexus_cell_metadata", parquet_files)]
+  
+  # If we don't have the expected split files, fall back to regular behavior
+  if (length(sample_file) != 1 || length(new_file) != 1) {
+    return(read_parquet(conn, parquet_files, ...))
+  }
+  
+  sample_table <- read_parquet(conn, sample_file, ...)
+  new_table <- read_parquet(conn, new_file, ...)
+  
+  # Perform left joins using dplyr syntax for better compatibility
+  new_table |>
+    left_join(sample_table, by = c("sample_id", "dataset_id")) 
+}
+
 #' Create indexed table from parquet file
 #' @param conn Database connection
 #' @param path Path to parquet file
