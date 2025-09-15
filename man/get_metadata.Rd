@@ -35,6 +35,9 @@ be created no matter what.}
 
 \item{use_split_files}{Optional logical scalar. If \code{TRUE}, uses split metadata files
 instead of the single combined metadata file.}
+
+\item{...}{Additional arguments passed to \code{\link[=read_parquet]{read_parquet()}} or
+\code{\link[=create_joined_metadata_table]{create_joined_metadata_table()}}.}
 }
 \value{
 A lazy data.frame subclass containing the metadata. You can interact
