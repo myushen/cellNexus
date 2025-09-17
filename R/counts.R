@@ -63,14 +63,14 @@ get_SingleCellExperiment <- function(...){
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#' @importFrom dplyr pull filter as_tibble inner_join collect transmute
+#' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
 #' @importFrom tibble column_to_rownames
 #' @importFrom purrr reduce map map_int imap pmap
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
 #' @importFrom SummarizedExperiment colData assayNames<-
 #' @importFrom assertthat assert_that has_name
-#' @importFrom cli cli_alert_success cli_alert_info
+#' @importFrom cli cli_alert_success cli_alert_info cli_progress_bar cli_progress_update cli_progress_done
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
@@ -133,46 +133,38 @@ get_single_cell_experiment <- function(data,
   }
   
   cli_alert_info("Reading files.")
-  experiments <- subdirs |>
-    imap(function(current_subdir, current_assay) {
-      # Build up an experiment for each assay
-      dir_prefix <- file.path(
-        versioned_cache_directory,
-        current_subdir
-      )
-      
-      experiment_list <- raw_data |> 
-        mutate(dir_prefix = file.path(cache_directory, atlas_id, current_subdir)) |>
-        dplyr::group_by(.data[[grouping_column]], dir_prefix) |>
-        dplyr::summarise(experiments = list(
-          group_to_data_container(
-            dplyr::cur_group_id(),
-            dplyr::cur_data_all(),
-            unique(dir_prefix),
-            features,
-            grouping_column
-          )
-        )) |>
-        dplyr::pull(experiments)
-      
-      commonGenes <- experiment_list |> check_gene_overlap()
-      experiment_list <- map(experiment_list, function(exp) {
-        exp[commonGenes,]
-      }) |>
-        do.call(cbind, args = _)
-    })
+  
+  groups <- raw_data |>
+    mutate(dir_prefix = file.path(versioned_cache_directory, subdirs)) |>
+    group_split(.data[[grouping_column]], dir_prefix)
+  
+  # Add progress bar for reading files 
+  pb <- cli_progress_bar("Reading files", total = length(groups))
+  
+  experiment_list <- map(seq_along(groups), function(i) {
+    gr <- groups[[i]]
+    res <- group_to_data_container(
+      i, gr,
+      dir_prefix = unique(gr$dir_prefix),
+      features = features,
+      grouping_column = grouping_column
+    )
+    # Update bar after finishing one file
+    cli_progress_update(id = pb)
+    res
+  })
+  cli_progress_done(id = pb)
+  
+  commonGenes <- experiment_list |> check_gene_overlap()
   
   cli_alert_info("Compiling Experiment.")
   
-  # Combine all the assays
-  # Get a donor SCE
-  experiment <- experiments[[1]]
+  experiments <- map(experiment_list, function(exp) {
+    exp[commonGenes,]
+  }) |>
+    do.call(cbind, args = _)
   
-  SummarizedExperiment::assays(experiment) <- map(experiments, function(exp) {
-    SummarizedExperiment::assays(exp)[[1]]
-  })
-  
-  experiment
+  experiments
 }
 
 #' Gets a Pseudobulk from curated metadata
@@ -202,14 +194,14 @@ get_single_cell_experiment <- function(data,
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#' @importFrom dplyr pull filter as_tibble inner_join collect transmute
+#' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
 #' @importFrom tibble column_to_rownames
-#' @importFrom purrr reduce map map_int imap 
+#' @importFrom purrr reduce map map_int imap pmap
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
 #' @importFrom SummarizedExperiment colData assayNames<-
-#' @importFrom assertthat assert_that
-#' @importFrom cli cli_alert_success cli_alert_info
+#' @importFrom assertthat assert_that has_name
+#' @importFrom cli cli_alert_success cli_alert_info cli_progress_bar cli_progress_update cli_progress_done
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
@@ -274,45 +266,37 @@ get_pseudobulk <- function(data,
   }
   
   cli_alert_info("Reading files.")
-  experiments <- subdirs |>
-    imap(function(current_subdir, current_assay) {
-      # Build up an experiment for each assay
-      dir_prefix <- file.path(
-        versioned_cache_directory,
-        current_subdir
-      )
-      experiment_list <- raw_data |>
-        mutate(dir_prefix = dir_prefix) |>
-        dplyr::group_by(.data[[grouping_column]], dir_prefix) |>
-        dplyr::summarise(experiments = list(
-          group_to_data_container(
-            dplyr::cur_group_id(),
-            dplyr::cur_data_all(),
-            unique(dir_prefix),
-            features,
-            grouping_column
-          )
-        )) |>
-        dplyr::pull(experiments)
-      
-      commonGenes <- experiment_list |> check_gene_overlap()
-      experiment_list <- map(experiment_list, function(exp) {
-        exp[commonGenes,]
-      }) |>
-        do.call(cbind, args = _)
-    })
+  groups <- raw_data |>
+    mutate(dir_prefix = file.path(versioned_cache_directory, subdirs)) |>
+    group_split(.data[[grouping_column]], dir_prefix)
+  
+  # Add progress bar for reading files 
+  pb <- cli_progress_bar("Reading files", total = length(groups))
+  
+  experiment_list <- map(seq_along(groups), function(i) {
+    gr <- groups[[i]]
+    res <- group_to_data_container(
+      i, gr,
+      dir_prefix = unique(gr$dir_prefix),
+      features = features,
+      grouping_column = grouping_column
+    )
+    # Update bar after finishing one file
+    cli_progress_update(id = pb)
+    res
+  })
+  cli_progress_done(id = pb)
+  
+  commonGenes <- experiment_list |> check_gene_overlap()
   
   cli_alert_info("Compiling Experiment.")
   
-  # Combine all the assays
-  # Get a donor SCE
-  experiment <- experiments[[1]]
+  experiments <- map(experiment_list, function(exp) {
+    exp[commonGenes,]
+  }) |>
+    do.call(cbind, args = _)
   
-  SummarizedExperiment::assays(experiment) <- map(experiments, function(exp) {
-    SummarizedExperiment::assays(exp)[[1]]
-  })
-  
-  experiment
+  experiments
 }
 
 #' Gets a Metacell from curated metadata
@@ -337,14 +321,14 @@ get_pseudobulk <- function(data,
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#' @importFrom dplyr pull filter as_tibble inner_join collect transmute
+#' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
 #' @importFrom tibble column_to_rownames
-#' @importFrom purrr reduce map map_int imap 
+#' @importFrom purrr reduce map map_int imap pmap
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
 #' @importFrom SummarizedExperiment colData assayNames<-
-#' @importFrom assertthat assert_that
-#' @importFrom cli cli_alert_success cli_alert_info
+#' @importFrom assertthat assert_that has_name
+#' @importFrom cli cli_alert_success cli_alert_info cli_progress_bar cli_progress_update cli_progress_done
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
@@ -415,46 +399,38 @@ get_metacell <- function(data,
   }
   
   cli_alert_info("Reading files.")
-  experiments <- subdirs |>
-    imap(function(current_subdir, current_assay) {
-      # Build up an experiment for each assay
-      dir_prefix <- file.path(
-        versioned_cache_directory,
-        current_subdir
-      )
-      experiment_list <- raw_data |>
-        mutate(dir_prefix = dir_prefix) |>
-        dplyr::group_by(.data[[grouping_column]], dir_prefix) |>
-        dplyr::summarise(experiments = list(
-          group_to_data_container(
-            dplyr::cur_group_id(),
-            dplyr::cur_data_all(),
-            unique(dir_prefix),
-            features,
-            grouping_column,
-            metacell_column = cell_aggregation
-          )
-        )) |>
-        dplyr::pull(experiments)
-      
-      commonGenes <- experiment_list |> check_gene_overlap()
-      experiment_list <- map(experiment_list, function(exp) {
-        exp[commonGenes,]
-      }) |>
-        do.call(cbind, args = _)
-    })
+  groups <- raw_data |>
+    mutate(dir_prefix = file.path(versioned_cache_directory, subdirs)) |>
+    group_split(.data[[grouping_column]], dir_prefix)
+  
+  # Add progress bar for reading files 
+  pb <- cli_progress_bar("Reading files", total = length(groups))
+  
+  experiment_list <- map(seq_along(groups), function(i) {
+    gr <- groups[[i]]
+    res <- group_to_data_container(
+      i, gr,
+      dir_prefix = unique(gr$dir_prefix),
+      features = features,
+      grouping_column = grouping_column,
+      metacell_column = cell_aggregation
+    )
+    # Update bar after finishing one file
+    cli_progress_update(id = pb)
+    res
+  })
+  cli_progress_done(id = pb)
+  
+  commonGenes <- experiment_list |> check_gene_overlap()
   
   cli_alert_info("Compiling Experiment.")
   
-  # Combine all the assays
-  # Get a donor SCE
-  experiment <- experiments[[1]]
+  experiments <- map(experiment_list, function(exp) {
+    exp[commonGenes,]
+  }) |>
+    do.call(cbind, args = _)
   
-  SummarizedExperiment::assays(experiment) <- map(experiments, function(exp) {
-    SummarizedExperiment::assays(exp)[[1]]
-  })
-  
-  experiment
+  experiments
 }
 
 #' Validate data parameters
@@ -635,7 +611,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     # remove cell-level annotations
     cell_level_anno <- c("cell_id", "cell_type", "file_id_cellNexus_single_cell",
                          "cell_type_ontology_term_id",
-                         "observation_joinid", "ensemble_joinid",
+                         "observation_joinid", "ensemble_joinid", "scaled_nCount_RNA",
                          "nFeature_expressed_in_sample", "nCount_RNA", "data_driven_ensemble", "cell_type_unified",
                          "empty_droplet", "observation_originalid", "alive", "scDblFinder.class", "is_immune")
     
