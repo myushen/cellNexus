@@ -135,7 +135,7 @@ get_single_cell_experiment <- function(data,
   cli_alert_info("Reading files.")
   
   groups <- raw_data |>
-    mutate(dir_prefix = file.path(versioned_cache_directory, subdirs)) |>
+    mutate(dir_prefix = file.path(cache_directory, atlas_id, subdirs)) |>
     group_split(.data[[grouping_column]], dir_prefix)
   
   # Add progress bar for reading files 
