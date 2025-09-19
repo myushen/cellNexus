@@ -44,10 +44,6 @@ Various metadata fields are \emph{not} common between datasets, so it does not
 make sense for these to live in the main metadata table. This function is a
 utility that allows easy fetching of this data if necessary.
 }
-\examples{
-harmonised <- dplyr::filter(get_metadata(), tissue == "kidney blood vessel")
-unharmonised <- get_unharmonised_metadata(harmonised)
-}
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
 A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
