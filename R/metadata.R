@@ -35,8 +35,7 @@ get_metadata_url <- function(databases  = "metadata.1.2.13.parquet",
   #clear_old_metadata(databases)
   if (use_split_files) {
     # Return URLs for the three split files
-    databases <- c("cellnexus_cell_metadata.1.2.13.parquet",
-                   "sample_metadata.1.2.13.parquet")
+    databases <- "cellnexus_metadata.1.2.13.parquet"
   }
   
   if (use_census) {
@@ -204,7 +203,7 @@ get_metadata <- function(cloud_metadata = get_metadata_url(),
                          use_split_files = FALSE,
                          ...) {
   # Handle split files
-  if (use_split_files && missing(cloud_metadata)) {
+  if (use_split_files) {
     cloud_metadata <- get_metadata_url(use_split_files = TRUE)
   }
   
@@ -236,15 +235,10 @@ get_metadata <- function(cloud_metadata = get_metadata_url(),
     cached_connection
   }
   else {
-    if (use_split_files && length(all_parquet) == 2) {
-      # Handle split files with left joins
-      table <- create_joined_metadata_table(all_parquet, ...)
-    } else {
       # Handle single file or multiple files without joins
       table <- duckdb() |>
         dbConnect(drv = _, read_only = TRUE) |>
         read_parquet(path = all_parquet, ...)
-    }
     cache$metadata_table[[hash]] <- table
     table
   }

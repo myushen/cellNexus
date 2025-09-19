@@ -145,7 +145,7 @@ read_parquet <- function(conn, path, filename_column=FALSE){
 #' @return A DuckDB-backed lazy table (`tbl_dbi`) representing the joined
 #'   metadata. This table can be queried with dplyr verbs and evaluated
 #'   lazily by DuckDB.
-#' @export
+#' @keywords internal
 create_joined_metadata_table <- function(parquet_files, ...) {
   # Create DuckDB connection
   conn <- duckdb() |> dbConnect(drv = _, read_only = TRUE)

@@ -32,3 +32,4 @@ specifically \code{sample_metadata} and \code{cellnexus_cell_metadata}. If both 
 these files are present, they will be joined on \code{sample_id} and \code{dataset_id}.
 Otherwise, all provided parquet files are read and returned without joining.
 }
+\keyword{internal}
