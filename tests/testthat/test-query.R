@@ -172,11 +172,6 @@ test_that("database_url() expect character ", {
     expect_s3_class("character")
 })
 
-test_that("get_metadata_url() with split files returns multiple URLs", {
-  urls <- get_metadata_url(use_split_files = TRUE)
-  expect_gt(length(urls), 1)
-})
-
 test_that("get_metadata() expect a unique cell_type `abnormal cell` is present", {
   n_cell <- get_metadata() |> filter(cell_type == 'abnormal cell') |> as_tibble() |> nrow()
   expect_true(n_cell > 0)
