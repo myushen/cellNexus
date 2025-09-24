@@ -134,23 +134,26 @@ get_single_cell_experiment <- function(data,
   
   cli_alert_info("Reading files.")
   
+  # Group by file only, not by dir_prefix
   groups <- raw_data |>
-    mutate(dir_prefix = file.path(cache_directory, atlas_id, subdirs)) |>
-    group_split(.data[[grouping_column]], dir_prefix)
+    group_split(.data[[grouping_column]])
   
-  # Add progress bar for reading files 
-  pb <- cli_progress_bar("Reading files", total = length(groups))
+  # Calculate total progress: number of files * number of assays
+  total_progress <- length(groups) * length(assays)
+  pb <- cli_progress_bar("Reading files", total = total_progress)
   
   experiment_list <- map(seq_along(groups), function(i) {
     gr <- groups[[i]]
     res <- group_to_data_container(
       i, gr,
-      dir_prefix = unique(gr$dir_prefix),
+      dir_prefix = file.path(cache_directory, unique(gr$atlas_id)),
       features = features,
-      grouping_column = grouping_column
+      grouping_column = grouping_column,
+      assays = assays,
+      subdirs = subdirs
     )
-    # Update bar after finishing one file
-    cli_progress_update(id = pb)
+    # Update bar after finishing one file (which may contain multiple assays)
+    cli_progress_update(id = pb, inc = length(assays))
     res
   })
   cli_progress_done(id = pb)
@@ -266,9 +269,10 @@ get_pseudobulk <- function(data,
   }
   
   cli_alert_info("Reading files.")
+  
+  # Group by file only, not by dir_prefix
   groups <- raw_data |>
-    mutate(dir_prefix = file.path(versioned_cache_directory, subdirs)) |>
-    group_split(.data[[grouping_column]], dir_prefix)
+    group_split(.data[[grouping_column]])
   
   # Add progress bar for reading files 
   pb <- cli_progress_bar("Reading files", total = length(groups))
@@ -277,9 +281,11 @@ get_pseudobulk <- function(data,
     gr <- groups[[i]]
     res <- group_to_data_container(
       i, gr,
-      dir_prefix = unique(gr$dir_prefix),
+      dir_prefix = file.path(versioned_cache_directory),
       features = features,
-      grouping_column = grouping_column
+      grouping_column = grouping_column,
+      assays = assays,
+      subdirs = subdirs
     )
     # Update bar after finishing one file
     cli_progress_update(id = pb)
@@ -399,9 +405,10 @@ get_metacell <- function(data,
   }
   
   cli_alert_info("Reading files.")
+  
+  # Group by file only, not by dir_prefix
   groups <- raw_data |>
-    mutate(dir_prefix = file.path(versioned_cache_directory, subdirs)) |>
-    group_split(.data[[grouping_column]], dir_prefix)
+    group_split(.data[[grouping_column]])
   
   # Add progress bar for reading files 
   pb <- cli_progress_bar("Reading files", total = length(groups))
@@ -410,10 +417,12 @@ get_metacell <- function(data,
     gr <- groups[[i]]
     res <- group_to_data_container(
       i, gr,
-      dir_prefix = unique(gr$dir_prefix),
+      dir_prefix = file.path(versioned_cache_directory),
       features = features,
       grouping_column = grouping_column,
-      metacell_column = cell_aggregation
+      metacell_column = cell_aggregation,
+      assays = assays,
+      subdirs = subdirs
     )
     # Update bar after finishing one file
     cli_progress_update(id = pb)
@@ -546,28 +555,44 @@ validate_data <- function(
 #' @importFrom glue glue
 #' @noRd
 group_to_data_container <- function(i, df, dir_prefix, features, grouping_column,
-                                    metacell_column = NULL) {
-  # Set file name based on type
-  experiment_path <- df[[grouping_column]] |>
-    head(1) |>
-    file.path(
-      dir_prefix,
-      suffix=_
-    )
-  
-  # Check if file exists
-  experiment_path |> map(function(path) {
-    file_exists = file.exists(path)
-    file_exists |> assert_that(
-      msg = "Your cache does not contain the file {experiment_path} you
-           attempted to query. Please provide the repository
-           parameter so that files can be synchronised from the
-           internet" |> glue()
-    )
+                                    metacell_column = NULL, assays = NULL, subdirs = NULL) {
+  # Handle multiple assays
+  if (!is.null(assays) && length(assays) > 1) {
+    assay_data <- map(assays, function(assay) {
+      assay_path <- file.path(dir_prefix, assay_map[assay], df[[grouping_column]][1])
+      
+      if (!file.exists(assay_path)) {
+        cli_abort("Your cache does not contain the file {assay_path} you attempted to query. Please provide the repository parameter so that files can be synchronised from the internet")
+      }
+      
+      # Load experiment
+      zellkonverter::readH5AD(assay_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
     })
-  
-  # Load experiment
-  experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
+    
+    # Use the first assay as the base experiment and add other assays
+    experiment <- assay_data[[1]]
+    purrr::iwalk(assays[-1], function(a, j) {
+      assay(experiment, a) <<- assay_data[[j + 1]]
+    })
+    
+  } else {
+    # Original single assay
+    experiment_path <- df[[grouping_column]] |>
+      head(1) |>
+      file.path(
+        dir_prefix,
+        subdirs[1],  # Use first subdir for single assay
+        suffix=_
+      )
+    
+    # Check if file exists
+    if (!file.exists(experiment_path)) {
+      cli_abort("Your cache does not contain the file {experiment_path} you attempted to query. Please provide the repository parameter so that files can be synchronised from the internet")
+    }
+    
+    # Load experiment
+    experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
+  }
   
   # Fix for https://github.com/tidyverse/dplyr/issues/6746
   force(i)
@@ -642,7 +667,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
    
   }
   else if (grouping_column == "file_id_cellNexus_metacell") {
-    # Select relevant annotations to remove single-cell level annotations
+    # Select metacell level annotations
     annotations <- metacell_column |> 
       c( "dataset_id", "sample_id", "assay", "assay_ontology_term_id", 
          "development_stage", "development_stage_ontology_term_id", "disease", "disease_ontology_term_id", 
@@ -655,7 +680,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
          "file_id_cellNexus_metacell", "dir_prefix") 
     
     new_coldata <- df |>
-      select(annotations) |>
+      select(any_of(annotations)) |>
       distinct() |>
       mutate(
         metacell_identifier = glue("{sample_id}___{.data[[metacell_column]]}"),
@@ -675,6 +700,8 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
       `colnames<-`(new_coldata$metacell_identifier) |>
       `colData<-`(value = DataFrame(new_coldata))
   }
+  
+  experiment
 }
 
 #' Synchronises one or more remote assays with a local copy
