@@ -111,11 +111,12 @@ sample_celltype_count <- metadata |> filter(empty_droplet == F,
 metadata = metadata |> left_join(sample_celltype_count, by = c("sample_id", "cell_type_unified_ensemble"), copy=T)
 
 # (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
-metadata = metadata |> filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9"))
+metadata = metadata |> filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9")) |> 
+  mutate(atlas_id = paste0(atlas_id, "/", DATE) )
 
-metadata_path = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/metadata.1.0.13.parquet"
+metadata_path = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/metadata.1.2.13.parquet"
 
-metadata |> mutate(atlas_id = paste0(atlas_id, "/", DATE) ) |>
+metadata |>
   duckdb_write_parquet(path = metadata_path,
                        con = dbConnect(duckdb::duckdb(), dbdir = ":memory:"))
 
@@ -131,16 +132,16 @@ metadata |> select(-any_of(remove_cols), -contains("metacell"),
                        con = dbConnect(duckdb::duckdb(), dbdir = ":memory:"))
 
 # Old metadata from cellxgene and census
-metadata |> select(observation_joinid, dataset_id, sample_id, cell_type, 
-                   cell_type_ontology_term_id,default_embedding, run_from_cell_id, suspension_type
-                   ) |> 
-  duckdb_write_parquet(path = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/census_cell_metadata.1.0.13.parquet",
+metadata |>  
+  select(observation_joinid, dataset_id, sample_id, cell_type,
+         cell_type_ontology_term_id,default_embedding, run_from_cell_id, suspension_type) |>
+  duckdb_write_parquet(path = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/census_cell_metadata.1.2.13.parquet",
                        con = dbConnect(duckdb::duckdb(), dbdir = ":memory:"))
 
 # Metacell metadata
 metadata |> 
   select(c("cell_id", "sample_id", "dataset_id"), contains("metacell")) |> 
-  duckdb_write_parquet(path = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/metacell_metadata.1.0.13.parquet",
+  duckdb_write_parquet(path = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/metacell_metadata.1.2.13.parquet",
                        con = dbConnect(duckdb::duckdb(), dbdir = ":memory:"))
 
 # Check whether cellnexus_metadata parquet can be optimised further
