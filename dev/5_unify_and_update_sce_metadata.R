@@ -85,12 +85,53 @@ metadata <- metadata |> select(
                    -monaco,
                    -matches("^scores"),
                    -matches("coarse$")) |> 
+  
+  # (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
+  filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9")) |> 
+  
   dplyr::rename(cell_annotation_blueprint_singler = blueprint_first_labels_fine,
          cell_annotation_monaco_singler = monaco_first_labels_fine,
          cell_annotation_azimuth_l2 = azimuth_predicted_celltype_l2) |> 
-  mutate(feature_count = as.integer(feature_count),
+  
+  mutate(alive = ifelse(is.na(alive), FALSE, alive),
+         feature_count = as.integer(feature_count),
          published_at = as.character(published_at),
-         revised_at = as.character(revised_at))
+         revised_at = as.character(revised_at),
+         nFeature_expressed_in_sample = as.integer(nFeature_expressed_in_sample),
+         cell_count = as.integer(cell_count),
+         
+         # update metacell columns are integter to minimise file size
+         across(contains("metacell_"), as.integer),
+         across(contains("_chunk"), as.integer), 
+         across(contains("subsets_"), as.integer)) 
+
+# Add low confidence ethnicity and imputed ethnicity labels to metadata. Both data are from Ning via email
+lowConf_ethnicity_df <- zellkonverter::readH5AD("/vast/projects/cellxgene_curated/cellNexus/sce_relabel.h5ad", reader = "R", use_hdf5 = T) |>
+  colData() |> as_tibble() |>
+  mutate(low_confidence_ethnicity = ifelse(ethnicity_relabel == "LowConfidenceLabel", TRUE, FALSE) |> as.character()) |>
+  select(sample_id, ethnicity_flagging_score = score, low_confidence_ethnicity = low_confidence_ethnicity)
+
+imputed_ethnicity_df <- zellkonverter::readH5AD("/vast/projects/cellxgene_curated/cellNexus/adata_unlabelled_with_predictions.h5ad", reader = "R", use_hdf5 = T)|>
+            colData() |> as_tibble() |>
+            select(sample_id, imputed_ethnicity = ethnicity_predictions) |> 
+  mutate(imputed_ethnicity = as.character(imputed_ethnicity))
+
+metadata <- metadata |>
+    
+    # Add low confidence ethnicity and imputed ethnicity labels to metadata. Both data are from Ning via email
+    left_join(lowConf_ethnicity_df,
+              by = "sample_id",copy = T)
+metadata <- metadata |>
+    left_join(imputed_ethnicity_df,
+              by = "sample_id",copy = T)
+
+metadata <- metadata |>
+    mutate(imputed_ethnicity = ifelse(is.na(imputed_ethnicity), self_reported_ethnicity, imputed_ethnicity)) |>
+  
+  # Add Atlas version/date
+  mutate(atlas_id = paste0(atlas_id,"/", DATE))
+    
+
 
 # Add pseudobulk aggregated_cells column
 sample_celltype_count <- metadata |> filter(empty_droplet == F,
@@ -100,38 +141,20 @@ sample_celltype_count <- metadata |> filter(empty_droplet == F,
                                                               name = ".aggregated_cells")
 metadata = metadata |> left_join(sample_celltype_count, by = c("sample_id", "cell_type_unified_ensemble"), copy=T)
 
-# (THESE TWO DATASETS DOESNT contain meaningful data - no observation_joinid etc), thus was excluded in the final metadata.
-metadata = metadata |> filter(!dataset_id %in% c("99950e99-2758-41d2-b2c9-643edcdf6d82", "9fcb0b73-c734-40a5-be9c-ace7eea401c9")) |> 
-  mutate(atlas_id = paste0(atlas_id, "/", DATE) )
 
-metadata_path = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/metadata.1.2.13.parquet"
+metadata_path = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/metadata.1.3.0.parquet"
 
-metadata |>
+metadata |> 
   duckdb_write_parquet(path = metadata_path,
                        con = dbConnect(duckdb::duckdb(), dbdir = ":memory:"))
 
 
-# Split metadata to sample-level and cell-level
-sample_cols <- c(
-  "sample_id", "sample_", "donor_id", "dataset_id", "dataset_version_id",
-  "age_days", "assay", "assay_ontology_term_id", "development_stage",
-  "development_stage_ontology_term_id", "self_reported_ethnicity",
-  "self_reported_ethnicity_ontology_term_id", "experiment___",
-  "organism", "organism_ontology_term_id", "sex", "sex_ontology_term_id",
-  "tissue", "tissue_type", "tissue_ontology_term_id", "tissue_groups",
-  "disease", "disease_ontology_term_id", "is_primary_data",
-  "cell_count", "collection_id", "filetype", "sample_heuristic",
-  "mean_genes_per_cell", "published_at", "revised_at", "schema_version",
-  "tombstone", "explorer_url", "citation", "feature_count", "filesize",
-  "primary_cell_count", "raw_data_location", "title", "url", "x_approximate_distribution",
-  "X_umap1", "X_umap2", "atlas_id","sample_chunk",
-  "sample_pseudobulk_chunk"
-)
 
-metadata |> select(all_of(sample_cols)) |> 
-  distinct() |> 
-  duckdb_write_parquet(path = "/vast/projects/cellxgene_curated/metadata_cellxgene_mengyuan/sample_metadata.1.2.13.parquet",
-                       con = dbConnect(duckdb::duckdb(), dbdir = ":memory:"))
+# Strip sample annotation from cellnexus annotation doesn't save too much (less than 3Mb), thus keep in one.
+remove_cols <- c("cell_chunk", "cell_type","cell_type_ontology_term_id",
+                 "data_driven_ensemble", "default_embedding","ensemble_joinid", 
+                 "observation_originalid", "run_from_cell_id", "suspension_type" )
+
   
 # Old metadata from cellxgene and census
 metadata |>  
