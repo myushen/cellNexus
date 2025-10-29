@@ -129,7 +129,7 @@ so a network connection is required for most functionality.</p>
 <code class="sourceCode R"><span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_metadata.html">get_metadata</a></span><span class="op">(</span>cloud_metadata <span class="op">=</span> <span class="va">METADATA_URL</span><span class="op">)</span></span>
 <span><span class="va">metadata</span></span></code></pre></div>
 <pre><code><span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 1 file, totalling 0 GB</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.1.3.0.parquet to /tmp/RtmpCMxFLV/sample_metadata.1.3.0.parquet</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.1.3.0.parquet to /tmp/RtmptkWUUV/sample_metadata.1.3.0.parquet</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Source:   SQL [?? x 97]</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Database: DuckDB 1.4.1 [unknown@Linux 6.11.0-1018-azure:R 4.5.1/:memory:]</span></span></span>
 <span><span class="co">#&gt;    cell_id                     dataset_id observation_joinid sample_id cell_type</span></span>
@@ -164,18 +164,18 @@ queries.</p>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="va">tissue</span>, <span class="va">cell_type_unified_ensemble</span><span class="op">)</span> </span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Source:   SQL [?? x 2]</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Database: DuckDB 1.4.1 [unknown@Linux 6.11.0-1018-azure:R 4.5.1/:memory:]</span></span></span>
-<span><span class="co">#&gt;    tissue              cell_type_unified_ensemble</span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> kidney              epithelial                </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> kidney blood vessel epithelial                </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> lung parenchyma     cd4 th2 em                </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> lung                cd4 fh em                 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> lung parenchyma     treg                      </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> forebrain           nk                        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> kidney              nk                        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> lung                cd4 tcm                   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> body of stomach     nk                        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> respiratory airway  cd4 th1/th17 em           </span></span>
+<span><span class="co">#&gt;    tissue             cell_type_unified_ensemble</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> thymus             cd14 mono                 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> breast             nk                        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> renal pelvis       epithelial                </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> respiratory airway cd4 th2 em                </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> lung               cd4 th1 em                </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> nose               cd4 fh em                 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> respiratory airway granulocyte               </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> blood              cd14 mono                 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> nose               cd4 tcm                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> colonic epithelium nk                        </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ more rows</span></span></span></code></pre></div>
 </div>
 </div>
@@ -642,7 +642,7 @@ in cellNexus::pbmc3k_sce</p>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Realising metadata.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Synchronising files</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 1 file, totalling 0.02 GB</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/21-08-2025/counts/e52795dec7b626b6276b867d55328d9f___1.h5ad to /tmp/RtmpCMxFLV/cellxgene/21-08-2025//counts/e52795dec7b626b6276b867d55328d9f___1.h5ad</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/21-08-2025/counts/e52795dec7b626b6276b867d55328d9f___1.h5ad to /tmp/RtmptkWUUV/cellxgene/21-08-2025//counts/e52795dec7b626b6276b867d55328d9f___1.h5ad</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Reading files.</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> cellNexus says: Not all genes completely overlap across the provided objects.Counts are generated by genes intersection.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Compiling Experiment.</span></span>
@@ -799,22 +799,22 @@ groups.</p>
 <span><span class="co">#&gt;  [21] otel_0.2.0                  Seurat_5.3.0               </span></span>
 <span><span class="co">#&gt;  [23] sctransform_0.4.2           spam_2.11-1                </span></span>
 <span><span class="co">#&gt;  [25] sp_2.2-0                    spatstat.sparse_3.1-0      </span></span>
-<span><span class="co">#&gt;  [27] reticulate_1.43.0           cowplot_1.2.0              </span></span>
+<span><span class="co">#&gt;  [27] reticulate_1.44.0           cowplot_1.2.0              </span></span>
 <span><span class="co">#&gt;  [29] pbapply_1.7-4               DBI_1.2.3                  </span></span>
 <span><span class="co">#&gt;  [31] RColorBrewer_1.1-3          abind_1.4-8                </span></span>
-<span><span class="co">#&gt;  [33] Rtsne_0.17                  GenomicRanges_1.61.6       </span></span>
+<span><span class="co">#&gt;  [33] Rtsne_0.17                  GenomicRanges_1.61.8       </span></span>
 <span><span class="co">#&gt;  [35] purrr_1.1.0                 BiocGenerics_0.55.4        </span></span>
-<span><span class="co">#&gt;  [37] IRanges_2.43.6              S4Vectors_0.47.5           </span></span>
+<span><span class="co">#&gt;  [37] IRanges_2.43.8              S4Vectors_0.47.6           </span></span>
 <span><span class="co">#&gt;  [39] ggrepel_0.9.6               irlba_2.3.5.1              </span></span>
 <span><span class="co">#&gt;  [41] listenv_0.9.1               spatstat.utils_3.2-0       </span></span>
 <span><span class="co">#&gt;  [43] goftest_1.2-3               RSpectra_0.16-2            </span></span>
 <span><span class="co">#&gt;  [45] spatstat.random_3.4-2       fitdistrplus_1.2-4         </span></span>
 <span><span class="co">#&gt;  [47] parallelly_1.45.1           pkgdown_2.1.3              </span></span>
-<span><span class="co">#&gt;  [49] codetools_0.2-20            DelayedArray_0.35.3        </span></span>
+<span><span class="co">#&gt;  [49] codetools_0.2-20            DelayedArray_0.35.4        </span></span>
 <span><span class="co">#&gt;  [51] tidyselect_1.2.1            farver_2.1.2               </span></span>
 <span><span class="co">#&gt;  [53] shinyWidgets_0.9.0          matrixStats_1.5.0          </span></span>
 <span><span class="co">#&gt;  [55] stats4_4.5.1                spatstat.explore_3.5-3     </span></span>
-<span><span class="co">#&gt;  [57] Seqinfo_0.99.3              duckdb_1.4.1               </span></span>
+<span><span class="co">#&gt;  [57] Seqinfo_0.99.4              duckdb_1.4.1               </span></span>
 <span><span class="co">#&gt;  [59] jsonlite_2.0.0              progressr_0.17.0           </span></span>
 <span><span class="co">#&gt;  [61] ggridges_0.5.7              survival_3.8-3             </span></span>
 <span><span class="co">#&gt;  [63] systemfonts_1.3.1           tools_4.5.1                </span></span>
@@ -832,11 +832,11 @@ groups.</p>
 <span><span class="co">#&gt;  [87] utf8_1.2.6                  tidyr_1.3.1                </span></span>
 <span><span class="co">#&gt;  [89] generics_0.1.4              data.table_1.17.8          </span></span>
 <span><span class="co">#&gt;  [91] httr_1.4.7                  htmlwidgets_1.6.4          </span></span>
-<span><span class="co">#&gt;  [93] S4Arrays_1.9.1              uwot_0.2.3                 </span></span>
+<span><span class="co">#&gt;  [93] S4Arrays_1.9.2              uwot_0.2.3                 </span></span>
 <span><span class="co">#&gt;  [95] pkgconfig_2.0.3             gtable_0.3.6               </span></span>
 <span><span class="co">#&gt;  [97] blob_1.2.4                  lmtest_0.9-40              </span></span>
 <span><span class="co">#&gt;  [99] S7_0.2.0                    SingleCellExperiment_1.31.1</span></span>
-<span><span class="co">#&gt; [101] XVector_0.49.1              htmltools_0.5.8.1          </span></span>
+<span><span class="co">#&gt; [101] XVector_0.49.3              htmltools_0.5.8.1          </span></span>
 <span><span class="co">#&gt; [103] dotCall64_1.2               SeuratObject_5.2.0         </span></span>
 <span><span class="co">#&gt; [105] scales_1.4.0                Biobase_2.69.1             </span></span>
 <span><span class="co">#&gt; [107] png_0.1-8                   spatstat.univar_3.1-4      </span></span>
@@ -863,7 +863,7 @@ groups.</p>
 <span><span class="co">#&gt; [149] patchwork_1.3.2             bit64_4.6.0-1              </span></span>
 <span><span class="co">#&gt; [151] future_1.67.0               Rhdf5lib_1.31.1            </span></span>
 <span><span class="co">#&gt; [153] shiny_1.11.1                SummarizedExperiment_1.39.2</span></span>
-<span><span class="co">#&gt; [155] ROCR_1.0-11                 igraph_2.2.0               </span></span>
+<span><span class="co">#&gt; [155] ROCR_1.0-11                 igraph_2.2.1               </span></span>
 <span><span class="co">#&gt; [157] bslib_0.9.0                 bit_4.6.0</span></span></code></pre></div>
 </div>
   </div>
