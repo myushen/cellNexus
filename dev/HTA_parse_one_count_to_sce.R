@@ -72,8 +72,8 @@ parse_csv <- function(sample, mtx_path, genes_path, barcodes_path) {
     assays = list(counts = counts),
     rowData = data.frame(gene_id = genes) |> tibble::column_to_rownames("gene_id"),
     colData = data.frame(barcode = barcodes,
-                         counts_path = basename(mtx_path),
-                         Biospecimen = sample)
+                         #counts_path = basename(mtx_path),
+                         sample_id = sample)
     
   )
   
@@ -113,8 +113,8 @@ parse_tsv <- function(sample, mtx_path, genes_path, barcodes_path) {
     assays = list(counts = counts),
     rowData = data.frame(gene_id = genes) |> tibble::column_to_rownames("gene_id"),
     colData = data.frame(barcode = barcodes,
-                         counts_path = basename(mtx_path),
-                         Biospecimen = sample)
+                         #counts_path = basename(mtx_path),
+                         sample_id = sample)
     
   )
   
@@ -166,7 +166,7 @@ tsv_files <- read.csv(metadata_path,sep = "\t", na.strings = c("NA",""), header 
       TRUE ~ NA_character_
     ),
     #channel_key = str_extract(Filename_basename, "^.*_channel[0-9]+"),
-    channel_number = str_extract(Filename_basename, "(?<=channel)[0-9]+")
+    channel_number = str_extract(Filename_basename, "channel[0-9]+")
   ) |>
   select(Biospecimen,channel_number, file_type, full_path, everything()) |>
   pivot_wider(
@@ -177,7 +177,7 @@ tsv_files <- read.csv(metadata_path,sep = "\t", na.strings = c("NA",""), header 
   mutate(sample_id = paste(Biospecimen, channel_number, sep = "___")) |> 
   
   # ONE SAMPLE FOR TESTING PURPOSE
-  filter(Biospecimen == "HTA1_274_4891101")
+  head(1)
   
 
 # =============================================================================
@@ -187,34 +187,37 @@ save_directory = "/vast/scratch/users/shen.m/htan/"
 
 # From a uncompressed csv input
 parse_csv(csv_files$Biospecimen, csv_files$mtx_path, csv_files$genes_path, csv_files$barcodes_path) |> 
-  writeH5AD(file.path(save_directory, paste0(csv_files$Biospecimen, ".h5ad")), compression = "gzip")
+  writeH5AD(file.path(save_directory, paste0(csv_files$sample_id, ".h5ad")), compression = "gzip")
 
 # From a compressed tsv input
-sce2 = tsv_files |> mutate(sce = pmap(
-  list(
-    tsv_files$sample_id, tsv_files$mtx_path, tsv_files$genes_path, tsv_files$barcodes_path
-  ), parse_tsv)
-) |> 
-  group_by(Biospecimen) |>
-  summarise(sce_list = list(sce), .groups = "drop") |> 
-  mutate(sce = map(sce_list, function(x) {
-    x <- unlist(x, recursive = T)
-    if (length(x) == 1) return(x[[1]])
-    Reduce(cbind, x)
-  }))
+parse_tsv(tsv_files$sample_id, tsv_files$mtx_path, tsv_files$genes_path, tsv_files$barcodes_path) |> 
+  writeH5AD(file.path(save_directory, paste0(tsv_files$sample_id, ".h5ad")), compression = "gzip")
 
-sce2 |> 
-  pwalk(~ writeH5AD(
-    ..3, 
-    file.path(save_directory, paste0(..1, ".h5ad")),
-    compression = "gzip"
-    )
-  )
+# sce2 = tsv_files |> mutate(sce = pmap(
+#   list(
+#     tsv_files$sample_id, tsv_files$mtx_path, tsv_files$genes_path, tsv_files$barcodes_path
+#   ), parse_tsv)
+# ) |> 
+#   group_by(Biospecimen) |>
+#   summarise(sce_list = list(sce), .groups = "drop") |> 
+#   mutate(sce = map(sce_list, function(x) {
+#     x <- unlist(x, recursive = T)
+#     if (length(x) == 1) return(x[[1]])
+#     Reduce(cbind, x)
+#   }))
+
+# sce2 |> 
+#   pwalk(~ writeH5AD(
+#     ..3, 
+#     file.path(save_directory, paste0(..1, ".h5ad")),
+#     compression = "gzip"
+#     )
+#   )
 
 # # =============================================================================
 # # Check saved SCE object
 # # =============================================================================
-# x = readH5AD(file.path(save_directory, "HTA1_274_4891101.h5ad"), reader = "R")
+# x = readH5AD(file.path(save_directory, "HTA1_203_332101___channel3.h5ad"), reader = "R")
 # y = readH5AD(file.path(save_directory, "HTA8_4003_001101.h5ad"), reader = "R")
 
 
