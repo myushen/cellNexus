@@ -56,14 +56,19 @@ METADATA_URL = if (params$demo_metadata)
 ```
 
 <!-- badges: start -->
-[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
 <!-- badges: end -->
 
-`cellNexus` is a query interface that allow the programmatic exploration and retrieval of the harmonised, curated and reannotated CELLxGENE single-cell human cell atlas. Data can be retrieved at cell, sample, or dataset levels based on filtering criteria.
+# Introduction
 
-Harmonised data is stored in the ARDC Nectar Research Cloud, and most 
-`cellNexus` functions interact with Nectar via web requests, so a 
-network connection is required for most functionality.
+`cellNexus` builds upon and extends the functionality of the previously released `CuratedAtlasQueryR`, providing a unified query and access interface to the harmonised, curated, and reannotated CELLxGENE human cell atlas. It enables reproducible and programmatic exploration of large-scale single-cell data resources, supporting retrieval at the cell, sample, and dataset levels through flexible filtering by tissue, cell type, experimental condition, or other metadata features. The retrieved data are returned for downstream analysis.
+
+`cellNexus` integrates over 40 million human cells processed with standardised quality control, consistent normalisation, and unified abundance representations—including single-cell, counts-per-million, pseudobulk, and metacell layers. This harmonised design facilitates efficient cross-dataset analyses and downstream integration.
+
+Data are hosted on the ARDC Nectar Research Cloud, and most `cellNexus` functions interact with Nectar via web requests, so a 
+network connection is required for most functionality.  
+
+`cellNexus` and CuratedAtlasQueryR both rely on pre-computed expression layers, but they differ in how these layers were generated. `cellNexus` applies a more standardised workflow with explicit empty droplet and dead cell removal followed by harmonised QC, normalisation, and multi-layer data generation. In doing so, it produces newly iterated data that align with the evolving CELLxGENE releases.
 
 ```{r, echo=FALSE, out.height = c("139px"), out.width = "120x" }
 find_figure("logo.png") |> knitr::include_graphics()
@@ -95,7 +100,7 @@ devtools::install_github("MangiolaLaboratory/cellNexus")
 library(cellNexus)
 ```
 
-Load additional packages
+## Load additional packages
 
 ```{r}
 suppressPackageStartupMessages({
