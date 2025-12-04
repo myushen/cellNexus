@@ -76,7 +76,8 @@ get_SingleCellExperiment <- function(...){
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
-#' meta <- get_metadata() |> head(2)
+#' # Use the lightweight sample database URL (for fast checks during development only)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 #' sce <- get_single_cell_experiment(meta)
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
@@ -216,7 +217,8 @@ get_single_cell_experiment <- function(data,
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
-#' meta <- get_metadata() |> head(2)
+#' # Use the lightweight sample database URL (for fast checks during development only)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 #' pseudobulk <- meta |> get_pseudobulk()
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
@@ -350,7 +352,8 @@ get_pseudobulk <- function(data,
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
-#' meta <- get_metadata() |> head(2)
+#' # Use the lightweight sample database URL (for fast checks during development only)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 #' metacell <- meta |> get_metacell(cell_aggregation = "metacell_2")
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 

@@ -48,7 +48,8 @@ returns a \code{\link[SingleCellExperiment:SingleCellExperiment]{SingleCellExper
 corresponding to the samples in that data frame
 }
 \examples{
-meta <- get_metadata() |> head(2)
+# Use the lightweight sample database URL (for fast checks during development only)
+meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 metacell <- meta |> get_metacell(cell_aggregation = "metacell_2")
 }
 \references{
