@@ -1,20 +1,20 @@
 Type: Package
 Package: cellNexus
 Title: Queries the Human Cell Atlas
-Version: 0.99.2
+Version: 0.99.3
 Authors@R: c(
     person(
         "Stefano",
         "Mangiola",
         email = "mangiolastefano@gmail.com",
-        role = c("aut", "cre", "rev"),
+        role = c("aut", "rev", "ctb"),
         comment = c(ORCID = "0000-0001-7474-836X")
     ),
     person(
         "Mengyuan",
         "Shen",
         email = "shen.m@wehi.edu.au",
-        role = c("aut", "rev", "ctb"),
+        role = c("aut", "cre", "rev"),
         comment = c(ORCID = "0009-0008-0057-8239")
     ),
     person(
@@ -74,7 +74,11 @@ Description: Provides access to a copy of the Human Cell Atlas, but with
     type, and patient ethnicity. Usage involves first querying the metadata
     table for cells of interest, and then downloading the corresponding cells 
     into one of several supported formats, including SingleCellExperiment, Seurat,
-    or pseudobulk SummarizedExperiment objects. 
+    or pseudobulk SummarizedExperiment objects. Note: The Human Cell Atlas data
+    accessed through this package is subject to its own licensing terms (typically
+    Creative Commons Attribution or similar open data licenses as specified by the
+    Human Cell Atlas Data Use Agreement), which differ from the package license
+    (GPL-3). See the package documentation for details. 
 License: GPL-3
 Depends:
     R (>= 4.2.0)
@@ -138,7 +142,7 @@ biocViews:
     Transcriptomics,
     ShinyApps
 Encoding: UTF-8
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 LazyDataCompression: xz
 URL: https://github.com/MangiolaLaboratory/cellNexus
 BugReports: https://github.com/MangiolaLaboratory/cellNexus/issues

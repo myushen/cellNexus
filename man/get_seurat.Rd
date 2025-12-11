@@ -45,7 +45,8 @@ Given a data frame of HCA metadata, returns a Seurat object corresponding to
 the samples in that data frame
 }
 \examples{
-meta <- get_metadata() |> head(2)
+# Use the lightweight sample database URL (for fast checks during development only)
+meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 seurat <- get_seurat(meta)
 }
 \references{
