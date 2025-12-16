@@ -37,6 +37,21 @@ When provided, the returned object will contain exactly the requested
 features (row order preserved), and any experiments/samples that do not
 contain all requested features are dropped. This preserves the full set
 of requested features at the cost of potentially fewer samples.
+A warning is emitted when samples are dropped.
+When provided, the returned object will contain exactly the requested
+features (row order preserved), and any experiments/samples that do not
+contain all requested features are dropped. This preserves the full set
+of requested features at the cost of potentially fewer samples.
+A warning is emitted when samples are dropped.
+When provided, the returned object will contain exactly the requested
+features (row order preserved), and any experiments/samples that do not
+contain all requested features are dropped. This preserves the full set
+of requested features at the cost of potentially fewer samples.
+A warning is emitted when samples are dropped.
+When provided, the returned object will contain exactly the requested
+features (row order preserved), and any experiments/samples that do not
+contain all requested features are dropped. This preserves the full set
+of requested features at the cost of potentially fewer samples.
 A warning is emitted when samples are dropped.}
   }}
 }

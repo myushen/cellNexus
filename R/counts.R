@@ -69,6 +69,21 @@ get_SingleCellExperiment <- function(...){
 #'   contain all requested features are dropped. This preserves the full set
 #'   of requested features at the cost of potentially fewer samples.
 #'   A warning is emitted when samples are dropped.
+#'   When provided, the returned object will contain exactly the requested
+#'   features (row order preserved), and any experiments/samples that do not
+#'   contain all requested features are dropped. This preserves the full set
+#'   of requested features at the cost of potentially fewer samples.
+#'   A warning is emitted when samples are dropped.
+#'   When provided, the returned object will contain exactly the requested
+#'   features (row order preserved), and any experiments/samples that do not
+#'   contain all requested features are dropped. This preserves the full set
+#'   of requested features at the cost of potentially fewer samples.
+#'   A warning is emitted when samples are dropped.
+#'   When provided, the returned object will contain exactly the requested
+#'   features (row order preserved), and any experiments/samples that do not
+#'   contain all requested features are dropped. This preserves the full set
+#'   of requested features at the cost of potentially fewer samples.
+#'   A warning is emitted when samples are dropped.
 #' @return A `SingleCellExperiment` object.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
@@ -387,6 +402,11 @@ get_pseudobulk <- function(data,
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
+#'   When provided, the returned object will contain exactly the requested
+#'   features (row order preserved), and any experiments/samples that do not
+#'   contain all requested features are dropped. This preserves the full set
+#'   of requested features at the cost of potentially fewer samples.
+#'   A warning is emitted when samples are dropped.
 #' @return A `SingleCellExperiment` object.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
@@ -487,11 +507,25 @@ get_metacell <- function(data,
         )) |>
         dplyr::pull(experiments)
       
-      commonGenes <- experiment_list |> check_gene_overlap()
-      experiment_list <- map(experiment_list, function(exp) {
-        exp[commonGenes,]
-      }) |>
-        do.call(cbind, args = _)
+      # If features provided, drop experiments missing any requested features
+      # and align rows to the requested features; otherwise intersect genes.
+      if (!is.null(features)) {
+        keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
+        dropped_count <- sum(!keep_idx)
+        if (all(!keep_idx)) {
+          cli_alert_warning("cellNexus says: None of the experiments contain all requested features. Please select different features.")
+        } else if (dropped_count > 0) {
+          cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
+        }
+        experiment_list <- experiment_list[keep_idx]
+        experiment_list <- purrr::map(experiment_list, function(exp) exp[features, ])
+      } else {
+        commonGenes <- experiment_list |> check_gene_overlap()
+        experiment_list <- map(experiment_list, function(exp) {
+          exp[commonGenes,]
+        })
+      }
+      experiment_list |> do.call(cbind, args = _)
     })
   
   cli_alert_info("Compiling Experiment.")
