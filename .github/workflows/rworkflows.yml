@@ -38,6 +38,17 @@ jobs:
           cont: ~
           rspm: ~
     steps:
+    - name: Setup Python (Windows)
+      if: matrix.config.os == 'windows-latest'
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Expose Python to reticulate (Windows)
+      if: matrix.config.os == 'windows-latest'
+      run: |
+        echo "RETICULATE_PYTHON=$(python -c 'import sys; print(sys.executable)')" >> $GITHUB_ENV
+        
     - uses: neurogenomics/rworkflows@master
       with:
         run_bioccheck: ${{ false }}
@@ -55,5 +66,3 @@ jobs:
         runner_os: ${{ runner.os }}
         cache_version: cache-v1
         docker_registry: ghcr.io
-        activate_environment: ${{ true }}
-        conda_env: python>=3.10,<3.13
