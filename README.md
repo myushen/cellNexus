@@ -410,7 +410,7 @@ columns with only NA values of a `SingleCellExperiment` metadata.
 # ! IMPORTANT if you save 200K+ cells
 HDF5Array::setAutoBlockSize(size = 1e+09) 
 
-single_cell_counts |> zellkonverter::writeH5AD("single_cell_counts.h5ad", 
+single_cell_counts |> anndataR::write_h5ad("single_cell_counts.h5ad", 
                                                compression = "gzip",
                                                verbose = TRUE)
 ```
@@ -525,7 +525,7 @@ cellNexus::pbmc3k_sce |>
 
 # Save SCE object
 cellNexus::pbmc3k_sce |> 
-  zellkonverter::writeH5AD(file = sce_path, compression = "gzip")
+  anndataR::write_h5ad(sce_path, compression = "gzip")
 #> ℹ Using the 'counts' assay as the X matrix
 ```
 

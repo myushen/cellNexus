@@ -254,7 +254,7 @@ test_that("get_single_cell_experiment() expect to combine local and cloud counts
     arrow::write_parquet(meta_path)
   
   cellNexus::pbmc3k_sce |> 
-    zellkonverter::writeH5AD(file = sce_path, compression = "gzip")
+    anndataR::write_h5ad(sce_path, compression = "gzip")
   
   # Test combining local and cloud metadata
   file_id_from_cloud <- "e52795dec7b626b6276b867d55328d9f___1.h5ad"
