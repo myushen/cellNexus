@@ -666,7 +666,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         `colnames<-`(new_coldata$sample_identifier) |>
         `colData<-`(value = DataFrame(new_coldata))
     
-    # Force renaming type class since zellkonverter::writeH5AD cannot save `SummarizedExperiment` object
+    # Force renaming type class to save `SummarizedExperiment` object
     experiment <- experiment |> as("SingleCellExperiment")
    
   }
