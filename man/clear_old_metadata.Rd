@@ -10,7 +10,7 @@
 clear_old_metadata(updated_data)
 }
 \arguments{
-\item{metadata}{A character vector of outdated metadata name}
+\item{updated_data}{A character vector of outdated metadata name}
 }
 \value{
 \code{NULL}, invisibly
