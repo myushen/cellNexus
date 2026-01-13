@@ -44,7 +44,8 @@ UNHARMONISED_URL <- single_line_str(
 #'     dplyr::filter(file_id_cellNexus_single_cell == dataset) |> dplyr::collect()
 #' unharmonised_meta <- get_unharmonised_dataset(dataset)
 #' unharmonised_tbl <- dplyr::collect(unharmonised_meta[[dataset]])
-#' dplyr::left_join(harmonised_meta, unharmonised_tbl, by=c("file_id_cellNexus_single_cell", "cell_id"))
+#' dplyr::left_join(harmonised_meta, unharmonised_tbl, 
+#'     by=c("file_id_cellNexus_single_cell", "cell_id"))
 #' }
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 

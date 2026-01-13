@@ -150,7 +150,7 @@ metadata = metadata |>
 
 ### Query raw counts
 
-```{r}
+```{r, eval=FALSE}
 single_cell_counts = 
     metadata |>
     dplyr::filter(
@@ -159,15 +159,21 @@ single_cell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_single_cell_experiment()
+  head() |> 
+  get_single_cell_experiment()
 
+single_cell_counts
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
 single_cell_counts
 ```
 
 ### Query counts scaled per million
 
-```{r}
-single_cell_counts = 
+```{r, eval=FALSE}
+single_cell_cpm = 
     metadata |>
     dplyr::filter(
         self_reported_ethnicity == "African" &
@@ -175,14 +181,20 @@ single_cell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_single_cell_experiment(assays = "cpm")
+  head() |> 
+  get_single_cell_experiment(assays = "cpm")
 
-single_cell_counts
+single_cell_cpm
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
+single_cell_cpm
 ```
 
 ### Query pseudobulk
 
-```{r}
+```{r, eval=FALSE}
 pseudobulk_counts = 
    metadata |>
     dplyr::filter(
@@ -191,8 +203,14 @@ pseudobulk_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_pseudobulk()
+  head() |> 
+  get_pseudobulk()
 
+pseudobulk_counts
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
 pseudobulk_counts
 ```
 
@@ -200,7 +218,7 @@ pseudobulk_counts
 
 The metadata includes a series of metacell aggregation levels, beginning with 2, 4, 8, and so on. For example, the value of metacell_2 represents a grouping of cells that can be split into two distinct metacells. 
 
-```{r}
+```{r, eval=FALSE}
 metacell_counts = 
    metadata |>
     dplyr::filter(!is.na(metacell_2)) |>
@@ -210,8 +228,14 @@ metacell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_metacell(cell_aggregation = "metacell_2")
+  head() |> 
+  get_metacell(cell_aggregation = "metacell_2")
 
+metacell_counts
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
 metacell_counts
 ```
 
@@ -219,8 +243,8 @@ metacell_counts
 
 This is helpful if just few genes are of interest (e.g ENSG00000134644 (PUM1)), as they can be compared across samples. cellNexus uses ENSEMBL gene ID(s).
 
-```{r}
-single_cell_counts = 
+```{r, eval=FALSE}
+single_cell_cpm = 
     metadata |>
     dplyr::filter(
         self_reported_ethnicity == "African" &
@@ -228,16 +252,22 @@ single_cell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
+  head() |>
+  get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
 
 single_cell_counts
+```
+
+```{r, echo=FALSE}
+single_cell_cpm <- single_cell_cpm["ENSG00000134644", ]
+single_cell_cpm
 ```
 
 ### Extract the counts as a Seurat object
 
 This convert the H5 SingleCellExperiment to Seurat so it might take long time and occupy a lot of memory depending on how many cells you are requesting.
 
-```{r}
+```{r, eval=FALSE}
 seurat_counts = 
     metadata |>
     dplyr::filter(
@@ -246,9 +276,15 @@ seurat_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_seurat()
+  head() |>
+  get_seurat()
 
 seurat_counts
+```
+
+```{r, echo=FALSE}
+SingleCellExperiment::counts(single_cell_counts) <- as(SingleCellExperiment::counts(single_cell_counts), "dgCMatrix")
+single_cell_counts |>  Seurat::as.Seurat(data = NULL)
 ```
 
 

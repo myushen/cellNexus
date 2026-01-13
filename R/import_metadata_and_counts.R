@@ -264,8 +264,8 @@ calculate_pseudobulk <- function(sce_data,
   qnorm_file_path <- file.path(quantile_normalised_dir, basename(file_id_cellNexus_single_cell)) |> paste0(extension)
   
   # Save pseudobulk counts
-  anndataR::write_h5ad(pseudobulk, counts_file_path, compression = "gzip")
-  anndataR::write_h5ad(normalised_pseudobulk, qnorm_file_path, compression = "gzip")
+  anndataR::write_h5ad(pseudobulk, counts_file_path, compression = "gzip", mode = "w")
+  anndataR::write_h5ad(normalised_pseudobulk, qnorm_file_path, compression = "gzip", mode = "w")
   
   cli_alert_info("pseudobulk are generated in {.path {pseudobulk_directory}}. ")
 }

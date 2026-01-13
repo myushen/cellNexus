@@ -73,7 +73,7 @@ clear_cache <- function() {
 }
 
 #' Clear the outdated metadata in the default cache directory.
-#' @param metadata A character vector of outdated metadata name
+#' @param updated_data A character vector of outdated metadata name
 #' @return `NULL`, invisibly
 #' @keywords internal
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
