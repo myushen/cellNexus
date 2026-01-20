@@ -43,7 +43,7 @@
 # Output files:
 #   - hta_cell_metadata.parquet: Cell-level metadata with cell_id, sample_id, file_id, cell_type
 #   - hta_sample_metadata.parquet: Sample-level metadata with all HTAN annotations
-#   - hta_metadata.1.0.0.parquet: Combined cell and sample metadata for cellNexus
+#   - hta_metadata.0.1.0.parquet: Combined cell and sample metadata for cellNexus
 
 library(targets)
 library(dplyr)
@@ -443,7 +443,7 @@ duckdb_write_parquet <- function(.tbl_sql, path, con) {
 
 save <- duckdb_write_parquet(
   cell_sample_metadata,
-  path = "/vast/scratch/users/shen.m/htan/hta_metadata.1.0.0.parquet",
+  path = "/vast/scratch/users/shen.m/htan/hta_metadata.0.1.0.parquet",
   con = con
 )
 
@@ -465,7 +465,7 @@ test_that("get_metadata and get_single_cell_experiment return expected SCE for t
   
   cell_metadata <-  tbl(
     dbConnect(duckdb::duckdb(), dbdir = ":memory:"),
-    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/htan/hta_metadata.1.0.0.parquet')")
+    sql("SELECT * FROM read_parquet('/vast/scratch/users/shen.m/htan/hta_metadata.0.1.0.parquet')")
   )
   
   # Build test data
@@ -499,5 +499,5 @@ test_that("get_metadata and get_single_cell_experiment return expected SCE for t
   
 })
 
-# upload "/vast/scratch/users/shen.m/htan/hta_metadata.1.0.0.parquet" to Nectar cellNexus-metadata/hta_metadata.1.0.0.parquet
+# upload "/vast/scratch/users/shen.m/htan/hta_metadata.0.1.0.parquet" to Nectar cellNexus-metadata/hta_metadata.0.1.0.parquet
 
