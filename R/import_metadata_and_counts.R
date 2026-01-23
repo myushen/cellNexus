@@ -101,6 +101,7 @@ assert_pseudobulk_metadata <- function(sce_obj,
 #' @importFrom S4Vectors metadata metadata<-
 #' @importFrom SummarizedExperiment assay assay<-
 #' @examples
+#' \dontrun{
 #' data(pbmc3k_sce)
 #' import_one_sce(pbmc3k_sce,
 #'                atlas_name = "pbmc3k_sce_atlas",
@@ -108,6 +109,7 @@ assert_pseudobulk_metadata <- function(sce_obj,
 #'                cell_aggregation = "single_cell",
 #'                cache_dir = get_default_cache_dir(),
 #'                pseudobulk = FALSE)
+#' }
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
@@ -264,8 +266,8 @@ calculate_pseudobulk <- function(sce_data,
   qnorm_file_path <- file.path(quantile_normalised_dir, basename(file_id_cellNexus_single_cell)) |> paste0(extension)
   
   # Save pseudobulk counts
-  zellkonverter::writeH5AD(pseudobulk, counts_file_path, compression = "gzip")
-  zellkonverter::writeH5AD(normalised_pseudobulk, qnorm_file_path, compression = "gzip")
+  anndataR::write_h5ad(pseudobulk, counts_file_path, compression = "gzip", mode = "w")
+  anndataR::write_h5ad(normalised_pseudobulk, qnorm_file_path, compression = "gzip", mode = "w")
   
   cli_alert_info("pseudobulk are generated in {.path {pseudobulk_directory}}. ")
 }

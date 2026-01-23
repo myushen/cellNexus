@@ -19,7 +19,8 @@ as.sparse.DelayedMatrix <- function(x, ...) {
 #' @return A Seurat object containing the same data as a call to
 #'   [get_single_cell_experiment()]
 #' @examples
-#' meta <- get_metadata() |> head(2)
+#' # Use the lightweight sample database URL (for fast checks during development only)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 #' seurat <- get_seurat(meta)
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 

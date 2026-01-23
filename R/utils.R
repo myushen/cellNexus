@@ -49,7 +49,7 @@ single_line_str <- function(text){
 #' @importFrom tools R_user_dir
 #' @importFrom utils packageName
 #' @examples
-#' get_metadata(cache_directory = get_default_cache_dir())
+#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = get_default_cache_dir())
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
@@ -73,7 +73,7 @@ clear_cache <- function() {
 }
 
 #' Clear the outdated metadata in the default cache directory.
-#' @param metadata A character vector of outdated metadata name
+#' @param updated_data A character vector of outdated metadata name
 #' @return `NULL`, invisibly
 #' @keywords internal
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
@@ -327,7 +327,7 @@ write_h5ad <- function(sce,
   
   if (ncol(SummarizedExperiment::assay(sce)) == 1) sce = sce |> duplicate_single_column_assay()
   
-  sce |> zellkonverter::writeH5AD(path, compression = "gzip", verbose = FALSE)
+  sce |> anndataR::write_h5ad(path, compression = "gzip", verbose = FALSE)
 }
 
 #' Duplicate Single-Column Assay in SingleCellExperiment Object

@@ -76,7 +76,8 @@ get_SingleCellExperiment <- function(...){
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
-#' meta <- get_metadata() |> head(2)
+#' # Use the lightweight sample database URL (for fast checks during development only)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 #' sce <- get_single_cell_experiment(meta)
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
@@ -157,11 +158,23 @@ get_single_cell_experiment <- function(data,
         )) |>
         dplyr::pull(experiments)
       
-      commonGenes <- experiment_list |> check_gene_overlap()
-      experiment_list <- map(experiment_list, function(exp) {
-        exp[commonGenes,]
-      }) |>
-        do.call(cbind, args = _)
+      # If features provided, drop experiments missing any requested features
+      # and align rows to the requested features; otherwise intersect genes.
+      if (!is.null(features)) {
+        keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
+        dropped_count <- sum(!keep_idx)
+        if (all(!keep_idx)) {
+          cli_alert_warning("cellNexus says: None of the experiments contain all requested features. Please select different features.")
+        } else if (dropped_count > 0) {
+          cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
+        }
+        experiment_list <- experiment_list[keep_idx]
+        experiment_list <- purrr::map(experiment_list, function(exp) exp[features, ])
+      } else {
+        commonGenes <- experiment_list |> check_gene_overlap()
+        experiment_list <- map(experiment_list, function(exp) exp[commonGenes,])
+      }
+      experiment_list |> do.call(cbind, args = _)
     })
   
   cli_alert_info("Compiling Experiment.")
@@ -216,7 +229,8 @@ get_single_cell_experiment <- function(data,
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
-#' meta <- get_metadata() |> head(2)
+#' # Use the lightweight sample database URL (for fast checks during development only)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 #' pseudobulk <- meta |> get_pseudobulk()
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
@@ -296,11 +310,36 @@ get_pseudobulk <- function(data,
         )) |>
         dplyr::pull(experiments)
       
-      commonGenes <- experiment_list |> check_gene_overlap()
-      experiment_list <- map(experiment_list, function(exp) {
-        exp[commonGenes,]
-      }) |>
-        do.call(cbind, args = _)
+
+      # If features is defined, drop all experiments which do not contain all the features
+      # The logic is that if the user requests a subset of features, 
+      # they prefer to preserve all requested features rather than all experiments
+      if (!is.null(features)) {
+
+        # Check if all experiments contain all the features
+        keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
+        dropped_count <- sum(!keep_idx)
+        if (all(!keep_idx)) {
+          cli_alert_warning("cellNexus says: None of the experiments contain all requested features. Please select different features.")
+        }
+        else if (dropped_count > 0) {
+          cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
+        }
+        experiment_list <- experiment_list[keep_idx]
+        # Ensure identical row order across experiments for cbind
+        experiment_list <- purrr::map(experiment_list, function(exp) {
+          exp[features, ]
+        })
+      } else {
+
+        commonGenes <- experiment_list |> check_gene_overlap()
+        experiment_list <- experiment_list |> map(function(exp) {
+          exp[commonGenes,]
+        })
+      }
+
+      experiment_list |>
+          do.call(cbind, args = _)
     })
   
   cli_alert_info("Compiling Experiment.")
@@ -350,7 +389,8 @@ get_pseudobulk <- function(data,
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
-#' meta <- get_metadata() |> head(2)
+#' # Use the lightweight sample database URL (for fast checks during development only)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 #' metacell <- meta |> get_metacell(cell_aggregation = "metacell_2")
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
@@ -437,11 +477,25 @@ get_metacell <- function(data,
         )) |>
         dplyr::pull(experiments)
       
-      commonGenes <- experiment_list |> check_gene_overlap()
-      experiment_list <- map(experiment_list, function(exp) {
-        exp[commonGenes,]
-      }) |>
-        do.call(cbind, args = _)
+      # If features provided, drop experiments missing any requested features
+      # and align rows to the requested features; otherwise intersect genes.
+      if (!is.null(features)) {
+        keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
+        dropped_count <- sum(!keep_idx)
+        if (all(!keep_idx)) {
+          cli_alert_warning("cellNexus says: None of the experiments contain all requested features. Please select different features.")
+        } else if (dropped_count > 0) {
+          cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
+        }
+        experiment_list <- experiment_list[keep_idx]
+        experiment_list <- purrr::map(experiment_list, function(exp) exp[features, ])
+      } else {
+        commonGenes <- experiment_list |> check_gene_overlap()
+        experiment_list <- map(experiment_list, function(exp) {
+          exp[commonGenes,]
+        })
+      }
+      experiment_list |> do.call(cbind, args = _)
     })
   
   cli_alert_info("Compiling Experiment.")
@@ -663,7 +717,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         `colnames<-`(new_coldata$sample_identifier) |>
         `colData<-`(value = DataFrame(new_coldata))
     
-    # Force renaming type class since zellkonverter::writeH5AD cannot save `SummarizedExperiment` object
+    # Force renaming type class to save `SummarizedExperiment` object
     experiment <- experiment |> as("SingleCellExperiment")
    
   }

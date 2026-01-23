@@ -124,7 +124,8 @@ The solution is to choose a different cache, for example
 }
 \examples{
 library(dplyr)
-filtered_metadata <- get_metadata() |>
+# For fast build purpose only, you do not need to specify anything in cloud_metadata.
+filtered_metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> 
     filter(
         self_reported_ethnicity == "African" &
             assay \%LIKE\% "\%10x\%" &

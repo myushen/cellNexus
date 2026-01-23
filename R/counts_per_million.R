@@ -11,7 +11,7 @@
 get_counts_per_million <- function(sce, input_file, output_file) {
 
   # Save SCE to the cache directory counts folder
-  sce |> zellkonverter::writeH5AD(input_file, compression = "gzip")
+  sce |> anndataR::write_h5ad(input_file, compression = "gzip")
   
   # Avoid completely empty cells
   col_sums <- colSums(as.matrix(assay(sce)))
@@ -31,9 +31,9 @@ get_counts_per_million <- function(sce, input_file, output_file) {
   
   sce <- sce[,colnames(sce)]
   
-  # Check if there is a memory issue 
-  assays(sce) <- assays(sce) |> map(DelayedArray::realize)
+  # # Check if there is a memory issue 
+  # assays(sce) <- assays(sce) |> map(DelayedArray::realize)
   
-  sce |> zellkonverter::writeH5AD(output_file, compression = "gzip")
+  sce |> anndataR::write_h5ad(output_file, compression = "gzip")
 } 
 

@@ -69,7 +69,6 @@
 #' # Example 4: Handling a case with more inputs than grid cells
 #' many.inputs <- tagList(replicate(10, textInput("input", "Input")))
 #' organize_inputs(many.inputs, columns = 3) # Creates more than one row
-#'
 organize_inputs <- function(
     tag.list,
     id = NULL,
@@ -143,7 +142,8 @@ organize_inputs <- function(
 #' @examples
 #' \dontrun{
 #' # Create the interface app with metadata
-#' metadata <- get_metadata()
+#' # For fast build purpose only, you do not need to specify anything in cloud_metadata.
+#' metadata <-get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
 #' app <- create_interface_app(metadata)
 #' # Run the app
 #' shiny::runApp(app)

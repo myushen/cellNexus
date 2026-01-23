@@ -12,7 +12,7 @@ cache <- rlang::env(
 #' Returns the URLs for all metadata files 
 #' @param databases A character vector specifying the names of the metadata files. 
 #'   Download the specific metadata by defining the metadata version. By default, it uses
-#'   metadata.1.2.13.parquet
+#'   metadata.1.3.0.parquet
 #' @param use_split_files Logical, default `FALSE`. If `TRUE`, returns 
 #'   URLs for the split metadata files.
 #' @param use_census Logical, default `FALSE`. If `TRUE`, returns the URL 
@@ -22,30 +22,30 @@ cache <- rlang::env(
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
-#' get_metadata_url("metadata.1.2.13.parquet")
+#' get_metadata_url("metadata.1.3.0.parquet")
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata_url <- function(databases  = "metadata.1.2.13.parquet", 
+get_metadata_url <- function(databases  = "metadata.1.3.0.parquet", 
                              use_split_files = FALSE,
                              use_census = FALSE,
                              use_metacell = FALSE) {
   #clear_old_metadata(databases)
   if (use_split_files) {
     # Return URLs for the three split files
-    databases <- "cellnexus_metadata.1.2.13.parquet"
+    databases <- "cellnexus_metadata.1.3.0.parquet"
   }
   
   if (use_census) {
     # Returns the URL for census metadata file
-    databases <- "census_cell_metadata.1.2.13.parquet"
+    databases <- "census_cell_metadata.1.3.0.parquet"
   }
   
   if (use_metacell) {
     # Returns the URL for metacell metadata file
-    databases <- "metacell_metadata.1.2.13.parquet"
+    databases <- "metacell_metadata.1.3.0.parquet"
   }
 
   glue::glue(
@@ -66,7 +66,7 @@ get_metadata_url <- function(databases  = "metadata.1.2.13.parquet",
 SAMPLE_DATABASE_URL <- single_line_str(
   "https://object-store.rc.nectar.org.au/v1/
     AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/
-    sample_metadata.1.2.13.parquet"
+    sample_metadata.1.3.0.parquet"
 )
 
 #' Gets the CellNexus metadata as a data frame.
@@ -99,7 +99,8 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' @export
 #' @examples
 #' library(dplyr)
-#' filtered_metadata <- get_metadata() |>
+#' # For fast build purpose only, you do not need to specify anything in cloud_metadata.
+#' filtered_metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> 
 #'     filter(
 #'         self_reported_ethnicity == "African" &
 #'             assay %LIKE% "%10x%" &

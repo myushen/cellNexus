@@ -45,3 +45,72 @@
 #' unique(metadata(pbmc3k_sce)$data$cell_type_unified_ensemble)
 #' }
 "pbmc3k_sce"
+
+
+#' Sample SingleCellExperiment Object with Counts Assay
+#'
+#' A pre-made SingleCellExperiment object with counts assay for vignette demonstration.
+#' This object is used in the vignette to avoid downloading data during package build.
+#' 
+#' @format An object of class \code{SingleCellExperiment} with:
+#' \describe{
+#'   \item{assays}{Gene expression matrix with counts assay}
+#'   \item{colData}{Cell metadata including sample_id, cell_type_unified_ensemble, etc.}
+#' }
+#' 
+#' @source Created from cellNexus datasets
+#' @details See \code{dev/create_vignette_data.R} for the creation script.
+#' @keywords datasets
+#' @docType data
+"single_cell_counts"
+
+#' Sample SingleCellExperiment Object with CPM Assay
+#'
+#' A pre-made SingleCellExperiment object with counts-per-million (CPM) assay for vignette demonstration.
+#' This object is used in the vignette to avoid downloading data during package build.
+#' 
+#' @format An object of class \code{SingleCellExperiment} with:
+#' \describe{
+#'   \item{assays}{Gene expression matrix with cpm assay}
+#'   \item{colData}{Cell metadata including sample_id, cell_type_unified_ensemble, etc.}
+#' }
+#' 
+#' @source Created from cellNexus datasets
+#' @details See \code{dev/create_vignette_data.R} for the creation script.
+#' @keywords datasets
+#' @docType data
+"single_cell_cpm"
+
+#' Sample Pseudobulk SingleCellExperiment Object
+#'
+#' A pre-made SingleCellExperiment object with pseudobulk aggregated data for vignette demonstration.
+#' This object is used in the vignette to avoid downloading data during package build.
+#' 
+#' @format An object of class \code{SingleCellExperiment} with:
+#' \describe{
+#'   \item{assays}{Gene expression matrix with counts assay aggregated by sample and cell type}
+#'   \item{colData}{Sample metadata including sample_id, cell_type_unified_ensemble, etc.}
+#' }
+#' 
+#' @source Created from cellNexus datasets
+#' @details See \code{dev/create_vignette_data.R} for the creation script.
+#' @keywords datasets
+#' @docType data
+"pseudobulk_counts"
+
+#' Sample Metacell SingleCellExperiment Object
+#'
+#' A pre-made SingleCellExperiment object with metacell aggregated data for vignette demonstration.
+#' This object is used in the vignette to avoid downloading data during package build.
+#' 
+#' @format An object of class \code{SingleCellExperiment} with:
+#' \describe{
+#'   \item{assays}{Gene expression matrix with counts assay aggregated into metacells}
+#'   \item{colData}{Metacell metadata including metacell_2, etc.}
+#' }
+#' 
+#' @source Created from cellNexus datasets
+#' @details See \code{dev/create_vignette_data.R} for the creation script.
+#' @keywords datasets
+#' @docType data
+"metacell_counts"

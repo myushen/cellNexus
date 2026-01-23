@@ -56,14 +56,19 @@ METADATA_URL = if (params$demo_metadata)
 ```
 
 <!-- badges: start -->
-[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
 <!-- badges: end -->
 
-`cellNexus` is a query interface that allow the programmatic exploration and retrieval of the harmonised, curated and reannotated CELLxGENE single-cell human cell atlas. Data can be retrieved at cell, sample, or dataset levels based on filtering criteria.
+# Introduction
 
-Harmonised data is stored in the ARDC Nectar Research Cloud, and most 
-`cellNexus` functions interact with Nectar via web requests, so a 
-network connection is required for most functionality.
+`cellNexus` builds upon and extends the functionality of the previously released `CuratedAtlasQueryR`, providing a unified query and access interface to the harmonised, curated, and reannotated CELLxGENE human cell atlas. It enables reproducible and programmatic exploration of large-scale single-cell data resources, supporting retrieval at the cell, sample, and dataset levels through flexible filtering by tissue, cell type, experimental condition, or other metadata features. The retrieved data are returned for downstream analysis.
+
+`cellNexus` integrates over 40 million human cells processed with standardised quality control, consistent normalisation, and unified abundance representations—including single-cell, counts-per-million, pseudobulk, and metacell layers. This harmonised design facilitates efficient cross-dataset analyses and downstream integration.
+
+Data are hosted on the ARDC Nectar Research Cloud, and most `cellNexus` functions interact with Nectar via web requests, so a 
+network connection is required for most functionality.  
+
+`cellNexus` and CuratedAtlasQueryR both rely on pre-computed expression layers, but they differ in how these layers were generated. `cellNexus` applies a more standardised workflow with explicit empty droplet and dead cell removal followed by harmonised QC, normalisation, and multi-layer data generation. In doing so, it produces newly iterated data that align with the evolving CELLxGENE releases.
 
 ```{r, echo=FALSE, out.height = c("139px"), out.width = "120x" }
 find_figure("logo.png") |> knitr::include_graphics()
@@ -95,7 +100,7 @@ devtools::install_github("MangiolaLaboratory/cellNexus")
 library(cellNexus)
 ```
 
-Load additional packages
+## Load additional packages
 
 ```{r}
 suppressPackageStartupMessages({
@@ -142,7 +147,7 @@ metadata = metadata |>
 
 ### Query raw counts
 
-```{r}
+```{r, eval=FALSE}
 single_cell_counts = 
     metadata |>
     dplyr::filter(
@@ -151,15 +156,21 @@ single_cell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_single_cell_experiment()
+  head() |> 
+  get_single_cell_experiment()
 
+single_cell_counts
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
 single_cell_counts
 ```
 
 ### Query counts scaled per million
 
-```{r}
-single_cell_counts = 
+```{r, eval=FALSE}
+single_cell_cpm = 
     metadata |>
     dplyr::filter(
         self_reported_ethnicity == "African" &
@@ -167,14 +178,20 @@ single_cell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_single_cell_experiment(assays = "cpm")
+  head() |> 
+  get_single_cell_experiment(assays = "cpm")
 
-single_cell_counts
+single_cell_cpm
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
+single_cell_cpm
 ```
 
 ### Query pseudobulk
 
-```{r}
+```{r, eval=FALSE}
 pseudobulk_counts = 
    metadata |>
     dplyr::filter(
@@ -183,8 +200,14 @@ pseudobulk_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_pseudobulk()
+  head() |> 
+  get_pseudobulk()
 
+pseudobulk_counts
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
 pseudobulk_counts
 ```
 
@@ -192,7 +215,7 @@ pseudobulk_counts
 
 The metadata includes a series of metacell aggregation levels, beginning with 2, 4, 8, and so on. For example, the value of metacell_2 represents a grouping of cells that can be split into two distinct metacells. 
 
-```{r}
+```{r, eval=FALSE}
 metacell_counts = 
    metadata |>
     dplyr::filter(!is.na(metacell_2)) |>
@@ -202,8 +225,14 @@ metacell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_metacell(cell_aggregation = "metacell_2")
+  head() |> 
+  get_metacell(cell_aggregation = "metacell_2")
 
+metacell_counts
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
 metacell_counts
 ```
 
@@ -211,8 +240,8 @@ metacell_counts
 
 This is helpful if just few genes are of interest (e.g ENSG00000134644 (PUM1)), as they can be compared across samples. cellNexus uses ENSEMBL gene ID(s).
 
-```{r}
-single_cell_counts = 
+```{r, eval=FALSE}
+single_cell_cpm = 
     metadata |>
     dplyr::filter(
         self_reported_ethnicity == "African" &
@@ -220,16 +249,22 @@ single_cell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
+  head() |>
+  get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
 
 single_cell_counts
+```
+
+```{r, echo=FALSE}
+single_cell_cpm <- single_cell_cpm["ENSG00000134644", ]
+single_cell_cpm
 ```
 
 ### Extract the counts as a Seurat object
 
 This convert the H5 SingleCellExperiment to Seurat so it might take long time and occupy a lot of memory depending on how many cells you are requesting.
 
-```{r}
+```{r, eval=FALSE}
 seurat_counts = 
     metadata |>
     dplyr::filter(
@@ -238,9 +273,15 @@ seurat_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_seurat()
+  head() |>
+  get_seurat()
 
 seurat_counts
+```
+
+```{r, echo=FALSE}
+SingleCellExperiment::counts(single_cell_counts) <- as(SingleCellExperiment::counts(single_cell_counts), "dgCMatrix")
+single_cell_counts |>  Seurat::as.Seurat(data = NULL)
 ```
 
 
@@ -319,7 +360,7 @@ However this `.h5ad` saving strategy has a bottleneck of handling columns with o
 # ! IMPORTANT if you save 200K+ cells
 HDF5Array::setAutoBlockSize(size = 1e+09) 
 
-single_cell_counts |> zellkonverter::writeH5AD("single_cell_counts.h5ad", 
+single_cell_counts |> anndataR::write_h5ad("single_cell_counts.h5ad", 
                                                compression = "gzip",
                                                verbose = TRUE)
 ```
@@ -434,7 +475,7 @@ cellNexus::pbmc3k_sce |>
 
 # Save SCE object
 cellNexus::pbmc3k_sce |> 
-  zellkonverter::writeH5AD(file = sce_path, compression = "gzip")
+  anndataR::write_h5ad(sce_path, compression = "gzip")
 ```
 
 ``` {r}
