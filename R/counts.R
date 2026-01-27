@@ -64,26 +64,6 @@ get_SingleCellExperiment <- function(...){
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#'   When provided, the returned object will contain exactly the requested
-#'   features (row order preserved), and any experiments/samples that do not
-#'   contain all requested features are dropped. This preserves the full set
-#'   of requested features at the cost of potentially fewer samples.
-#'   A warning is emitted when samples are dropped.
-#'   When provided, the returned object will contain exactly the requested
-#'   features (row order preserved), and any experiments/samples that do not
-#'   contain all requested features are dropped. This preserves the full set
-#'   of requested features at the cost of potentially fewer samples.
-#'   A warning is emitted when samples are dropped.
-#'   When provided, the returned object will contain exactly the requested
-#'   features (row order preserved), and any experiments/samples that do not
-#'   contain all requested features are dropped. This preserves the full set
-#'   of requested features at the cost of potentially fewer samples.
-#'   A warning is emitted when samples are dropped.
-#'   When provided, the returned object will contain exactly the requested
-#'   features (row order preserved), and any experiments/samples that do not
-#'   contain all requested features are dropped. This preserves the full set
-#'   of requested features at the cost of potentially fewer samples.
-#'   A warning is emitted when samples are dropped.
 #' @return A `SingleCellExperiment` object.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
@@ -237,11 +217,6 @@ get_single_cell_experiment <- function(data,
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#'   When provided, the returned object will contain exactly the requested
-#'   features (row order preserved), and any experiments/samples that do not
-#'   contain all requested features are dropped. This preserves the full set
-#'   of requested features at the cost of potentially fewer samples.
-#'   A warning is emitted when samples are dropped.
 #' @return A `SummarizedExperiment` object.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
@@ -402,11 +377,6 @@ get_pseudobulk <- function(data,
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#'   When provided, the returned object will contain exactly the requested
-#'   features (row order preserved), and any experiments/samples that do not
-#'   contain all requested features are dropped. This preserves the full set
-#'   of requested features at the cost of potentially fewer samples.
-#'   A warning is emitted when samples are dropped.
 #' @return A `SingleCellExperiment` object.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
