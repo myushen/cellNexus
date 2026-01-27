@@ -30,3 +30,8 @@ A lazy SQL table with metacell metadata joined to the cellNexus metadata.
 Downloads and joins the metacell metadata with cellNexus metadata.
 This function creates indexed tables for efficient joining and returns a data frame.
 }
+\examples{
+library(dplyr)
+get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |> 
+  join_metacell_table(cache_directory = tempdir())
+}

@@ -90,8 +90,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #'   be created no matter what.
 #' @param use_split_files Optional logical scalar. If `TRUE`, uses split metadata files
 #'   instead of the single combined metadata file.
-#' @param ... Additional arguments passed to [read_parquet()] or
-#'   [create_joined_metadata_table()].
+#' @param ... Additional arguments passed to [read_parquet()].
 #' @return A lazy data.frame subclass containing the metadata. You can interact
 #'   with this object using most standard dplyr functions. For string matching,
 #'   it is recommended that you use `stringr::str_like` to filter character
@@ -257,13 +256,17 @@ get_metadata <- function(cloud_metadata = get_metadata_url(),
 #' @param join_keys A character vector of column names used for the join.
 #'   Defaults to `c("sample_id", "dataset_id", "cell_id")`.
 #' @param ... Additional arguments passed to [read_parquet()].
+#' @examples 
+#' library(dplyr)
+#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |> 
+#'   join_metacell_table(cache_directory = tempdir())
 #' @return A lazy SQL table with metacell metadata joined to the cellNexus metadata.
 #' @export
 join_metacell_table <- function(tbl, 
                                 cache_directory = get_default_cache_dir(),
                                 join_keys = c("sample_id", "dataset_id", "cell_id"),
                                 ...) {
-  cloud_metadata <- get_metadata_url(use_metacell = T)
+  cloud_metadata <- get_metadata_url(use_metacell = TRUE)
   # Synchronize remote files
   walk(cloud_metadata, function(url) {
     # Calculate the file path from the URL
@@ -296,13 +299,16 @@ join_metacell_table <- function(tbl,
 #' @param join_keys A character vector of column names used for the join.
 #'   Defaults to `c("sample_id", "dataset_id", "observation_joinid")`.
 #' @param ... Additional arguments passed to [read_parquet()].
+#' library(dplyr)
+#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |> 
+#'   join_census_table(cache_directory = tempdir())
 #' @return A lazy SQL table with Census metadata joined to the cellNexus metadata.
 #' @export
 join_census_table <- function(tbl, 
                               cache_directory = get_default_cache_dir(), 
                               join_keys = c("sample_id", "dataset_id", "observation_joinid"),
                               ...) {
-  cloud_metadata <- get_metadata_url(use_census = T)
+  cloud_metadata <- get_metadata_url(use_census = TRUE)
   # Synchronize remote files
   walk(cloud_metadata, function(url) {
     # Calculate the file path from the URL

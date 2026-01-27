@@ -21,7 +21,10 @@ directory where remote parquet files will be stored. Defaults to
 \item{join_keys}{A character vector of column names used for the join.
 Defaults to \code{c("sample_id", "dataset_id", "observation_joinid")}.}
 
-\item{...}{Additional arguments passed to \code{\link[=read_parquet]{read_parquet()}}.}
+\item{...}{Additional arguments passed to \code{\link[=read_parquet]{read_parquet()}}.
+library(dplyr)
+get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |>
+join_census_table(cache_directory = tempdir())}
 }
 \value{
 A lazy SQL table with Census metadata joined to the cellNexus metadata.

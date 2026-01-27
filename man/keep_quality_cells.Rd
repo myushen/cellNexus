@@ -35,3 +35,8 @@ A filtered data frame containing only cells that pass all QC checks.
 \description{
 Keep high-quality cells based on QC columns
 }
+\examples{
+get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir()) |> 
+  head(2) |>
+  keep_quality_cells()
+}

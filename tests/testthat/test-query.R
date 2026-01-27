@@ -283,7 +283,7 @@ test_that("get_metacell() syncs appropriate files", {
 
 test_that("get_metadata handles use_split_files correctly", {
   cache = tempfile()
-  meta_single <- get_metadata(use_split_files = FALSE)
+  meta_single <- get_metadata(use_split_files = FALSE, cloud_metadata = SAMPLE_DATABASE_URL)
   expect_s3_class(meta_single, "tbl_dbi") 
   expect_gt(ncol(meta_single), 0)
   
@@ -298,14 +298,14 @@ test_that("get_metadata handles use_split_files correctly", {
 test_that("join_census_table() returns an unique column",{
   cache = tempfile()
   col <- "cell_type"
-  meta <- get_metadata(use_split_files = T) |> head() |> 
+  meta <- get_metadata(use_split_files = T, cloud_metadata = SAMPLE_DATABASE_URL) |> head() |> 
     join_census_table()
   expect_true(col %in% colnames(meta))
 })
 
 test_that("join_metacell_table() returns an unique column",{
   cache = tempfile()
-  meta <- get_metadata(use_split_files = T) |> head() |> 
+  meta <- get_metadata(use_split_files = T, cloud_metadata = SAMPLE_DATABASE_URL) |> head() |> 
     join_metacell_table()
   cols <- colnames(meta)
   
