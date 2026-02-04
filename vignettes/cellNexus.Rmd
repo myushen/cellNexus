@@ -24,7 +24,7 @@ knit: >
             output_dir = proj_root,
             knit_root_dir = proj_root,
             params = list(
-                demo_metadata = FALSE
+                demo_metadata = TRUE
             )
         )
     })
@@ -56,14 +56,19 @@ METADATA_URL = if (params$demo_metadata)
 ```
 
 <!-- badges: start -->
-[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
 <!-- badges: end -->
 
-`cellNexus` is a query interface that allow the programmatic exploration and retrieval of the harmonised, curated and reannotated CELLxGENE single-cell human cell atlas. Data can be retrieved at cell, sample, or dataset levels based on filtering criteria.
+# Introduction
 
-Harmonised data is stored in the ARDC Nectar Research Cloud, and most 
-`cellNexus` functions interact with Nectar via web requests, so a 
-network connection is required for most functionality.
+`cellNexus` builds upon and extends the functionality of the previously released `CuratedAtlasQueryR`, providing a unified query and access interface to the harmonised, curated, and reannotated CELLxGENE human cell atlas. It enables reproducible and programmatic exploration of large-scale single-cell data resources, supporting retrieval at the cell, sample, and dataset levels through flexible filtering by tissue, cell type, experimental condition, or other metadata features. The retrieved data are returned for downstream analysis.
+
+`cellNexus` integrates over 40 million human cells processed with standardised quality control, consistent normalisation, and unified abundance representations—including single-cell, counts-per-million, pseudobulk, and metacell layers. This harmonised design facilitates efficient cross-dataset analyses and downstream integration.
+
+Data are hosted on the ARDC Nectar Research Cloud, and most `cellNexus` functions interact with Nectar via web requests, so a 
+network connection is required for most functionality.  
+
+`cellNexus` and CuratedAtlasQueryR both rely on pre-computed expression layers, but they differ in how these layers were generated. `cellNexus` applies a more standardised workflow with explicit empty droplet and dead cell removal followed by harmonised QC, normalisation, and multi-layer data generation. In doing so, it produces newly iterated data that align with the evolving CELLxGENE releases.
 
 ```{r, echo=FALSE, out.height = c("139px"), out.width = "120x" }
 find_figure("logo.png") |> knitr::include_graphics()
@@ -95,7 +100,7 @@ devtools::install_github("MangiolaLaboratory/cellNexus")
 library(cellNexus)
 ```
 
-Load additional packages
+## Load additional packages
 
 ```{r}
 suppressPackageStartupMessages({
@@ -109,18 +114,17 @@ suppressPackageStartupMessages({
 ### Load the metadata
 
 ```{r, eval=FALSE}
-metadata <- get_metadata()
+metadata <- get_metadata(cloud_metadata = METADATA_URL)
 metadata
 ```
 
 ```{r, echo=FALSE}
 # Note: a custom cache is used here ONLY for R CHECK compliance purposes. Users will NOT need to specify a custom cache
-metadata <- get_metadata(cache_directory = tempdir())
+metadata <- get_metadata(cloud_metadata = METADATA_URL, cache_directory = tempdir())
 metadata
 ```
 
 Metadata is saved to `get_default_cache_dir()` unless a custom path is provided via the cache_directory argument. The `metadata` variable can then be re-used for all subsequent queries. 
-
 
 ### Explore the tissue 
 
@@ -129,15 +133,13 @@ metadata |>
     dplyr::distinct(tissue, cell_type_unified_ensemble) 
 ```
 
-## Quality Control
+## Quality control
 cellNexus metadata applies standardised quality control to filter out empty droplets, dead or damaged cells, doublets, and samples with low gene counts.
 
 ```{r}
 metadata = metadata |> 
-  dplyr::filter(empty_droplet == FALSE,
-         alive == TRUE,
-         scDblFinder.class != "doublet",
-         feature_count >= 5000)
+  dplyr::filter(feature_count >= 5000) |> 
+  keep_quality_cells()
 ```
 
 
@@ -145,7 +147,7 @@ metadata = metadata |>
 
 ### Query raw counts
 
-```{r}
+```{r, eval=FALSE}
 single_cell_counts = 
     metadata |>
     dplyr::filter(
@@ -154,15 +156,21 @@ single_cell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_single_cell_experiment()
+  head() |> 
+  get_single_cell_experiment()
 
+single_cell_counts
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
 single_cell_counts
 ```
 
 ### Query counts scaled per million
 
-```{r}
-single_cell_counts = 
+```{r, eval=FALSE}
+single_cell_cpm = 
     metadata |>
     dplyr::filter(
         self_reported_ethnicity == "African" &
@@ -170,14 +178,20 @@ single_cell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_single_cell_experiment(assays = "cpm")
+  head() |> 
+  get_single_cell_experiment(assays = "cpm")
 
-single_cell_counts
+single_cell_cpm
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
+single_cell_cpm
 ```
 
 ### Query pseudobulk
 
-```{r}
+```{r, eval=FALSE}
 pseudobulk_counts = 
    metadata |>
     dplyr::filter(
@@ -186,8 +200,14 @@ pseudobulk_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_pseudobulk()
+  head() |> 
+  get_pseudobulk()
 
+pseudobulk_counts
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
 pseudobulk_counts
 ```
 
@@ -195,7 +215,7 @@ pseudobulk_counts
 
 The metadata includes a series of metacell aggregation levels, beginning with 2, 4, 8, and so on. For example, the value of metacell_2 represents a grouping of cells that can be split into two distinct metacells. 
 
-```{r}
+```{r, eval=FALSE}
 metacell_counts = 
    metadata |>
     dplyr::filter(!is.na(metacell_2)) |>
@@ -205,8 +225,14 @@ metacell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_metacell(cell_aggregation = "metacell_2")
+  head() |> 
+  get_metacell(cell_aggregation = "metacell_2")
 
+metacell_counts
+```
+
+```{r, echo=FALSE}
+# Pre-made example for demonstration (avoids download during build)
 metacell_counts
 ```
 
@@ -214,8 +240,8 @@ metacell_counts
 
 This is helpful if just few genes are of interest (e.g ENSG00000134644 (PUM1)), as they can be compared across samples. cellNexus uses ENSEMBL gene ID(s).
 
-```{r}
-single_cell_counts = 
+```{r, eval=FALSE}
+single_cell_cpm = 
     metadata |>
     dplyr::filter(
         self_reported_ethnicity == "African" &
@@ -223,16 +249,22 @@ single_cell_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
+  head() |>
+  get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
 
 single_cell_counts
+```
+
+```{r, echo=FALSE}
+single_cell_cpm <- single_cell_cpm["ENSG00000134644", ]
+single_cell_cpm
 ```
 
 ### Extract the counts as a Seurat object
 
 This convert the H5 SingleCellExperiment to Seurat so it might take long time and occupy a lot of memory depending on how many cells you are requesting.
 
-```{r}
+```{r, eval=FALSE}
 seurat_counts = 
     metadata |>
     dplyr::filter(
@@ -241,9 +273,15 @@ seurat_counts =
         tissue == "lung parenchyma" &
         cell_type |> stringr::str_like("%CD4%")
     ) |>
-    get_seurat()
+  head() |>
+  get_seurat()
 
 seurat_counts
+```
+
+```{r, echo=FALSE}
+SingleCellExperiment::counts(single_cell_counts) <- as(SingleCellExperiment::counts(single_cell_counts), "dgCMatrix")
+single_cell_counts |>  Seurat::as.Seurat(data = NULL)
 ```
 
 
@@ -322,7 +360,7 @@ However this `.h5ad` saving strategy has a bottleneck of handling columns with o
 # ! IMPORTANT if you save 200K+ cells
 HDF5Array::setAutoBlockSize(size = 1e+09) 
 
-single_cell_counts |> zellkonverter::writeH5AD("single_cell_counts.h5ad", 
+single_cell_counts |> anndataR::write_h5ad("single_cell_counts.h5ad", 
                                                compression = "gzip",
                                                verbose = TRUE)
 ```
@@ -396,45 +434,62 @@ find_figure("FCN1_tissue_plot.png") |> knitr::include_graphics()
 ```
 
 
-## Integrate cloud metadata with local metadata
-CellNexus not only enables users to query our metadata but also allows integration with your local metadata. Additionally, users can integrate with your metadata stored in the cloud. 
+## Integrate cloud and local metadata
+`cellNexus` not only enables users to query our metadata but also allows integration with your local metadata. Additionally, users can integrate with your metadata stored in the cloud. 
 
-To enable this feature, users must include `file_id_cellNexus_single_cell` (e.g sample_sce_obj.h5ad) 
-and `atlas_id` (e.g cellxgene/dd-mm-yy) columns in the metadata.
+To enable this feature, users must include `file_id_cellNexus_single_cell`
+and `atlas_id` (e.g cellxgene/dd-mm-yy) columns in the metadata. See metadata structure in cellNexus::pbmc3k_sce
 
 ``` {r}
-# Define local cache and metadata path
+# Set up local cache and paths
 local_cache <- tempdir()
-meta_path <- paste0(local_cache,"/my_metadata.parquet")
+layer <- "counts"
+meta_path <- file.path(local_cache, "pbmc3k_metadata.parquet")
 
-# Extract the date from example sce metadata 
-date <- cellNexus::sample_sce_obj |> S4Vectors::metadata() |> 
-  purrr::pluck("data") |> dplyr::pull(atlas_id) |> unique()
+# Extract and prepare metadata
+pbmc3k_metadata <- cellNexus::pbmc3k_sce |> 
+  S4Vectors::metadata() |> 
+  purrr::pluck("data") |> 
+  dplyr::mutate(
+    counts_directory = file.path(tempdir(), atlas_id, layer),
+    sce_path = file.path(counts_directory, file_id_cellNexus_single_cell)
+  )
 
-# Create a directory for storing counts
-counts_path = file.path(local_cache, date, "counts")
-dir.create(counts_path, recursive = TRUE, showWarnings = FALSE)
+# Get unique paths
+counts_directory <- pbmc3k_metadata |> 
+  dplyr::pull(counts_directory) |> 
+  unique()
 
-# Define the SCE file path for saving
-sce_path = file.path(counts_path, "sample_sce_obj.h5ad")
+sce_path <- pbmc3k_metadata |> 
+  dplyr::pull(sce_path) |> 
+  unique()
 
-# Save metadata to disk 
-cellNexus::sample_sce_obj |> S4Vectors::metadata() |> purrr::pluck("data") |>
+# Create directory structure
+dir.create(counts_directory, recursive = TRUE, showWarnings = FALSE)
+
+# Save data to disk
+cellNexus::pbmc3k_sce |> 
+  S4Vectors::metadata() |> 
+  purrr::pluck("data") |> 
   arrow::write_parquet(meta_path)
 
-# Save SCE to disk
-cellNexus::sample_sce_obj |> zellkonverter::writeH5AD(file = sce_path,
-                                                      compression = "gzip")
+# Save SCE object
+cellNexus::pbmc3k_sce |> 
+  anndataR::write_h5ad(sce_path, compression = "gzip")
 ```
 
 ``` {r}
-# A file from cloud 
-file_id_from_cloud <- "68aea852584d77f78e5c91204558316d___1.h5ad"
+# A cellNexus file
+file_id_from_cloud <- "e52795dec7b626b6276b867d55328d9f___1.h5ad"
+file_id_local <- basename(sce_path)
 
-get_metadata(local_metadata = meta_path) |>
+get_metadata(cloud_metadata = METADATA_URL,
+             local_metadata = meta_path,
+             cache_directory = local_cache) |>
   
   # For illustration purpose, only filter a selected cloud metadata and the saved metadata 
-  dplyr::filter(file_id_cellNexus_single_cell %in% c("sample_sce_obj.h5ad", file_id_from_cloud)) |>
+  dplyr::filter(file_id_cellNexus_single_cell %in% c(file_id_from_cloud, file_id_local)) |>
+  dplyr::select(cell_id, sample_id, dataset_id, cell_type_unified_ensemble, atlas_id, file_id_cellNexus_single_cell ) |>
   get_single_cell_experiment(cache_directory = local_cache)
     
 ```

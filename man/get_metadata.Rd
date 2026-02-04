@@ -12,6 +12,7 @@ get_metadata(
   local_metadata = NULL,
   cache_directory = get_default_cache_dir(),
   use_cache = TRUE,
+  use_split_files = FALSE,
   ...
 )
 }
@@ -25,20 +26,17 @@ if exists.}
 path of parquet database(s).}
 
 \item{cache_directory}{Optional character vector of length 1. A file path on
-your local system to a directory (not a file) that will be used to store
-\code{metadata.parquet}}
+your local system to a directory (not a file) that will be used to store metadata.}
 
 \item{use_cache}{Optional logical scalar. If \code{TRUE} (the default), and this
 function has been called before with the same parameters, then a cached
 reference to the table will be returned. If \code{FALSE}, a new connection will
 be created no matter what.}
 
-\item{...}{
-  Arguments passed on to \code{\link[=read_parquet]{read_parquet}}
-  \describe{
-    \item{\code{filename_column}}{A column name to the metadata that indicates which row came from which file.
-By default it does not add the column.}
-  }}
+\item{use_split_files}{Optional logical scalar. If \code{TRUE}, uses split metadata files
+instead of the single combined metadata file.}
+
+\item{...}{Additional arguments passed to \code{\link[=read_parquet]{read_parquet()}}.}
 }
 \value{
 A lazy data.frame subclass containing the metadata. You can interact
@@ -125,13 +123,17 @@ The solution is to choose a different cache, for example
 }
 \examples{
 library(dplyr)
-filtered_metadata <- get_metadata() |>
+# For fast build purpose only, you do not need to specify anything in cloud_metadata.
+filtered_metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> 
     filter(
         self_reported_ethnicity == "African" &
             assay \%LIKE\% "\%10x\%" &
             tissue == "lung parenchyma" &
             cell_type \%LIKE\% "\%CD4\%"
     )
+
+# Use split files for reduced download size (when available)
+metadata_split <- get_metadata(use_split_files = TRUE)
 
 }
 \references{

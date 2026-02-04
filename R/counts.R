@@ -24,6 +24,7 @@ COUNTS_URL <- single_line_str(
 #' @inherit get_single_cell_experiment
 #' @inheritDotParams get_single_cell_experiment
 #' @importFrom cli cli_alert_warning
+#' @return A `SingleCellExperiment` object.
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
@@ -64,6 +65,7 @@ get_SingleCellExperiment <- function(...){
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
+#' @return A `SingleCellExperiment` object.
 #' @importFrom tibble column_to_rownames
 #' @importFrom purrr reduce map map_int imap pmap
 #' @importFrom BiocGenerics cbind
@@ -74,7 +76,8 @@ get_SingleCellExperiment <- function(...){
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
-#' meta <- get_metadata() |> head(2)
+#' # Use the lightweight sample database URL (for fast checks during development only)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 #' sce <- get_single_cell_experiment(meta)
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
@@ -158,16 +161,27 @@ get_single_cell_experiment <- function(data,
   })
   cli_progress_done(id = pb)
   
-  commonGenes <- experiment_list |> check_gene_overlap()
+  # If features provided, drop experiments missing any requested features
+  # and align rows to the requested features; otherwise intersect genes.
+  if (!is.null(features)) {
+    keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
+    dropped_count <- sum(!keep_idx)
+    if (all(!keep_idx)) {
+      cli_alert_warning("cellNexus says: None of the experiments contain all requested features. Please select different features.")
+    } else if (dropped_count > 0) {
+      cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
+    }
+    experiment_list <- experiment_list[keep_idx]
+    experiment_list <- purrr::map(experiment_list, function(exp) exp[features, ])
+  } else {
+    commonGenes <- experiment_list |> check_gene_overlap()
+    experiment_list <- map(experiment_list, function(exp) exp[commonGenes,])
+  }
   
   cli_alert_info("Compiling Experiment.")
   
-  experiments <- map(experiment_list, function(exp) {
-    exp[commonGenes,]
-  }) |>
+  experiment_list |> 
     do.call(cbind, args = _)
-  
-  experiments
 }
 
 #' Gets a Pseudobulk from curated metadata
@@ -198,6 +212,7 @@ get_single_cell_experiment <- function(data,
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
+#' @return A `SummarizedExperiment` object.
 #' @importFrom tibble column_to_rownames
 #' @importFrom purrr reduce map map_int imap pmap
 #' @importFrom BiocGenerics cbind
@@ -208,10 +223,9 @@ get_single_cell_experiment <- function(data,
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
-#' \dontrun{
-#' meta <- get_metadata() |> filter(tissue_harmonised == "lung")
+#' # Use the lightweight sample database URL (for fast checks during development only)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 #' pseudobulk <- meta |> get_pseudobulk()
-#' }
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
@@ -293,16 +307,37 @@ get_pseudobulk <- function(data,
   })
   cli_progress_done(id = pb)
   
-  commonGenes <- experiment_list |> check_gene_overlap()
+  # If features is defined, drop all experiments which do not contain all the features
+  # The logic is that if the user requests a subset of features, 
+  # they prefer to preserve all requested features rather than all experiments
+  if (!is.null(features)) {
+    
+    # Check if all experiments contain all the features
+    keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
+    dropped_count <- sum(!keep_idx)
+    if (all(!keep_idx)) {
+      cli_alert_warning("cellNexus says: None of the experiments contain all requested features. Please select different features.")
+    }
+    else if (dropped_count > 0) {
+      cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
+    }
+    experiment_list <- experiment_list[keep_idx]
+    # Ensure identical row order across experiments for cbind
+    experiment_list <- purrr::map(experiment_list, function(exp) {
+      exp[features, ]
+    })
+  } else {
+    
+    commonGenes <- experiment_list |> check_gene_overlap()
+    experiment_list <- experiment_list |> map(function(exp) {
+      exp[commonGenes,]
+    })
+  }
   
   cli_alert_info("Compiling Experiment.")
   
-  experiments <- map(experiment_list, function(exp) {
-    exp[commonGenes,]
-  }) |>
+  experiment_list |>
     do.call(cbind, args = _)
-  
-  experiments
 }
 
 #' Gets a Metacell from curated metadata
@@ -328,6 +363,7 @@ get_pseudobulk <- function(data,
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
+#' @return A `SingleCellExperiment` object.
 #' @importFrom tibble column_to_rownames
 #' @importFrom purrr reduce map map_int imap pmap
 #' @importFrom BiocGenerics cbind
@@ -338,10 +374,9 @@ get_pseudobulk <- function(data,
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
-#' \dontrun{
-#' meta <- get_metadata() |> filter(tissue_harmonised == "lung")
-#' metacell <- meta |> filter(!is.na(metacell_2)) |> get_metacell(cell_aggregation = "metacell_2")
-#' }
+#' # Use the lightweight sample database URL (for fast checks during development only)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
+#' metacell <- meta |> get_metacell(cell_aggregation = "metacell_2")
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
@@ -430,16 +465,31 @@ get_metacell <- function(data,
   })
   cli_progress_done(id = pb)
   
-  commonGenes <- experiment_list |> check_gene_overlap()
+  
+  # If features provided, drop experiments missing any requested features
+  # and align rows to the requested features; otherwise intersect genes.
+  if (!is.null(features)) {
+    keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
+    dropped_count <- sum(!keep_idx)
+    if (all(!keep_idx)) {
+      cli_alert_warning("cellNexus says: None of the experiments contain all requested features. Please select different features.")
+    } else if (dropped_count > 0) {
+      cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
+    }
+    experiment_list <- experiment_list[keep_idx]
+    experiment_list <- purrr::map(experiment_list, function(exp) exp[features, ])
+  } else {
+    commonGenes <- experiment_list |> check_gene_overlap()
+    experiment_list <- map(experiment_list, function(exp) {
+      exp[commonGenes,]
+    })
+  }
   
   cli_alert_info("Compiling Experiment.")
   
-  experiments <- map(experiment_list, function(exp) {
-    exp[commonGenes,]
-  }) |>
+  experiment_list |> 
     do.call(cbind, args = _)
-  
-  experiments
+
 }
 
 #' Validate data parameters
@@ -467,6 +517,8 @@ get_metacell <- function(data,
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
+#' @return A list containing validated parameters including data, repository, assays,
+#'   cache_directory, features, cell_aggregation, and atlas_name.
 #' @importFrom dplyr pull filter as_tibble inner_join collect
 #' @importFrom tibble column_to_rownames
 #' @importFrom purrr reduce map map_int imap 
@@ -662,7 +714,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         `colnames<-`(new_coldata$sample_identifier) |>
         `colData<-`(value = DataFrame(new_coldata))
     
-    # Force renaming type class since zellkonverter::writeH5AD cannot save `SummarizedExperiment` object
+    # Force renaming type class to save `SummarizedExperiment` object
     experiment <- experiment |> as("SingleCellExperiment")
    
   }

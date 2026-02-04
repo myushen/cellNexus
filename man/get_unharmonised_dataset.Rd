@@ -49,7 +49,8 @@ harmonised_meta <- get_metadata() |>
     dplyr::filter(file_id_cellNexus_single_cell == dataset) |> dplyr::collect()
 unharmonised_meta <- get_unharmonised_dataset(dataset)
 unharmonised_tbl <- dplyr::collect(unharmonised_meta[[dataset]])
-dplyr::left_join(harmonised_meta, unharmonised_tbl, by=c("file_id_cellNexus_single_cell", "cell_id"))
+dplyr::left_join(harmonised_meta, unharmonised_tbl, 
+    by=c("file_id_cellNexus_single_cell", "cell_id"))
 }
 }
 \references{
@@ -58,3 +59,4 @@ A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 doi:10.1101/2023.06.08.542671.
 }
+\keyword{internal}

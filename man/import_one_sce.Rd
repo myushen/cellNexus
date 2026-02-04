@@ -45,13 +45,15 @@ in the provided cache directory.
 Import and process metadata and counts for a SingleCellExperiment object
 }
 \examples{
-data(sample_sce_obj)
-import_one_sce(sample_sce_obj,
-               atlas_name = "sample_atlas",
-               import_date = "9999-99-99",
+\dontrun{
+data(pbmc3k_sce)
+import_one_sce(pbmc3k_sce,
+               atlas_name = "pbmc3k_sce_atlas",
+               import_date = format(Sys.Date(), "\%d-\%m-\%Y"),
                cell_aggregation = "single_cell",
                cache_dir = get_default_cache_dir(),
                pseudobulk = FALSE)
+}
 }
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,

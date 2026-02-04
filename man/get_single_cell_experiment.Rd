@@ -43,13 +43,17 @@ an HTTP URL pointing to the location where the single cell data is stored.}
 \item{features}{An optional character vector of features (ie genes) to return
 the counts for. By default counts for all features will be returned.}
 }
+\value{
+A \code{SingleCellExperiment} object.
+}
 \description{
 Given a data frame of Curated Atlas metadata obtained from \code{\link[=get_metadata]{get_metadata()}},
 returns a \code{\link[SingleCellExperiment:SingleCellExperiment]{SingleCellExperiment::SingleCellExperiment}} object
 corresponding to the samples in that data frame
 }
 \examples{
-meta <- get_metadata() |> head(2)
+# Use the lightweight sample database URL (for fast checks during development only)
+meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 sce <- get_single_cell_experiment(meta)
 }
 \references{

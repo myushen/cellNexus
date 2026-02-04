@@ -7,10 +7,10 @@
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
 }
 \usage{
-clear_old_metadata(updated_data)
+clear_old_metadata(metadata)
 }
 \arguments{
-\item{metadata}{A character vector of outdated metadata name}
+\item{updated_data}{A character vector of outdated metadata name}
 }
 \value{
 \code{NULL}, invisibly
