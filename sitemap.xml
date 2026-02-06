@@ -12,6 +12,7 @@
 <url><loc>/reference/create_interface_app.html</loc></url>
 <url><loc>/reference/delete_counts.html</loc></url>
 <url><loc>/reference/get_SingleCellExperiment.html</loc></url>
+<url><loc>/reference/get_cell_communication_strength.html</loc></url>
 <url><loc>/reference/get_default_cache_dir.html</loc></url>
 <url><loc>/reference/get_metacell.html</loc></url>
 <url><loc>/reference/get_metadata.html</loc></url>
