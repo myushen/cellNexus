@@ -36,6 +36,7 @@
 #'   nested inside a tabsetPanel.
 #'
 #' @importFrom shiny fluidRow column tagList tabsetPanel tabPanel
+#' @importFrom methods is
 #' @export
 #'
 #' @author Jared Andrews
@@ -134,7 +135,7 @@ organize_inputs <- function(
 #' @return A Shiny app that allows users to filter cellNexus metadata and generate code for retrieval
 #'   in the selected format.
 #'
-#' @importFrom shiny fluidPage sidebarLayout sidebarPanel mainPanel titlePanel textAreaInput
+#' @importFrom shiny fluidPage sidebarLayout sidebarPanel mainPanel titlePanel textAreaInput reactive
 #'   verbatimTextOutput renderPrint shinyApp h3 tagList reactiveValues selectInput hr tabsetPanel tabPanel
 #' @importFrom shinyWidgets pickerInput pickerOptions
 #' @importFrom dplyr filter distinct
