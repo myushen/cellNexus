@@ -4,10 +4,12 @@
 \alias{create_interface_app}
 \title{Create a Shiny app that allows users to generate filtering & retreival code for cellNexus}
 \usage{
-create_interface_app(ui_choices)
+create_interface_app(ui_choices, return_as_list = FALSE)
 }
 \arguments{
 \item{ui_choices}{A list of pre-computed unique values for each filterable column in the metadata.}
+
+\item{return_as_list}{If TRUE, returns a list with 'ui' and 'server' components instead of a Shiny app object.}
 }
 \value{
 A Shiny app that allows users to filter cellNexus metadata and generate code for retrieval

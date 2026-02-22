@@ -1,6 +1,6 @@
 library(cellNexus)
 library(shiny)
 
-app <- create_interface_app(ui_choices)
+app <- create_interface_app(ui_choices, return_as_list = TRUE)
 
-runApp(app)
+shinyApp(ui = app$ui, server = app$server)
