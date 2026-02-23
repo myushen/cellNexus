@@ -1448,7 +1448,7 @@
         "Description": "Provides access to a copy of the Human Cell Atlas, but with \n    harmonised metadata. This allows for uniform querying across numerous \n    datasets within the Atlas using common fields such as cell type, tissue \n    type, and patient ethnicity. Usage involves first querying the metadata\n    table for cells of interest, and then downloading the corresponding cells \n    into one of several supported formats, including SingleCellExperiment, Seurat,\n    or pseudobulk SummarizedExperiment objects. Note: The Human Cell Atlas data\n    accessed through this package is subject to its own licensing terms (typically\n    Creative Commons Attribution or similar open data licenses as specified by the\n    Human Cell Atlas Data Use Agreement), which differ from the package license\n    (GPL-3). See the package documentation for details. ",
         "License": "GPL-3",
         "Depends": "R (>= 4.5.0)",
-        "Imports": "dplyr, SummarizedExperiment, SingleCellExperiment, purrr (>=\n1.0.0), BiocGenerics, glue, HDF5Array, DBI, tools, httr, curl,\ncli, assertthat, SeuratObject, Seurat, methods, rlang,\nS4Vectors, tibble, utils, dbplyr (>= 2.3.0), duckdb, checkmate,\nshiny, shinyWidgets",
+        "Imports": "dplyr, SummarizedExperiment, SingleCellExperiment, purrr (>=\n1.0.0), BiocGenerics, glue, HDF5Array, DBI, tools, httr, curl,\ncli, assertthat, SeuratObject, Seurat, methods, rlang,\nS4Vectors, tibble, utils, dbplyr (>= 2.3.0), duckdb, checkmate,\nshiny, shinyWidgets, rclipboard",
         "Suggests": "rmarkdown, knitr, testthat, basilisk, arrow, reticulate,\nspelling, forcats, ggplot2, rprojroot, openssl, scuttle,\nDelayedArray, tidybulk, BiocParallel, magrittr, preprocessCore,\nzellkonverter, anndataR, stringr",
         "Biarch": "true",
         "biocViews": "AssayDomain, Infrastructure, RNASeq, DifferentialExpression,\nGeneExpression, Normalization, Clustering, QualityControl,\nSequencing, Transcription, Transcriptomics, ShinyApps",
@@ -1467,16 +1467,16 @@
         "RemoteRepo": "cellNexus",
         "RemoteUsername": "j-andrews7",
         "RemoteRef": "app_updates",
-        "RemoteSha": "f904fe9fcc47cfc5434f94380906f8f0fd6e3256",
+        "RemoteSha": "9f6a192f8a978ac498abc2a6f2ac48fce0604ce5",
         "GithubRepo": "cellNexus",
         "GithubUsername": "j-andrews7",
         "GithubRef": "app_updates",
-        "GithubSHA1": "f904fe9fcc47cfc5434f94380906f8f0fd6e3256",
+        "GithubSHA1": "9f6a192f8a978ac498abc2a6f2ac48fce0604ce5",
         "NeedsCompilation": "no",
-        "Packaged": "2026-02-22 23:41:58 UTC; jared",
+        "Packaged": "2026-02-23 00:57:45 UTC; jared",
         "Author": "Stefano Mangiola [aut, rev, ctb] (ORCID:\n    <https://orcid.org/0000-0001-7474-836X>),\n  Mengyuan Shen [aut, cre, rev] (ORCID:\n    <https://orcid.org/0009-0008-0057-8239>),\n  Michael Milton [aut, rev, ctb] (ORCID:\n    <https://orcid.org/0000-0002-8965-2595>),\n  Martin Morgan [ctb, rev],\n  Vincent Carey [ctb, rev],\n  Julie Iskander [rev],\n  Tony Papenfuss [rev],\n  Silicon Valley Foundation CZF2019-002443 [fnd],\n  NIH NHGRI 5U24HG004059-18 [fnd],\n  Victoria Cancer Agency ECRF21036 [fnd],\n  NHMRC 1116955 [fnd]",
         "Maintainer": "Mengyuan Shen <shen.m@wehi.edu.au>",
-        "Built": "R 4.5.0; ; 2026-02-22 23:41:58 UTC; windows"
+        "Built": "R 4.5.0; ; 2026-02-23 00:57:46 UTC; windows"
       }
     },
     "checkmate": {
@@ -3743,6 +3743,29 @@
         "Date/Publication": "2026-01-17 08:40:02 UTC",
         "Built": "R 4.5.2; x86_64-w64-mingw32; 2026-02-18 01:42:26 UTC; windows",
         "Archs": "x64"
+      }
+    },
+    "rclipboard": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "rclipboard",
+        "Title": "Shiny/R Wrapper for 'clipboard.js'",
+        "Version": "0.2.1",
+        "Author": "Sebastien Bihorel",
+        "Maintainer": "Sebastien Bihorel <sb.pmlab@gmail.com>",
+        "Description": "Leverages the functionality of 'clipboard.js', a JavaScript library\n    for HMTL5-based copy to clipboard from web pages (see <https://clipboardjs.com>\n    for more information), and provides a reactive copy-to-clipboard UI button \n    component, called 'rclipButton', and a a reactive copy-to-clipboard UI link \n    component, called 'rclipLink', for 'shiny' R applications.",
+        "Depends": "R (>= 3.3.0)",
+        "License": "MIT + file LICENSE",
+        "Encoding": "UTF-8",
+        "URL": "https://github.com/sbihorel/rclipboard/",
+        "BugReports": "https://github.com/sbihorel/rclipboard/issues/",
+        "Imports": "shiny, bslib (>= 0.5.1)",
+        "NeedsCompilation": "no",
+        "Packaged": "2023-11-15 09:28:51 UTC; sebastien",
+        "Repository": "CRAN",
+        "Date/Publication": "2023-11-15 10:00:02 UTC",
+        "Built": "R 4.5.2; ; 2026-02-18 03:22:21 UTC; windows"
       }
     },
     "reshape2": {
