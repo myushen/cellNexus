@@ -137,8 +137,10 @@ organize_inputs <- function(
 #'   in the selected format.
 #'
 #' @importFrom shiny fluidPage sidebarLayout sidebarPanel mainPanel titlePanel textAreaInput reactive
-#'   verbatimTextOutput renderPrint shinyApp h3 tagList reactiveValues selectInput hr tabsetPanel tabPanel
+#'   verbatimTextOutput renderText shinyApp h3 h4 p a tagList reactiveValues selectInput hr
+#'   conditionalPanel fluidRow column uiOutput renderUI icon tags
 #' @importFrom shinyWidgets pickerInput pickerOptions
+#' @importFrom rclipboard rclipboardSetup rclipButton
 #' @importFrom dplyr filter distinct
 #'
 #' @examples
@@ -240,19 +242,23 @@ create_interface_app <- function(ui_choices, return_as_list = FALSE) {
             choices = c("counts", "cpm"),
             selected = "counts"
         ),
-        selectInput(
-            inputId = "metacell_aggregation",
-            label = "Metacell Aggregation",
-            choices = c("metacell_2", "metacell_4", "metacell_8", "metacell_16",
-                "metacell_32", "metacell_64", "metacell_128", "metacell_256",
-                "metacell_512", "metacell_1024", "metacell_2048", "metacell_4096",
-                "metacell_8192"),
-            selected = "metacell_2"
+        conditionalPanel(
+            condition = "input.retrieval_type == 'metacell'",
+            selectInput(
+                inputId = "metacell_aggregation",
+                label = "Metacell Aggregation",
+                choices = c("metacell_2", "metacell_4", "metacell_8", "metacell_16",
+                    "metacell_32", "metacell_64", "metacell_128", "metacell_256",
+                    "metacell_512", "metacell_1024", "metacell_2048", "metacell_4096",
+                    "metacell_8192"),
+                selected = "metacell_2"
+            )
         ),
     )
 
     ui <- fluidPage(
-        titlePanel("cellNexus Data Selection"),
+        rclipboardSetup(),
+        titlePanel("cellNexus Query Builder"),
         sidebarLayout(
             sidebarPanel(width = 5,
                 organize_inputs(cell_inputs, columns = 2, title = h3("Cell Type")),
@@ -262,10 +268,30 @@ create_interface_app <- function(ui_choices, return_as_list = FALSE) {
                 organize_inputs(retrieval_inputs, columns = 2, title = h3("Retrieval Options")),
             ),
             mainPanel(width = 7,
-                h3("Generated Code"),
-                tabsetPanel(
-                    tabPanel("R", verbatimTextOutput("r_code_box")),
-                    tabPanel("Python", verbatimTextOutput("python_code_box"))
+                h3("Usage"),
+                p(
+                    "Use the filters on the left to select cells and samples of interest. ",
+                    "The generated code below will update automatically based on your selections. ",
+                    "Click the copy button to copy the code to your clipboard for use in your R or Python session. ",
+                    "For more details, see the ",
+                    a("cellNexus documentation.", href = "https://cellnexus.org/", target = "_blank")
+                ),
+                hr(),
+                fluidRow(
+                    column(6,
+                        fluidRow(
+                            column(10, h4("R")),
+                            column(2, uiOutput("r_copy_btn"))
+                        ),
+                        verbatimTextOutput("r_code_box")
+                    ),
+                    column(6,
+                        fluidRow(
+                            column(10, h4("Python")),
+                            column(2, uiOutput("py_copy_btn"))
+                        ),
+                        verbatimTextOutput("python_code_box")
+                    )
                 )
             )
         )
@@ -294,14 +320,14 @@ create_interface_app <- function(ui_choices, return_as_list = FALSE) {
                 }
             }
 
-            code_lines <- c("library(cellNexus)", "my_data <- get_metadata() |>",
+            code_lines <- c("library(cellNexus)", "metadata <- get_metadata()", "my_data <- metadata |>",
                 if (length(filter_conditions) > 0) {
                     paste0("  dplyr::filter(", paste(filter_conditions, collapse = ",\n         "), ") |>")
                 },
                 retrieval_condition()
             )
 
-            cat(paste(code_lines, collapse = "\n"))
+            paste(code_lines, collapse = "\n")
         })
 
         # Collect inputs as data.frame with each row as input_id and filter
@@ -415,7 +441,7 @@ create_interface_app <- function(ui_choices, return_as_list = FALSE) {
                 "conn.close()"
             )
 
-            cat(paste(code_lines, collapse = "\n"))
+            paste(code_lines, collapse = "\n")
         })
 
         # Python retrieval condition
@@ -439,12 +465,30 @@ create_interface_app <- function(ui_choices, return_as_list = FALSE) {
             }
         })
 
-        output$r_code_box <- renderPrint({
+        output$r_code_box <- renderText({
             full_code()
         })
 
-        output$python_code_box <- renderPrint({
+        output$python_code_box <- renderText({
             python_full_code()
+        })
+
+        output$r_copy_btn <- renderUI({
+            rclipButton(
+                inputId = "r_clip",
+                label = "",
+                clipText = full_code(),
+                icon = icon("clipboard")
+            )
+        })
+
+        output$py_copy_btn <- renderUI({
+            rclipButton(
+                inputId = "py_clip",
+                label = "",
+                clipText = python_full_code(),
+                icon = icon("clipboard")
+            )
         })
     }
 

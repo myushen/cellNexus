@@ -107,7 +107,8 @@ Imports:
     duckdb,
     checkmate,
     shiny,
-    shinyWidgets
+    shinyWidgets,
+    rclipboard
 Suggests:
     rmarkdown,
     knitr,
