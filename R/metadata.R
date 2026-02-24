@@ -35,17 +35,17 @@ get_metadata_url <- function(databases  = "metadata.1.3.0.parquet",
   #clear_old_metadata(databases)
   if (use_split_files) {
     # Return URLs for the three split files
-    databases <- "cellnexus_metadata.1.3.0.parquet"
+    databases <- "cellnexus_metadata.1.4.0.parquet"
   }
   
   if (use_census) {
     # Returns the URL for census metadata file
-    databases <- "census_cell_metadata.1.3.0.parquet"
+    databases <- "census_cell_metadata.1.4.0.parquet"
   }
   
   if (use_metacell) {
     # Returns the URL for metacell metadata file
-    databases <- "metacell_metadata.1.3.0.parquet"
+    databases <- "metacell_metadata.1.4.0.parquet"
   }
 
   glue::glue(

@@ -289,17 +289,25 @@ job::job({
   
   # Strip sample annotation from cellnexus annotation doesn't save too much (less than 3Mb), thus keep in one.
   remove_cols <- c(
-    "cell_chunk", "cell_type", "cell_type_ontology_term_id",
-    "data_driven_ensemble", "default_embedding", "ensemble_joinid",
-    "observation_originalid", "run_from_cell_id", "suspension_type"
+    "observation_originalid", "default_embedding", "ensemble_joinid",
+    "explorer_url", "published_at", "revised_at", "run_from_cell_id",
+    "schema_version", "suspension_type", "title", "tombstone", "url",
+    "citation", "sample_", 
+    "collection_id", "dataset_version_id", "donor_id"
   )
   
   # CellNexus metadata (smaller file for Shiny): drop heavy / internal columns by name patterns
   drop_cellnexus <- unique(c(
+    cols[grepl("^cell_type", cols)],
     intersect(remove_cols, cols),
     cols[grepl("metacell", cols)],
-    cols[grepl("^subsets_", cols)],
-    cols[grepl("^high_", cols)]
+    cols[grepl("^assay", cols)],
+    cols[grepl("^development_stage", cols)],
+    cols[grepl("^disease", cols)],
+    cols[grepl("^organism", cols)],
+    cols[grepl("^self_reported_ethnicity", cols)],
+    cols[grepl("^sex", cols)],
+    cols[grepl("^tissue", cols) & cols != "tissue_groups"]
   ))
   keep_cellnexus <- setdiff(cols, drop_cellnexus)
   select_cellnexus <- paste(sql_id(keep_cellnexus), collapse = ", ")
@@ -312,20 +320,28 @@ job::job({
         SELECT {DBI::SQL(select_cellnexus)}
         FROM metadata
       )
-      TO {DBI::dbQuoteString(con, file.path(out_dir, 'cellnexus_metadata.1.3.0.parquet'))}
+      TO {DBI::dbQuoteString(con, file.path(out_dir, 'cellnexus_metadata.1.4.0.parquet'))}
       (FORMAT PARQUET, COMPRESSION 'brotli');
       "
     )
   )
   
   # Original census-like metadata subset (stable columns)
-  census_cols <- intersect(
-    c(
-      "observation_joinid", "dataset_id", "sample_id", "cell_type",
-      "cell_type_ontology_term_id", "default_embedding", "run_from_cell_id", "suspension_type"
-    ),
-    cols
-  )
+  census_cols <- c(
+    intersect(c(
+      "observation_joinid", "dataset_id", "donor_id", "collection_id", "sample_id", "cell_type",
+      "cell_type_ontology_term_id", "default_embedding", "run_from_cell_id", "suspension_type",
+      "ensemble_joinid", "explorer_url", "published_at", "revised_at", "run_from_cell_id",
+      "schema_version", "suspension_type", "title", "tombstone", "url", "citation", "dataset_version_id"),
+      cols),
+    cols[grepl("^cell_type", cols)],
+    cols[grepl("^assay", cols)],
+    cols[grepl("^development_stage", cols)],
+    cols[grepl("^disease", cols)],
+    cols[grepl("^organism", cols)],
+    cols[grepl("^self_reported_ethnicity", cols)],
+    cols[grepl("^sex", cols)],
+    cols[grepl("^tissue", cols) & cols != "tissue_groups"])
   select_census <- paste(sql_id(census_cols), collapse = ", ")
   
   DBI::dbExecute(
@@ -336,7 +352,7 @@ job::job({
       SELECT {DBI::SQL(select_census)}
       FROM metadata
     )
-    TO {DBI::dbQuoteString(con, file.path(out_dir, 'census_cell_metadata.1.3.0.parquet'))}
+    TO {DBI::dbQuoteString(con, file.path(out_dir, 'census_cell_metadata.1.4.0.parquet'))}
     (FORMAT PARQUET, COMPRESSION 'brotli');
     "
     )
@@ -355,7 +371,7 @@ job::job({
       SELECT {DBI::SQL(select_metacell)}
       FROM metadata
     )
-    TO {DBI::dbQuoteString(con, file.path(out_dir, 'metacell_metadata.1.3.0.parquet'))}
+    TO {DBI::dbQuoteString(con, file.path(out_dir, 'metacell_metadata.1.4.0.parquet'))}
     (FORMAT PARQUET, COMPRESSION 'brotli');
     "
     )
