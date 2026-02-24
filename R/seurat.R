@@ -3,7 +3,7 @@
 #' @importFrom assertthat assert_that
 #' @importFrom methods as
 #' @importFrom SeuratObject as.sparse
-#' @exportS3Method
+#' @exportS3Method as.sparse DelayedMatrix
 as.sparse.DelayedMatrix <- function(x, ...) {
     # This is glue to ensure the SCE -> Seurat conversion works properly with
     # DelayedArray types

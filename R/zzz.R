@@ -76,3 +76,26 @@ NULL
                 dbDisconnect()
         })
 }
+
+#' Attach `dplyr` on package attach
+#'
+#' This hook attaches `dplyr` when `cellNexus` is attached (e.g.
+#' `library(cellNexus)`), so users can use common `dplyr` verbs without the
+#' `dplyr::` prefix in interactive workflows. Startup messages are suppressed.
+#'
+#' @param libname The library path where the package is installed.
+#' @param pkgname The name of the package being attached.
+#' @keywords internal
+#' @noRd
+.onAttach <- function(libname, pkgname) {
+  if (!"package:dplyr" %in% search()) {
+    suppressPackageStartupMessages(
+      library(
+        "dplyr",
+        character.only = TRUE,
+        quietly = TRUE,
+        warn.conflicts = TRUE
+      )
+    )
+  }
+}
