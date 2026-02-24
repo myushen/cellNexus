@@ -91,7 +91,7 @@ get_SingleCellExperiment <- function(...){
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
 #' @importFrom SummarizedExperiment colData assayNames<-
-#' @importFrom assertthat assert_that has_name
+#' @importFrom checkmate assert check_subset check_true
 #' @importFrom cli cli_alert_success cli_alert_info
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
@@ -112,14 +112,14 @@ get_single_cell_experiment <- function(data,
                                        repository = COUNTS_URL,
                                        features = NULL){
   raw_data <- collect(data)
-  assert_that(
-    inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_id", "file_id_cellNexus_single_cell", "atlas_id"))
+  assert(
+    check_true(inherits(raw_data, "tbl")),
+    check_subset(c("cell_id", "file_id_cellNexus_single_cell", "atlas_id"), names(raw_data))
   )
   
   atlas_name <- raw_data |> distinct(atlas_id) |> pull()
-  parameter_validation_list <- 
-    validate_data(data, assays, cell_aggregation, cache_directory, 
+  parameter_validation_list <-
+    validate_data(data, assays, cell_aggregation, cache_directory,
                   repository, features)
   
   versioned_cache_directory <- parameter_validation_list$cache_directory
@@ -132,9 +132,7 @@ get_single_cell_experiment <- function(data,
   if (!is.null(repository)) {
     cli_alert_info("Synchronising files")
     parsed_repo <- parse_url(repository)
-    parsed_repo$scheme |>
-      `%in%`(c("http", "https")) |>
-      assert_that()
+    assert(check_true(parsed_repo$scheme %in% c("http", "https")))
     
     files_to_read <-
       raw_data |> 
@@ -249,7 +247,7 @@ get_single_cell_experiment <- function(data,
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
 #' @importFrom SummarizedExperiment colData assayNames<-
-#' @importFrom assertthat assert_that
+#' @importFrom checkmate assert check_subset check_true
 #' @importFrom cli cli_alert_success cli_alert_info
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
@@ -270,14 +268,14 @@ get_pseudobulk <- function(data,
                            repository = COUNTS_URL,
                            features = NULL) {
   raw_data <- collect(data)
-  assert_that(
-    inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_id", "file_id_cellNexus_pseudobulk", "sample_id", "cell_type_unified_ensemble",
-                         "atlas_id"))
+  assert(
+    check_true(inherits(raw_data, "tbl")),
+    check_subset(c("cell_id", "file_id_cellNexus_pseudobulk", "sample_id", "cell_type_unified_ensemble",
+                   "atlas_id"), names(raw_data))
   )
   atlas_name <- raw_data |> distinct(atlas_id) |> pull()
-  parameter_validation_list <- 
-    validate_data(data, assays, cell_aggregation, cache_directory, 
+  parameter_validation_list <-
+    validate_data(data, assays, cell_aggregation, cache_directory,
                   repository, features)
   
   versioned_cache_directory <- parameter_validation_list$cache_directory
@@ -290,9 +288,7 @@ get_pseudobulk <- function(data,
   if (!is.null(repository)) {
     cli_alert_info("Synchronising files")
     parsed_repo <- parse_url(repository)
-    parsed_repo$scheme |>
-      `%in%`(c("http", "https")) |>
-      assert_that()
+    assert(check_true(parsed_repo$scheme %in% c("http", "https")))
     
     files_to_read <-
       raw_data |> 
@@ -335,12 +331,12 @@ get_pseudobulk <- function(data,
         )) |>
         dplyr::pull(experiments)
       
-
+      
       # If features is defined, drop all experiments which do not contain all the features
       # The logic is that if the user requests a subset of features, 
       # they prefer to preserve all requested features rather than all experiments
       if (!is.null(features)) {
-
+        
         # Check if all experiments contain all the features
         keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
         dropped_count <- sum(!keep_idx)
@@ -356,15 +352,15 @@ get_pseudobulk <- function(data,
           exp[features, ]
         })
       } else {
-
+        
         commonGenes <- experiment_list |> check_gene_overlap()
         experiment_list <- experiment_list |> map(function(exp) {
           exp[commonGenes,]
         })
       }
-
+      
       experiment_list |>
-          do.call(cbind, args = _)
+        do.call(cbind, args = _)
     })
   
   cli_alert_info("Compiling Experiment.")
@@ -414,7 +410,7 @@ get_pseudobulk <- function(data,
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
 #' @importFrom SummarizedExperiment colData assayNames<-
-#' @importFrom assertthat assert_that
+#' @importFrom checkmate assert check_subset check_true
 #' @importFrom cli cli_alert_success cli_alert_info
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
@@ -434,12 +430,12 @@ get_metacell <- function(data,
                          cache_directory = get_default_cache_dir(),
                          repository = COUNTS_URL,
                          features = NULL
-                         ) {
+) {
   raw_data <- collect(data)
-  assert_that(
-    inherits(raw_data, "tbl"),
-    has_name(raw_data, c("sample_id", "file_id_cellNexus_single_cell", "atlas_id")),
-    any(grepl("^metacell", names(raw_data)))
+  assert(
+    check_true(inherits(raw_data, "tbl")),
+    check_subset(c("sample_id", "file_id_cellNexus_single_cell", "atlas_id"), names(raw_data)),
+    check_true(any(grepl("^metacell", names(raw_data))))
   )
   raw_data = raw_data |> 
     # This is to separate metacell and single_cell in group_to_data_container, also 
@@ -461,15 +457,13 @@ get_metacell <- function(data,
   if (!is.null(repository)) {
     cli_alert_info("Synchronising files")
     parsed_repo <- parse_url(repository)
-    parsed_repo$scheme |>
-      `%in%`(c("http", "https")) |>
-      assert_that()
+    assert(check_true(parsed_repo$scheme %in% c("http", "https")))
     
     files_to_read <-
-      raw_data |> 
+      raw_data |>
       transmute(
-        files = .data[[grouping_column]], 
-        atlas_name = atlas_id, 
+        files = .data[[grouping_column]],
+        atlas_name = atlas_id,
         cache_dir = cache_directory
       ) |> distinct() |>
       pmap(function(files, atlas_name, cache_dir) {
@@ -574,8 +568,8 @@ get_metacell <- function(data,
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
 #' @importFrom SummarizedExperiment colData assayNames<-
-#' @importFrom assertthat assert_that has_name
-#' @importFrom cli cli_alert_info
+#' @importFrom checkmate assert check_true
+#' @importFrom cli cli_alert_info cli_abort
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
@@ -591,17 +585,14 @@ validate_data <- function(
     
 ) {
   # Parameter validation
-  assays %in% names(assay_map) |>
-    all() |>
-    assert_that(
-      msg = 'assays must be a character vector containing counts and/or
-            "cpm" and/or "rank"'
-    )
-  assert_that(
-    !anyDuplicated(assays),
-    inherits(cache_directory, "character"),
-    is.null(repository) || is.character(repository),
-    is.null(features) || is.character(features)
+  if (!all(assays %in% names(assay_map))) {
+    cli_abort('assays must be a character vector containing counts and/or "cpm" and/or "rank"')
+  }
+  assert(
+    check_true(!anyDuplicated(assays)),
+    check_true(inherits(cache_directory, "character")),
+    check_true(is.null(repository) || is.character(repository)),
+    check_true(is.null(features) || is.character(features))
   )
   
   # Data parameter validation (last, because it's slower)
@@ -668,13 +659,10 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   # Check if file exists
   experiment_path |> map(function(path) {
     file_exists = file.exists(path)
-    file_exists |> assert_that(
-      msg = "Your cache does not contain the file {experiment_path} you
-           attempted to query. Please provide the repository
-           parameter so that files can be synchronised from the
-           internet" |> glue()
-    )
-    })
+    if (!file_exists) {
+      cli_abort("Your cache does not contain the file {path} you attempted to query. Please provide the repository parameter so that files can be synchronised from the internet.")
+    }
+  })
   
   # Load experiment
   experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
@@ -735,7 +723,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         original_sample_id = .data$sample_identifier
       ) |>
       column_to_rownames("original_sample_id")
-
+    
     experiment <- `if`(
       is.null(features),
       experiment[, new_coldata$sample_identifier],
@@ -744,12 +732,12 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         experiment[genes, new_coldata$sample_identifier]
       }
     ) |>
-        `colnames<-`(new_coldata$sample_identifier) |>
-        `colData<-`(value = DataFrame(new_coldata))
+      `colnames<-`(new_coldata$sample_identifier) |>
+      `colData<-`(value = DataFrame(new_coldata))
     
     # Force renaming type class to save `SummarizedExperiment` object
     experiment <- experiment |> as("SingleCellExperiment")
-   
+    
   }
   else if (grouping_column == "file_id_cellNexus_metacell") {
     # Select relevant annotations to remove single-cell level annotations
@@ -860,7 +848,7 @@ sync_assay_files <- function(
   pmap_chr(files, function(full_url, output_dir, output_file) {
     sync_remote_file(full_url, output_file)
     output_file
-    }, .progress = list(name = "Downloading files"))
+  }, .progress = list(name = "Downloading files"))
 }
 
 #' Checks whether genes in a list of SummarizedExperiment objects overlap

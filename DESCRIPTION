@@ -94,7 +94,6 @@ Imports:
     tools,
     httr,
     cli,
-    assertthat,
     SeuratObject,
     Seurat,
     methods,
@@ -106,7 +105,10 @@ Imports:
     duckdb,
     checkmate,
     shiny,
-    shinyWidgets
+    shinyWidgets,
+    anndataR,
+    stringr,
+    scuttle
 Suggests:
     rmarkdown,
     knitr,
@@ -119,15 +121,10 @@ Suggests:
     ggplot2,
     rprojroot,
     openssl,
-    scuttle,
     DelayedArray,
     tidybulk,
     BiocParallel,
-    magrittr,
-    preprocessCore,
-    zellkonverter,
-    anndataR,
-    stringr
+    preprocessCore
 Biarch: true
 biocViews: 
     AssayDomain,
@@ -144,7 +141,6 @@ biocViews:
     ShinyApps
 Encoding: UTF-8
 RoxygenNote: 7.3.3
-LazyDataCompression: xz
 URL: https://github.com/MangiolaLaboratory/cellNexus
 BugReports: https://github.com/MangiolaLaboratory/cellNexus/issues
 VignetteBuilder: knitr
@@ -162,4 +158,3 @@ Collate:
     'unharmonised.R'
     'zzz.R'
 Language: en-US
-LazyData: true

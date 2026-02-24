@@ -14,6 +14,11 @@ url_file_size <- function(urls){
             HEAD(url)$headers$`content-length` 
         ) / 10^9
     })
+  map_dbl(urls, function(url){
+    as.numeric(
+      HEAD(url)$headers$`content-length` 
+    ) / 10^9
+  })
 }
 
 #' Prints a message indicating the size of a download
@@ -23,14 +28,14 @@ url_file_size <- function(urls){
 #' @return `NULL`, invisibly
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 report_file_sizes <- function(urls){
-    total_size <- url_file_size(urls) |> 
-        sum() |>
-        round(digits=2)
-    
-    "Downloading {length(urls)} file{?s}, totalling {total_size} GB" |>
-        cli_alert_info()
-    
-    invisible(NULL)
+  total_size <- url_file_size(urls) |> 
+    sum() |>
+    round(digits=2)
+  
+  "Downloading {length(urls)} file{?s}, totalling {total_size} GB" |>
+    cli_alert_info()
+  
+  invisible(NULL)
 }
 
 #' Formats a multi-line string as it it were on one line
@@ -56,12 +61,12 @@ single_line_str <- function(text){
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_default_cache_dir <- function() {
-    packageName() |>
-        R_user_dir(
-            "cache"
-        ) |>
-        normalizePath() |>
-        suppressWarnings()
+  packageName() |>
+    R_user_dir(
+      "cache"
+    ) |>
+    normalizePath() |>
+    suppressWarnings()
 }
 
 #' Clear the default cache directory
@@ -93,24 +98,24 @@ clear_old_metadata <- function(updated_data) {
 #' @keywords internal
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 sync_remote_file <- function(full_url, output_file, ...) {
-    if (!file.exists(output_file)) {
-        output_dir <- dirname(output_file)
-        dir.create(output_dir,
-                   recursive = TRUE,
-                   showWarnings = FALSE
-        )
-        cli_alert_info("Downloading {full_url} to {output_file}")
-        
-        tryCatch(
-            GET(full_url, write_disk(output_file), ...) |> stop_for_status(),
-            error = function(e) {
-                # Clean up if we had an error
-                file.remove(output_file)
-                cli_abort("File {full_url} could not be downloaded. {e}")
-            }
-        )
-    }
-    invisible(NULL)
+  if (!file.exists(output_file)) {
+    output_dir <- dirname(output_file)
+    dir.create(output_dir,
+               recursive = TRUE,
+               showWarnings = FALSE
+    )
+    cli_alert_info("Downloading {full_url} to {output_file}")
+    
+    tryCatch(
+      GET(full_url, write_disk(output_file), ...) |> stop_for_status(),
+      error = function(e) {
+        # Clean up if we had an error
+        file.remove(output_file)
+        cli_abort("File {full_url} could not be downloaded. {e}")
+      }
+    )
+  }
+  invisible(NULL)
 }
 
 #' Returns a tibble from a parquet file path
@@ -127,8 +132,8 @@ sync_remote_file <- function(full_url, output_file, ...) {
 #' @keywords internal
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 read_parquet <- function(conn, path, filename_column=FALSE){
-    from_clause <- glue_sql("FROM read_parquet([{`path`*}], union_by_name=true, filename={filename_column})", .con=conn) |> sql()
-    tbl(conn, from_clause)
+  from_clause <- glue_sql("FROM read_parquet([{`path`*}], union_by_name=true, filename={filename_column})", .con=conn) |> sql()
+  tbl(conn, from_clause)
 }
 
 #' Deletes specific counts and metadata from cache
@@ -224,7 +229,7 @@ write_h5ad <- function(sce,
 #' @keywords internal
 duplicate_single_column_assay <- function(sce) {
   
-  assay_name = sce |> assays() |> names() |> magrittr::extract2(1)
+  assay_name = (sce |> assays() |> names())[[1L]]
   
   if(ncol(assay(sce)) == 1) {
     
@@ -257,7 +262,7 @@ duplicate_single_column_assay <- function(sce) {
 #' @return `NULL`, invisibly. Progress messages are displayed for the downloads.
 #' 
 #' @importFrom dplyr pull transmute distinct
-#' @importFrom assertthat assert_that has_name
+#' @importFrom checkmate assert check_subset check_true
 #' @importFrom cli cli_alert_info
 #' @importFrom purrr pmap
 #' @importFrom httr parse_url
@@ -270,9 +275,7 @@ sync_metadata_assay_files <- function(data,
                                       grouping_column,
                                       cache_directory = get_default_cache_dir()
 ) {
-  assert_that(
-    all(c("cell_id", "atlas_id", grouping_column) %in% colnames(data))
-  )
+  assert(check_subset(c("cell_id", "atlas_id", grouping_column), colnames(data)))
   atlas_name <- data |> pull(atlas_id) |> unique()
   
   subdirs <- assay_map[assays]
@@ -280,9 +283,7 @@ sync_metadata_assay_files <- function(data,
   if (!is.null(repository)) {
     cli_alert_info("Synchronising files")
     parsed_repo <- parse_url(repository)
-    parsed_repo$scheme |>
-      `%in%`(c("http", "https")) |>
-      assert_that()
+    assert(check_true(parsed_repo$scheme %in% c("http", "https")))
     
     files_to_read <-
       data |> 
