@@ -89,13 +89,9 @@ NULL
 #' @noRd
 .onAttach <- function(libname, pkgname) {
   if (!"package:dplyr" %in% search()) {
-    suppressPackageStartupMessages(
-      library(
-        "dplyr",
-        character.only = TRUE,
-        quietly = TRUE,
-        warn.conflicts = TRUE
-      )
-    )
+    if (requireNamespace("dplyr", quietly = TRUE)) {
+      suppressPackageStartupMessages(attachNamespace("dplyr"))
+    }
   }
 }
+
