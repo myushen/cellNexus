@@ -25,27 +25,27 @@ Authors@R: c(
         comment = c(ORCID = "0000-0002-8965-2595")
     ),
     person(
-        "Martin",
-        "Morgan",
-        email = "Martin.Morgan@RoswellPark.org",
-        role = c("ctb", "rev")
+        "Jared",
+        "Andrews",
+        email = "jared.andrews07@gmail.com",
+        role = c("aut", "rev", "ctb")
     ),
     person(
-        "Vincent",
-        "Carey",
-        email = "stvjc@channing.harvard.edu",
-        role = c("ctb", "rev")
+        "Juan",
+        "Henao",
+        email = "juan.henao@helmholtz-muenchen.de",
+        role = c("aut", "ctb")
+    ),
+    person(
+        "Edward",
+        "Yang",
+        email = "edwardyang125@gmail.com",
+        role = c("aut", "ctb")
     ),
     person(
         "Julie",
         "Iskander",
         email = "iskander.j@wehi.edu.au",
-        role = c( "rev")
-    ),
-    person(
-        "Tony",
-        "Papenfuss",
-        email = "papenfuss@wehi.edu.au",
         role = c( "rev")
     ),
     person(
