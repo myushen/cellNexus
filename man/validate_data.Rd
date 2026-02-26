@@ -24,7 +24,7 @@ atlas name in format (e.g cellxgene/06-02-2025) for internal use.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 
 \item{assays}{A character vector specifying the desired assay(s) to be requested.
-Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or
+Valid elements include "counts", "cpm", "rank", and "sct" for single-cell analyses, or
 "counts" for pseudobulk analyses.
 The default setting retrieves only the counts assay.
 If your analysis involves a smaller set of genes, consider using the "cpm" assay.
