@@ -167,6 +167,7 @@ single_cell_counts
 
 ```{r, echo=FALSE}
 # Pre-made example for demonstration (avoids download during build)
+data(single_cell_counts)
 single_cell_counts
 ```
 
@@ -189,6 +190,7 @@ single_cell_cpm
 
 ```{r, echo=FALSE}
 # Pre-made example for demonstration (avoids download during build)
+data(single_cell_cpm)
 single_cell_cpm
 ```
 
@@ -211,6 +213,7 @@ pseudobulk_counts
 
 ```{r, echo=FALSE}
 # Pre-made example for demonstration (avoids download during build)
+data(pseudobulk_counts)
 pseudobulk_counts
 ```
 
@@ -236,6 +239,7 @@ metacell_counts
 
 ```{r, echo=FALSE}
 # Pre-made example for demonstration (avoids download during build)
+data(metacell_counts)
 metacell_counts
 ```
 
@@ -448,9 +452,10 @@ and `atlas_id` (e.g cellxgene/dd-mm-yy) columns in the metadata. See metadata st
 local_cache <- tempdir()
 layer <- "counts"
 meta_path <- file.path(local_cache, "pbmc3k_metadata.parquet")
+data(pbmc3k_sce)
 
 # Extract and prepare metadata
-pbmc3k_metadata <- cellNexus::pbmc3k_sce |> 
+pbmc3k_metadata <- pbmc3k_sce |> 
   S4Vectors::metadata() |> 
   purrr::pluck("data") |> 
   dplyr::mutate(
@@ -471,13 +476,13 @@ sce_path <- pbmc3k_metadata |>
 dir.create(counts_directory, recursive = TRUE, showWarnings = FALSE)
 
 # Save data to disk
-cellNexus::pbmc3k_sce |> 
+pbmc3k_sce |> 
   S4Vectors::metadata() |> 
   purrr::pluck("data") |> 
   arrow::write_parquet(meta_path)
 
 # Save SCE object
-cellNexus::pbmc3k_sce |> 
+pbmc3k_sce |> 
   anndataR::write_h5ad(sce_path, compression = "gzip")
 ```
 
