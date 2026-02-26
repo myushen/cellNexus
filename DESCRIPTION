@@ -151,7 +151,6 @@ Collate:
     'counts_per_million.R'
     'data.R'
     'dev.R'
-    'import_metadata_and_counts.R'
     'interface_app.R'
     'metadata.R'
     'seurat.R'
