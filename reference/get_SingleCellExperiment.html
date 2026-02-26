@@ -77,8 +77,7 @@ They can be obtained from the <code><a href="get_metadata.html">get_metadata()</
 
     <dt><code>assays</code></dt>
 <dd><p>A character vector specifying the desired assay(s) to be requested.
-Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or
-"counts" for pseudobulk analyses.
+Valid elements include "counts", "cpm", "rank", and "sct" for single-cell analyses
 The default setting retrieves only the counts assay.
 If your analysis involves a smaller set of genes, consider using the "cpm" assay.
 The "rank" assay is suited for signature calculations across millions of cells.</p></dd>
@@ -100,21 +99,6 @@ an HTTP URL pointing to the location where the single cell data is stored.</p></
     <dt><code>features</code></dt>
 <dd><p>An optional character vector of features (ie genes) to return
 the counts for. By default counts for all features will be returned.
-When provided, the returned object will contain exactly the requested
-features (row order preserved), and any experiments/samples that do not
-contain all requested features are dropped. This preserves the full set
-of requested features at the cost of potentially fewer samples.
-A warning is emitted when samples are dropped.
-When provided, the returned object will contain exactly the requested
-features (row order preserved), and any experiments/samples that do not
-contain all requested features are dropped. This preserves the full set
-of requested features at the cost of potentially fewer samples.
-A warning is emitted when samples are dropped.
-When provided, the returned object will contain exactly the requested
-features (row order preserved), and any experiments/samples that do not
-contain all requested features are dropped. This preserves the full set
-of requested features at the cost of potentially fewer samples.
-A warning is emitted when samples are dropped.
 When provided, the returned object will contain exactly the requested
 features (row order preserved), and any experiments/samples that do not
 contain all requested features are dropped. This preserves the full set
