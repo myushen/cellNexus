@@ -17,14 +17,14 @@ in the selected format.
 Create a Shiny app that allows users to generate filtering & retreival code for cellNexus
 }
 \examples{
-\dontrun{
+get_default_cache_dir()
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # Create the interface app with metadata
-# For fast build purpose only, you do not need to specify anything in cloud_metadata.
-metadata <-get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
+metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
 app <- create_interface_app(metadata)
 # Run the app
 shiny::runApp(app)
-}
+\dontshow{\}) # examplesIf}
 }
 \author{
 Jared Andrews

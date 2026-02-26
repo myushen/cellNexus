@@ -38,19 +38,12 @@ with cellNexus-compatible metadata structure.
 See \code{dev/create_pbmc3k_sce.R} for the complete creation script.
 }
 \examples{
-\dontrun{
-# Load the sample dataset
 data(pbmc3k_sce)
-
-# View basic information
 pbmc3k_sce
-
 # Access metadata
 metadata(pbmc3k_sce)$data
-
 # View cell types
 unique(metadata(pbmc3k_sce)$data$cell_type_unified_ensemble)
-}
 }
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,

@@ -18,4 +18,7 @@ clear_old_metadata(updated_data)
 \description{
 Clear the outdated metadata in the default cache directory.
 }
+\examples{
+clear_old_metadata("sample_metadata.1.3.0.parquet")
+}
 \keyword{internal}

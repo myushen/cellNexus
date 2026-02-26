@@ -24,4 +24,8 @@ This object is used in the vignette to avoid downloading data during package bui
 \details{
 See \code{dev/create_vignette_data.R} for the creation script.
 }
+\examples{
+data(single_cell_cpm)
+single_cell_cpm
+}
 \keyword{datasets}

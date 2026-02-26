@@ -558,6 +558,9 @@ get_metacell <- function(data,
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @examples
+#' meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir()) |> head(1)
+#' validate_data(meta, "counts", "single_cell", tempdir(), NULL, NULL)
 validate_data <- function(
     data,
     assays = "counts",

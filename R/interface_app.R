@@ -140,14 +140,13 @@ organize_inputs <- function(
 #' @importFrom dplyr filter distinct
 #'
 #' @examples
-#' \dontrun{
+#' get_default_cache_dir()
+#' @examplesIf interactive()
 #' # Create the interface app with metadata
-#' # For fast build purpose only, you do not need to specify anything in cloud_metadata.
-#' metadata <-get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
+#' metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
 #' app <- create_interface_app(metadata)
 #' # Run the app
 #' shiny::runApp(app)
-#' }
 #' @export
 #' @author Jared Andrews
 create_interface_app <- function(metadata) {

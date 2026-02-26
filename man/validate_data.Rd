@@ -52,6 +52,10 @@ cache_directory, features, cell_aggregation, and atlas_name.
 Given a data frame of Curated Atlas metadata obtained from \code{\link[=get_metadata]{get_metadata()}},
 returns a list of parameters being validated.
 }
+\examples{
+meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir()) |> head(1)
+validate_data(meta, "counts", "single_cell", tempdir(), NULL, NULL)
+}
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
 A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human

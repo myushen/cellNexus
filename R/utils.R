@@ -72,7 +72,6 @@ get_default_cache_dir <- function() {
 #' Clear the default cache directory
 #' @return A length one character vector.
 #' @keywords internal
-#' @noRd
 clear_cache <- function() {
   get_default_cache_dir() |> unlink(TRUE, TRUE)
 }
@@ -82,6 +81,8 @@ clear_cache <- function() {
 #' @return `NULL`, invisibly
 #' @keywords internal
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @examples
+#' clear_old_metadata("sample_metadata.1.3.0.parquet")
 clear_old_metadata <- function(updated_data) {
   cache_directory <- get_default_cache_dir()
   files_in_cache <- list.files(cache_directory)
@@ -268,6 +269,9 @@ duplicate_single_column_assay <- function(sce) {
 #' @importFrom httr parse_url
 #' @importFrom rlang .data
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @examples
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(1) |> dplyr::collect()
+#' sync_metadata_assay_files(meta, grouping_column = "file_id_cellNexus_single_cell", cache_directory = tempdir())
 sync_metadata_assay_files <- function(data,
                                       assays = "counts",
                                       repository = COUNTS_URL,

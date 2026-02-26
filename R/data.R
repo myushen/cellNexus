@@ -31,19 +31,12 @@
 #' @keywords datasets
 #' @docType data
 #' @examples
-#' \dontrun{
-#' # Load the sample dataset
 #' data(pbmc3k_sce)
-#' 
-#' # View basic information
 #' pbmc3k_sce
-#' 
 #' # Access metadata
 #' metadata(pbmc3k_sce)$data
-#' 
 #' # View cell types
 #' unique(metadata(pbmc3k_sce)$data$cell_type_unified_ensemble)
-#' }
 "pbmc3k_sce"
 
 
@@ -62,6 +55,9 @@
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
 #' @docType data
+#' @examples
+#' data(single_cell_counts)
+#' single_cell_counts
 "single_cell_counts"
 
 #' Sample SingleCellExperiment Object with CPM Assay
@@ -79,6 +75,9 @@
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
 #' @docType data
+#' @examples
+#' data(single_cell_cpm)
+#' single_cell_cpm
 "single_cell_cpm"
 
 #' Sample Pseudobulk SingleCellExperiment Object
@@ -96,6 +95,9 @@
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
 #' @docType data
+#' @examples
+#' data(pseudobulk_counts)
+#' pseudobulk_counts
 "pseudobulk_counts"
 
 #' Sample Metacell SingleCellExperiment Object
@@ -113,4 +115,7 @@
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
 #' @docType data
+#' @examples
+#' data(metacell_counts)
+#' metacell_counts
 "metacell_counts"

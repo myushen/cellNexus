@@ -24,4 +24,8 @@ This object is used in the vignette to avoid downloading data during package bui
 \details{
 See \code{dev/create_vignette_data.R} for the creation script.
 }
+\examples{
+data(metacell_counts)
+metacell_counts
+}
 \keyword{datasets}
