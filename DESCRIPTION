@@ -110,8 +110,9 @@ Imports:
     stringr,
     scuttle
 Suggests:
-    rmarkdown,
+    BiocStyle,
     knitr,
+    rmarkdown,
     testthat,
     basilisk,
     arrow,

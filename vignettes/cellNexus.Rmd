@@ -1,18 +1,23 @@
 ---
 title: "cellNexus"
-output: "html_vignette"
+author: "Mangiola et al."
+package: cellNexus
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
 params:
   demo_metadata: true
 vignette: >
   %\VignetteIndexEntry{cellNexus}
-  %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 knit: >
     (function(x, ...){
         proj_root <- rprojroot::find_package_root_file() |> normalizePath()
         rmarkdown::render(
             x,
-            output_format = "html_document",
+            output_format = BiocStyle::html_document(toc = TRUE, toc_float = TRUE),
             params = list(
                 demo_metadata = TRUE
             )
@@ -483,7 +488,7 @@ pbmc3k_sce |>
 
 # Save SCE object
 pbmc3k_sce |> 
-  anndataR::write_h5ad(sce_path, compression = "gzip")
+  anndataR::write_h5ad(sce_path, compression = "gzip", mode = "w")
 ```
 
 ``` {r}
