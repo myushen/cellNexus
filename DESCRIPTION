@@ -106,6 +106,7 @@ Imports:
     checkmate,
     shiny,
     shinyWidgets,
+    zellkonverter,
     anndataR,
     stringr,
     scuttle

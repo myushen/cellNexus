@@ -632,6 +632,7 @@ validate_data <- function(
 #' @importFrom utils head
 #' @importFrom cli cli_alert_warning cli_abort
 #' @importFrom glue glue
+#' @importFrom zellkonverter readH5AD
 #' @keywords internal
 group_to_data_container <- function(i, df, dir_prefix, features, grouping_column,
                                     metacell_column = NULL) {
@@ -647,12 +648,18 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   experiment_path |> map(function(path) {
     file_exists <- file.exists(path)
     if (!file_exists) {
-      cli_abort("Your cache does not contain the file {path} you attempted to query. Please provide the repository parameter so that files can be synchronised from the internet.")
+      cli_abort(
+        paste(
+          "Your cache does not contain the file {path} you attempted to query.",
+          "Please provide the repository parameter so that files can be synchronised from the internet."
+        )
+      )
     }
   })
   
   # Load experiment
-  experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
+  # Use zellkonverter, because anndataR does not support DelayedArray yet. Issue: https://github.com/scverse/anndataR/pull/387
+  experiment <- readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
   
   # Fix for https://github.com/tidyverse/dplyr/issues/6746
   force(i)
