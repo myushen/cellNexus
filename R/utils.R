@@ -38,16 +38,6 @@ report_file_sizes <- function(urls) {
   invisible(NULL)
 }
 
-#' Formats a multi-line string as it it were on one line
-#' @param text Any character vector
-#' @return The same character vector, with newlines and subsequent whitespace
-#'   removed
-#' @keywords internal
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-single_line_str <- function(text){
-  stringr::str_remove_all(text, r"(\n\s*)")
-}
-
 #' Returns the default cache directory with a version number
 #' @export
 #' @return A length one character vector.

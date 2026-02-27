@@ -39,11 +39,7 @@ get_metadata_url <- function(databases = c("metadata.1.3.0.parquet")) {
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-SAMPLE_DATABASE_URL <- single_line_str(
-  "https://object-store.rc.nectar.org.au/v1/
-    AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/
-    sample_metadata.1.3.0.parquet"
-)
+SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.1.3.0.parquet"
 
 #' Gets the CellNexus metadata as a data frame.
 #'
