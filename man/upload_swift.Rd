@@ -3,6 +3,9 @@
 \name{upload_swift}
 \alias{upload_swift}
 \title{Upload a file to the Nectar object store}
+\source{
+\href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
+}
 \usage{
 upload_swift(
   source,

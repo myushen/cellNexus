@@ -266,6 +266,7 @@ duplicate_single_column_assay <- function(sce) {
 #' @importFrom httr parse_url
 #' @importFrom rlang .data
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @keywords internal
 #' @examples
 #' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(1) |> dplyr::collect()
 #' sync_metadata_assay_files(meta, grouping_column = "file_id_cellNexus_single_cell", cache_directory = tempdir())

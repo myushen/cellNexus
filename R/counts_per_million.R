@@ -7,7 +7,7 @@
 #' @importFrom SingleCellExperiment SingleCellExperiment
 #' @importFrom SummarizedExperiment assay assays assays<-
 #' @importFrom purrr map
-#' @noRd
+#' @keywords internal
 get_counts_per_million <- function(sce, input_file, output_file) {
 
   # Save SCE to the cache directory counts folder

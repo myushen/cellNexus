@@ -10,6 +10,8 @@
 #'
 #' @author Jared Andrews
 #' @rdname INTERNAL_string_to_vector
+#' @keywords internal
+#' @noRd
 .string_to_vector <- function(x) {
     if (!is.null(x)) {
         if (x != "") {
@@ -69,6 +71,7 @@
 #' # Example 4: Handling a case with more inputs than grid cells
 #' many.inputs <- tagList(replicate(10, textInput("input", "Input")))
 #' organize_inputs(many.inputs, columns = 3) # Creates more than one row
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 organize_inputs <- function(
     tag.list,
     id = NULL,
@@ -149,6 +152,7 @@ organize_inputs <- function(
 #' shiny::runApp(app)
 #' @export
 #' @author Jared Andrews
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 create_interface_app <- function(metadata) {
     # Generate dynamic pickerInputs for select columns in metadata
     cell_cols <- c(

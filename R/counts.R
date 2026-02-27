@@ -16,6 +16,7 @@ assay_map <- c(
 )
 
 #' Base URL pointing to the count data at the current version
+#' @keywords internal
 #' @noRd
 COUNTS_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata"
 
@@ -557,6 +558,7 @@ get_metacell <- function(data,
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @keywords internal
 #' @examples
 #' meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir()) |> head(1)
 #' validate_data(meta, "counts", "single_cell", tempdir(), NULL, NULL)
@@ -630,7 +632,7 @@ validate_data <- function(
 #' @importFrom utils head
 #' @importFrom cli cli_alert_warning cli_abort
 #' @importFrom glue glue
-#' @noRd
+#' @keywords internal
 group_to_data_container <- function(i, df, dir_prefix, features, grouping_column,
                                     metacell_column = NULL) {
   # Set file name based on type
@@ -776,7 +778,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
 #' @importFrom httr modify_url
 #' @importFrom dplyr transmute filter
 #' @importFrom httr parse_url
-#' @noRd
+#' @keywords internal
 sync_assay_files <- function(
     url = parse_url(COUNTS_URL),
     atlas_name,
@@ -842,7 +844,7 @@ sync_assay_files <- function(
 #' @return A character vector of genes intersection across objects
 #' @importFrom purrr map reduce
 #' @importFrom cli cli_alert_warning
-#' @noRd
+#' @keywords internal
 check_gene_overlap <- function(obj_list) {
   gene_lists <- map(obj_list, rownames)
   common_genes <- reduce(gene_lists, intersect)

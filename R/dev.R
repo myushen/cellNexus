@@ -15,6 +15,7 @@
 #'   character scalar
 #' @return `NULL`, invisibly
 #' @keywords internal
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 upload_swift <- function(
     source,
     container,
@@ -90,6 +91,7 @@ upload_swift <- function(
 #' }
 #' @keywords internal
 #' @inherit upload_swift return
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 update_database <- function(metadata, version, ...){
     # These are optional dev packages
     rlang::check_installed(c("arrow", "glue", "basilisk"))
@@ -109,6 +111,7 @@ update_database <- function(metadata, version, ...){
 #' @inheritDotParams upload_swift
 #' @inherit upload_swift return
 #' @keywords internal
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 #' @examples
 #' \dontrun{
 #' update_unharmonised(
@@ -134,6 +137,7 @@ update_unharmonised <- function(unharmonised_parquet_dir, ...){
 #'  created anndata files.
 #' @keywords internal
 #' @return A character vector of the newly-created anndata files
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 #' @examples
 #' \dontrun{
 #' hdf5_to_anndata(

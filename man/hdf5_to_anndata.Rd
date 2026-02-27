@@ -3,6 +3,9 @@
 \name{hdf5_to_anndata}
 \alias{hdf5_to_anndata}
 \title{Converts a series of HDF5Array-serialized SingleCellExperiments to AnnData}
+\source{
+\href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
+}
 \usage{
 hdf5_to_anndata(input_directory, output_directory)
 }

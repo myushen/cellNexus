@@ -4,6 +4,7 @@
 NULL
 
 #' Environment that we use to cache the DuckDB connections
+#' @keywords internal
 #' @noRd
 cache <- rlang::env(
   metadata_table = rlang::env()
