@@ -14,9 +14,6 @@ An object of class \code{SingleCellExperiment} with:
 \source{
 Created from cellNexus datasets
 }
-\usage{
-single_cell_counts
-}
 \description{
 A pre-made SingleCellExperiment object with counts assay for vignette demonstration.
 This object is used in the vignette to avoid downloading data during package build.

@@ -190,24 +190,20 @@ clean_and_report_NA_columns <- function(df) {
   df |> select(-all_of(na_column_names))
 }
 
-#' Save anndata
+#' Save SingleCellExperiment as AnnData (.h5ad) after cleaning NA columns from colData
 #' @return `NULL`, invisible
-#' @noRd
 #' @keywords internal
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-write_h5ad <- function(sce,
-                       path) {
-  selected_columns <- sce |>
-    SummarizedExperiment::colData() |>
+save_sce_as_h5ad <- function(sce, path) {
+  # Remove columns in colData that are all NA and warn the user
+  cleaned_coldata <- SummarizedExperiment::colData(sce) |>
     as.data.frame() |>
-    clean_and_report_NA_columns() |>
-    names()
-  
-  colData_subset <- colData(sce)[, selected_columns]
-  colData(sce) <- colData_subset
+    clean_and_report_NA_columns()
+  SummarizedExperiment::colData(sce) <- S4Vectors::DataFrame(cleaned_coldata)
 
-  if (ncol(SummarizedExperiment::assay(sce)) == 1) sce <- sce |> duplicate_single_column_assay()
-  
+  if (ncol(SummarizedExperiment::assay(sce)) == 1) {
+    sce <- sce |> duplicate_single_column_assay()
+  }
   sce |> anndataR::write_h5ad(path, compression = "gzip", verbose = FALSE)
 }
 

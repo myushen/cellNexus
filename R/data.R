@@ -30,6 +30,7 @@
 #'   doi:10.1101/2023.06.08.542671.
 #' @keywords datasets
 #' @docType data
+#' @usage NULL
 #' @examples
 #' data(pbmc3k_sce)
 #' pbmc3k_sce
@@ -55,6 +56,7 @@
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
 #' @docType data
+#' @usage NULL
 #' @examples
 #' data(single_cell_counts)
 #' single_cell_counts
@@ -75,6 +77,7 @@
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
 #' @docType data
+#' @usage NULL
 #' @examples
 #' data(single_cell_cpm)
 #' single_cell_cpm
@@ -95,6 +98,7 @@
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
 #' @docType data
+#' @usage NULL
 #' @examples
 #' data(pseudobulk_counts)
 #' pseudobulk_counts
@@ -115,6 +119,7 @@
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
 #' @docType data
+#' @usage NULL
 #' @examples
 #' data(metacell_counts)
 #' metacell_counts

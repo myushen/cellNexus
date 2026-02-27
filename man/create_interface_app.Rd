@@ -21,7 +21,7 @@ Create a Shiny app that allows users to generate filtering & retreival code for 
 }
 \examples{
 get_default_cache_dir()
-\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # Create the interface app with metadata
 metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
 app <- create_interface_app(metadata)

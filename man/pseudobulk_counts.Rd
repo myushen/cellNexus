@@ -14,9 +14,6 @@ An object of class \code{SingleCellExperiment} with:
 \source{
 Created from cellNexus datasets
 }
-\usage{
-pseudobulk_counts
-}
 \description{
 A pre-made SingleCellExperiment object with pseudobulk aggregated data for vignette demonstration.
 This object is used in the vignette to avoid downloading data during package build.

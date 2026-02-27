@@ -26,9 +26,6 @@ An object of class \code{SingleCellExperiment} with:
 \source{
 Created from pbmc3k dataset (SeuratData package)
 }
-\usage{
-pbmc3k_sce
-}
 \description{
 A sample SingleCellExperiment object created from the pbmc3k dataset for testing and demonstration purposes.
 The dataset contains 500 cells with gene expression data mapped to Ensembl gene IDs and formatted
