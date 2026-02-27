@@ -101,12 +101,12 @@ get_unharmonised_metadata <- function(metadata, ...){
         group_by(.data$file_id_cellNexus_single_cell) |>
         summarise(
             unharmonised = list(
-              dataset_id=.data$file_id_cellNexus_single_cell[[1]],
-              cells=.data$cell_id,
-              conn=remote_con(metadata)
+              dataset_id = .data$file_id_cellNexus_single_cell[[1L]],
+              cells = .data$cell_id,
+              conn = remote_con(metadata)
             ) |>
-                c(args) |> 
-                do.call(get_unharmonised_dataset, args=_) |> 
+                c(args) |>
+                do.call(get_unharmonised_dataset, args = _) |>
                 list()
         )
 }

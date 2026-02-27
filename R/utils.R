@@ -27,11 +27,11 @@ url_file_size <- function(urls){
 #' @keywords internal
 #' @return `NULL`, invisibly
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-report_file_sizes <- function(urls){
-  total_size <- url_file_size(urls) |> 
+report_file_sizes <- function(urls) {
+  total_size <- url_file_size(urls) |>
     sum() |>
-    round(digits=2)
-  
+    round(digits = 2)
+
   "Downloading {length(urls)} file{?s}, totalling {total_size} GB" |>
     cli_alert_info()
   
@@ -153,9 +153,12 @@ delete_counts <- function(data,
   map(counts_path, ~ .x |> unlink(recursive = TRUE))
   
   # metadata
-  filename <- get_metadata(cache_directory = cache_directory, filename_column = "meta_filename", use_cache = FALSE ) |> 
-    filter(file_id_db %in% ids) |> distinct(meta_filename) |> pull(meta_filename)
-  arrow::read_parquet(filename) |> filter(!file_id_db %in% ids) |>
+  filename <- get_metadata(cache_directory = cache_directory, filename_column = "meta_filename", use_cache = FALSE) |>
+    filter(file_id_db %in% ids) |>
+    distinct(meta_filename) |>
+    pull(meta_filename)
+  arrow::read_parquet(filename) |>
+    filter(!file_id_db %in% ids) |>
     arrow::write_parquet(filename)
 }
 
@@ -203,13 +206,16 @@ clean_and_report_NA_columns <- function(df) {
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 write_h5ad <- function(sce,
                        path) {
-  selected_columns <- sce |> SummarizedExperiment::colData() |> 
-    as.data.frame() |> clean_and_report_NA_columns() |> names()
+  selected_columns <- sce |>
+    SummarizedExperiment::colData() |>
+    as.data.frame() |>
+    clean_and_report_NA_columns() |>
+    names()
   
-  colData_subset = colData(sce)[, selected_columns]
+  colData_subset <- colData(sce)[, selected_columns]
   colData(sce) <- colData_subset
-  
-  if (ncol(SummarizedExperiment::assay(sce)) == 1) sce = sce |> duplicate_single_column_assay()
+
+  if (ncol(SummarizedExperiment::assay(sce)) == 1) sce <- sce |> duplicate_single_column_assay()
   
   sce |> anndataR::write_h5ad(path, compression = "gzip", verbose = FALSE)
 }
@@ -229,21 +235,21 @@ write_h5ad <- function(sce,
 #' @importFrom rlang set_names
 #' @keywords internal
 duplicate_single_column_assay <- function(sce) {
-  
-  assay_name = (sce |> assays() |> names())[[1L]]
-  
-  if(ncol(assay(sce)) == 1) {
-    
+
+  assay_name <- (sce |> assays() |> names())[[1L]]
+
+  if (ncol(assay(sce)) == 1) {
+
     # Duplicate the assay to prevent saving errors due to single-column matrices
-    my_assay = cbind(assay(sce), assay(sce))
+    my_assay <- cbind(assay(sce), assay(sce))
     # Rename the second column to distinguish it
-    colnames(my_assay)[2] = paste0("DUMMY", "___", colnames(my_assay)[2])
-    
-    cd = colData(sce)
-    cd = cd |> rbind(cd)
-    rownames(cd)[2] = paste0("DUMMY", "___", rownames(cd)[2])
-    
-    sce =  SingleCellExperiment(assay = list(my_assay) |> set_names(assay_name), colData = cd)
+    colnames(my_assay)[2] <- paste0("DUMMY", "___", colnames(my_assay)[2])
+
+    cd <- colData(sce)
+    cd <- cd |> rbind(cd)
+    rownames(cd)[2] <- paste0("DUMMY", "___", rownames(cd)[2])
+
+    sce <- SingleCellExperiment(assay = list(my_assay) |> set_names(assay_name), colData = cd)
     sce
   } 
   sce
@@ -290,14 +296,15 @@ sync_metadata_assay_files <- function(data,
     assert(check_true(parsed_repo$scheme %in% c("http", "https")))
     
     files_to_read <-
-      data |> 
+      data |>
       transmute(
-        files = .data[[grouping_column]], 
-        atlas_name = atlas_id, 
+        files = .data[[grouping_column]],
+        atlas_name = atlas_id,
         cache_dir = cache_directory
-      ) |>  distinct() |> 
-      # Convert to tibble here to avoid breaking the memory after loading all metadata 
-      tibble::as_tibble() |> 
+      ) |>
+      distinct() |>
+      # Convert to tibble here to avoid breaking the memory after loading all metadata
+      tibble::as_tibble() |>
       pmap(function(files, atlas_name, cache_dir) {
         sync_assay_files(
           files = files,

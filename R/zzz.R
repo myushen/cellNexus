@@ -70,7 +70,7 @@ NULL
     # "Connection is garbage-collected" messages
     cache$metadata_table |>
         as.list() |>
-        walk(function(table){
+        walk(function(table) {
             table |>
                 remote_con() |>
                 dbDisconnect()

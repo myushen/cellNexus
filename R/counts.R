@@ -120,12 +120,13 @@ get_single_cell_experiment <- function(data,
     assert(check_true(parsed_repo$scheme %in% c("http", "https")))
     
     files_to_read <-
-      raw_data |> 
+      raw_data |>
       transmute(
-        files = .data[[grouping_column]], 
-        atlas_name = atlas_id, 
+        files = .data[[grouping_column]],
+        atlas_name = atlas_id,
         cache_dir = cache_directory
-      ) |>  distinct() |> 
+      ) |>
+      distinct() |>
       pmap(function(files, atlas_name, cache_dir) {
         sync_assay_files(
           files = files,
@@ -147,7 +148,7 @@ get_single_cell_experiment <- function(data,
         current_subdir
       )
       
-      experiment_list <- raw_data |> 
+      experiment_list <- raw_data |>
         mutate(dir_prefix = file.path(cache_directory, atlas_id, current_subdir)) |>
         dplyr::group_by(.data[[grouping_column]], dir_prefix) |>
         dplyr::summarise(experiments = list(
@@ -274,12 +275,13 @@ get_pseudobulk <- function(data,
     assert(check_true(parsed_repo$scheme %in% c("http", "https")))
     
     files_to_read <-
-      raw_data |> 
+      raw_data |>
       transmute(
-        files = .data[[grouping_column]], 
-        atlas_name = atlas_id, 
+        files = .data[[grouping_column]],
+        atlas_name = atlas_id,
         cache_dir = cache_directory
-      ) |> distinct() |>
+      ) |>
+      distinct() |>
       pmap(function(files, atlas_name, cache_dir) {
         sync_assay_files(
           files = files,
@@ -291,7 +293,7 @@ get_pseudobulk <- function(data,
         )
       })
   }
-  
+
   cli_alert_info("Reading files.")
   experiments <- subdirs |>
     imap(function(current_subdir, current_assay) {
@@ -420,8 +422,8 @@ get_metacell <- function(data,
     check_subset(c("sample_id", "file_id_cellNexus_single_cell", "atlas_id"), names(raw_data)),
     check_true(any(grepl("^metacell", names(raw_data))))
   )
-  raw_data = raw_data |> 
-    # This is to separate metacell and single_cell in group_to_data_container, also 
+  raw_data <- raw_data |>
+    # This is to separate metacell and single_cell in group_to_data_container, also
     #    not to produce repetitive column in the metadata
     mutate(file_id_cellNexus_metacell = file_id_cellNexus_single_cell)
   
@@ -448,7 +450,8 @@ get_metacell <- function(data,
         files = .data[[grouping_column]],
         atlas_name = atlas_id,
         cache_dir = cache_directory
-      ) |> distinct() |>
+      ) |>
+      distinct() |>
       pmap(function(files, atlas_name, cache_dir) {
         sync_assay_files(
           files = files,
@@ -460,7 +463,7 @@ get_metacell <- function(data,
         )
       })
   }
-  
+
   cli_alert_info("Reading files.")
   experiments <- subdirs |>
     imap(function(current_subdir, current_assay) {
@@ -644,7 +647,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   
   # Check if file exists
   experiment_path |> map(function(path) {
-    file_exists = file.exists(path)
+    file_exists <- file.exists(path)
     if (!file_exists) {
       cli_abort("Your cache does not contain the file {path} you attempted to query. Please provide the repository parameter so that files can be synchronised from the internet.")
     }
@@ -702,7 +705,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     new_coldata <- df |>
       select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
       # Remove metacell and single-cell level annotations in pseudobulk
-      select(-contains("metacell"), -matches("azimuth|monaco|blueprint|subsets_|high_")) |> 
+      select(-contains("metacell"), -matches("azimuth|monaco|blueprint|subsets_|high_")) |>
       distinct() |>
       mutate(
         sample_identifier = glue("{sample_id}___{cell_type_unified_ensemble}"),
@@ -727,8 +730,8 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   }
   else if (grouping_column == "file_id_cellNexus_metacell") {
     # Select relevant annotations to remove single-cell level annotations
-    annotations <- metacell_column |> 
-      c( "dataset_id", "sample_id", "assay", "assay_ontology_term_id", 
+    annotations <- metacell_column |>
+      c("dataset_id", "sample_id", "assay", "assay_ontology_term_id", 
          "development_stage", "development_stage_ontology_term_id", "disease", "disease_ontology_term_id", 
          "donor_id", "experiment___", "explorer_url", "feature_count", "is_primary_data", 
          "organism", "organism_ontology_term_id", "published_at", "raw_data_location", 
