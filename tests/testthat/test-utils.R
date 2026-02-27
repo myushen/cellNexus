@@ -9,3 +9,27 @@ test_that("url_file_size() returns the correct sizes", {
             0.944
         ), tolerance = 0.001)
 })
+
+test_that("get_default_cache_dir() returns a character path", {
+  d <- get_default_cache_dir()
+  expect_type(d, "character")
+  expect_length(d, 1L)
+  expect_true(nzchar(d))
+  expect_true(grepl("cellNexus", d, fixed = TRUE))
+})
+
+test_that("single_line_str() strips newlines and indentation", {
+  expect_equal(
+    cellNexus:::single_line_str("hello\n world"),
+    "helloworld"
+  )
+  expect_equal(
+    cellNexus:::single_line_str("a\n  b\n   c"),
+    "abc"
+  )
+  expect_equal(cellNexus:::single_line_str(""), "")
+})
+
+test_that("clear_old_metadata() runs without error", {
+  expect_invisible(cellNexus:::clear_old_metadata("sample_metadata.1.3.0.parquet"))
+})
