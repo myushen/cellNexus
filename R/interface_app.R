@@ -299,7 +299,7 @@ create_interface_app <- function(metadata) {
                 retrieval_condition()
             )
 
-            cat(paste(code_lines, collapse = "\n"))
+            paste(code_lines, collapse = "\n")
         })
 
         # Collect inputs as data.frame with each row as input_id and filter
@@ -352,7 +352,7 @@ create_interface_app <- function(metadata) {
             }
         })
 
-        output$code_box <- renderPrint({
+        output$code_box <- renderText({
             full_code()
         })
     }
