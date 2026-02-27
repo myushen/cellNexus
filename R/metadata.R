@@ -161,7 +161,7 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' get_metadata(cache_directory = path.expand('~'))
 #' ```
 #' 
-#' @inheritDotParams read_parquet
+#' @inheritDotParams duckdb_read_parquet
 #' 
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
@@ -205,7 +205,7 @@ get_metadata <- function(
   else {
     table <- duckdb() |>
       dbConnect(drv = _, read_only = TRUE) |>
-      read_parquet(path = all_parquet, ...)
+      duckdb_read_parquet(path = all_parquet, ...)
     cache$metadata_table[[hash]] <- table
     table
   }

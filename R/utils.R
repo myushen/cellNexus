@@ -119,21 +119,22 @@ sync_remote_file <- function(full_url, output_file, ...) {
   invisible(NULL)
 }
 
-#' Returns a tibble from a parquet file path
+#' Returns a tibble from a parquet file path via DuckDB
 #' Since dbplyr 2.4.0, raw file paths aren't handled very well
 #' See: <https://github.com/duckdb/duckdb-r/issues/38>
 #' Hence the need for this method
-#' @param filename_column A column name to the metadata that indicates which row came from which file. 
-#' By default it does not add the column.
-#' @importFrom glue glue
+#' @param conn A DuckDB connection.
+#' @param path Path(s) to parquet file(s).
+#' @param filename_column A column name to the metadata that indicates which row came from which file.
+#'   By default it does not add the column.
 #' @importFrom dplyr tbl
 #' @importFrom dbplyr sql
 #' @importFrom glue glue_sql
 #' @return An SQL data frame
 #' @keywords internal
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-read_parquet <- function(conn, path, filename_column=FALSE){
-  from_clause <- glue_sql("FROM read_parquet([{`path`*}], union_by_name=true, filename={filename_column})", .con=conn) |> sql()
+duckdb_read_parquet <- function(conn, path, filename_column = FALSE) {
+  from_clause <- glue_sql("FROM read_parquet([{`path`*}], union_by_name=true, filename={filename_column})", .con = conn) |> sql()
   tbl(conn, from_clause)
 }
 

@@ -71,7 +71,7 @@ get_unharmonised_dataset <- function(
             progress(type = "down", con = stderr())
         )
     
-    read_parquet(conn, local_path) |>
+    duckdb_read_parquet(conn, local_path) |>
         filter(.data$cell_id %in% cells)
 }
 
