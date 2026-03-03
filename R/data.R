@@ -35,9 +35,7 @@
 #' data(pbmc3k_sce)
 #' pbmc3k_sce
 #' # Access metadata
-#' metadata(pbmc3k_sce)$data
-#' # View cell types
-#' unique(metadata(pbmc3k_sce)$data$cell_type_unified_ensemble)
+#' S4Vectors::metadata(pbmc3k_sce)$data
 "pbmc3k_sce"
 
 

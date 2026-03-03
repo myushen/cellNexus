@@ -38,9 +38,7 @@ See \code{dev/create_pbmc3k_sce.R} for the complete creation script.
 data(pbmc3k_sce)
 pbmc3k_sce
 # Access metadata
-metadata(pbmc3k_sce)$data
-# View cell types
-unique(metadata(pbmc3k_sce)$data$cell_type_unified_ensemble)
+S4Vectors::metadata(pbmc3k_sce)$data
 }
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
