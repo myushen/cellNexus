@@ -202,7 +202,7 @@ save_sce_as_h5ad <- function(sce, path) {
   if (ncol(SummarizedExperiment::assay(sce)) == 1) {
     sce <- sce |> duplicate_single_column_assay()
   }
-  sce |> anndataR::write_h5ad(path, compression = "gzip", verbose = FALSE)
+  sce |> anndataR::write_h5ad(path, compression = "gzip")
 }
 
 #' Duplicate Single-Column Assay in SingleCellExperiment Object
@@ -261,9 +261,6 @@ duplicate_single_column_assay <- function(sce) {
 #' @importFrom rlang .data
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 #' @keywords internal
-#' @examples
-#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(1) |> dplyr::collect()
-#' sync_metadata_assay_files(meta, grouping_column = "file_id_cellNexus_single_cell", cache_directory = tempdir())
 sync_metadata_assay_files <- function(data,
                                       assays = "counts",
                                       repository = COUNTS_URL,

@@ -35,8 +35,4 @@ sync_metadata_assay_files(
 \description{
 Downloads and caches assay files from a remote repository based on metadata specifications.
 }
-\examples{
-meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(1) |> dplyr::collect()
-sync_metadata_assay_files(meta, grouping_column = "file_id_cellNexus_single_cell", cache_directory = tempdir())
-}
 \keyword{internal}

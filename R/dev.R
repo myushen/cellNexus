@@ -15,6 +15,7 @@
 #'   character scalar
 #' @return `NULL`, invisibly
 #' @keywords internal
+#' @noRd
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 upload_swift <- function(
     source,
@@ -90,6 +91,7 @@ upload_swift <- function(
 #'  # Prints "metadata.0.2.3.parquet" if successful
 #' }
 #' @keywords internal
+#' @noRd
 #' @inherit upload_swift return
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 update_database <- function(metadata, version, ...){
@@ -111,6 +113,7 @@ update_database <- function(metadata, version, ...){
 #' @inheritDotParams upload_swift
 #' @inherit upload_swift return
 #' @keywords internal
+#' @noRd
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 #' @examples
 #' \dontrun{
@@ -136,6 +139,7 @@ update_unharmonised <- function(unharmonised_parquet_dir, ...){
 #' @param output_directory A character scalar. The path to a directory in which to save the
 #'  created anndata files.
 #' @keywords internal
+#' @noRd
 #' @return A character vector of the newly-created anndata files
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 #' @examples
@@ -258,10 +262,10 @@ hdf5_to_anndata <- function(input_directory, output_directory){
 
 #' Makes a "downsampled" metadata file that only contains the minimal data
 #' needed to run the vignette and unit tests
+#' @keywords internal
 #' @noRd
 #' @param output Character scalar. Path to the output file.
 #' @return NULL
-#' @keywords internal
 downsample_metadata <- function(output = "sample_metadata.1.3.0.parquet"){
     metadata <- get_metadata()
     

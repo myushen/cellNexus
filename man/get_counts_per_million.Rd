@@ -4,12 +4,10 @@
 \alias{get_counts_per_million}
 \title{Generating counts per million from a SingleCellExperiment object}
 \usage{
-get_counts_per_million(sce, input_file, output_file)
+get_counts_per_million(sce, output_file)
 }
 \arguments{
 \item{sce}{A SingleCellExperiment object}
-
-\item{input_file}{A character vector of counts Anndata file path}
 
 \item{output_file}{A character vector of CPM Anndata file path}
 }
@@ -19,4 +17,7 @@ A directory stores counts per million Anndata
 \description{
 Generating counts per million from a SingleCellExperiment object
 }
-\keyword{internal}
+\examples{
+data(pbmc3k_sce)
+get_counts_per_million(pbmc3k_sce, tempfile(fileext = ".h5ad"))
+}

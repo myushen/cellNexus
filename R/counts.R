@@ -559,9 +559,7 @@ get_metacell <- function(data,
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 #' @keywords internal
-#' @examples
-#' meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir()) |> head(1)
-#' validate_data(meta, "counts", "single_cell", tempdir(), NULL, NULL)
+#' @noRd
 validate_data <- function(
     data,
     assays = "counts",
@@ -634,6 +632,7 @@ validate_data <- function(
 #' @importFrom glue glue
 #' @importFrom zellkonverter readH5AD
 #' @keywords internal
+#' @noRd
 group_to_data_container <- function(i, df, dir_prefix, features, grouping_column,
                                     metacell_column = NULL) {
   # Set file name based on type
@@ -786,6 +785,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
 #' @importFrom dplyr transmute filter
 #' @importFrom httr parse_url
 #' @keywords internal
+#' @noRd
 sync_assay_files <- function(
     url = parse_url(COUNTS_URL),
     atlas_name,
@@ -852,6 +852,7 @@ sync_assay_files <- function(
 #' @importFrom purrr map reduce
 #' @importFrom cli cli_alert_warning
 #' @keywords internal
+#' @noRd
 check_gene_overlap <- function(obj_list) {
   gene_lists <- map(obj_list, rownames)
   common_genes <- reduce(gene_lists, intersect)
