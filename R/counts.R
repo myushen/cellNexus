@@ -204,8 +204,6 @@ get_single_cell_experiment <- function(data,
 #'   They can be obtained from the [get_metadata()] function.
 #' @param assays A character vector specifying the desired assay(s) to be requested. 
 #'   The default setting retrieves only the counts assay.
-#'   If your analysis involves a smaller set of genes, consider using the "cpm" assay. 
-#'   The "rank" assay is suited for signature calculations across millions of cells.
 #' @param cell_aggregation A character vector that specifies which cell aggregation 
 #'   strategy should be applied. This will create a corresponding subdirectory 
 #'   in the cache directory.
@@ -682,7 +680,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     }
     
     new_coldata <- df |>
-      mutate(original_cell_ = .data$cell_id, cell_id = glue("{cell_id}_{i}")) |>
+      mutate(original_cell_ = as.character(.data$cell_id), cell_id = glue("{cell_id}_{i}")) |>
       column_to_rownames("cell_id") |>
       as("DataFrame")
     
@@ -746,25 +744,32 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
          "tissue_groups", "atlas_id", "sample_chunk", "file_id_cellNexus_single_cell", 
          "file_id_cellNexus_metacell", "dir_prefix") 
     
+    mapping_tbl <- as.data.frame(SummarizedExperiment::colData(experiment)) |>
+      dplyr::select(sample_id, !!rlang::sym(metacell_column), metacell_id)
+    
     new_coldata <- df |>
-      select(annotations) |>
+      left_join(
+        mapping_tbl,
+        by = c("sample_id", metacell_column)
+      ) |>
+      select(all_of(annotations), metacell_id) |>
       distinct() |>
       mutate(
-        metacell_identifier = glue("{sample_id}___{.data[[metacell_column]]}"),
-        original_metacell_id = .data$metacell_identifier
+        original_metacell_id = .data$metacell_id,
+        metacell_identifier = glue("{metacell_id}_{i}")
       ) |>
-      column_to_rownames("original_metacell_id")
+      column_to_rownames("metacell_identifier")
     
     experiment <- `if`(
       is.null(features),
-      experiment[, new_coldata$metacell_identifier],
+      experiment[, new_coldata$original_metacell_id],
       {
         # Optionally subset the genes
         genes <- rownames(experiment) |> intersect(features)
-        experiment[genes, new_coldata$metacell_identifier]
+        experiment[genes, new_coldata$original_metacell_id]
       }
     ) |>
-      `colnames<-`(new_coldata$metacell_identifier) |>
+      `colnames<-`(new_coldata$original_metacell_id) |>
       `colData<-`(value = DataFrame(new_coldata))
   }
 }
