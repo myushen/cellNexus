@@ -70,6 +70,8 @@ metadata <- get_metadata(cloud_metadata = METADATA_URL)
 metadata
 ```
 
+    #> ℹ Downloading 1 file, totalling 0 GB
+    #> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.2.0.0.parquet to /tmp/RtmpVDjbPV/sample_metadata.2.0.0.parquet
     #> # Source:   SQL [?? x 97]
     #> # Database: DuckDB v1.2.2 [shen.m@Darwin 23.3.0:R 4.5.0/:memory:]
     #>    cell_id                     dataset_id observation_joinid sample_id cell_type
