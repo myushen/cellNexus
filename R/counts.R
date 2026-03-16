@@ -520,7 +520,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   })
   
   # Load experiment
-  # Use zellkonverter, because anndataR does not support DelayedArray yet. Issue: https://github.com/scverse/anndataR/pull/387
+  # anndataR does not support reading existing assay names from h5ad file
   experiment <- readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
   
   # Fix for https://github.com/tidyverse/dplyr/issues/6746

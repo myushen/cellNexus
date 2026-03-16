@@ -79,7 +79,7 @@ upload_swift <- function(
 #' @inheritDotParams upload_swift
 #' @examples
 #' \dontrun{
-#'  metadata = cellNexus::get_metadata() |>
+#'  metadata <- cellNexus::get_metadata() |>
 #'      head(10) |>
 #'      dplyr::collect()
 #'  update_database(

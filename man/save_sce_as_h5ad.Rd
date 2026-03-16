@@ -15,20 +15,19 @@ save_sce_as_h5ad(sce, path, ...)
 \item{path}{Output file path for the \code{.h5ad} file.}
 
 \item{...}{
-  Arguments passed on to \code{\link[anndataR:write_h5ad]{anndataR::write_h5ad}}
+  Arguments passed on to \code{\link[zellkonverter:writeH5AD]{zellkonverter::writeH5AD}}
   \describe{
-    \item{\code{object}}{The object to write, either a
-\code{\link[SingleCellExperiment:SingleCellExperiment]{SingleCellExperiment::SingleCellExperiment}} or a
-\code{\link[SeuratObject:Seurat-class]{SeuratObject::Seurat}} object}
-    \item{\code{compression}}{The compression algorithm to use when writing the HDF5
-file. Can be one of \code{"none"}, \code{"gzip"} or \code{"lzf"}. Defaults to \code{"none"}.}
-    \item{\code{mode}}{The mode to open the HDF5 file.
-\itemize{
-\item \code{a} creates a new file or opens an existing one for read/write
-\item \verb{r+} opens an existing file for read/write
-\item \code{w} creates a file, truncating any existing ones
-\item \verb{w-}/\code{x} are synonyms creating a file and failing if it already exists
-}}
+    \item{\code{file}}{String containing a path to write the new \code{.h5ad} file.}
+    \item{\code{X_name}}{Name of the assay to use as the primary matrix (\code{X}) of the
+AnnData object. If \code{NULL}, the first assay of \code{sce} will be used by default.}
+    \item{\code{skip_assays}}{Logical scalar indicating whether assay matrices should
+be ignored when writing to \code{file}.}
+    \item{\code{compression}}{Type of compression when writing the new \code{.h5ad} file.}
+    \item{\code{version}}{A string giving the version of the \strong{anndata} Python library
+to use. Allowed values are available in \code{.AnnDataVersions}. By default the
+latest version is used.}
+    \item{\code{verbose}}{Logical scalar indicating whether to print progress messages.
+If \code{NULL} uses \code{getOption("zellkonverter.verbose")}.}
   }}
 }
 \value{

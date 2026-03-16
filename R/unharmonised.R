@@ -1,8 +1,5 @@
 # Functions that relate to unharmonised metadata
 
-#' @include utils.R
-NULL
-
 #' Base URL for all the unharmonised data
 #' @keywords internal
 #' @noRd

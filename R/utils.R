@@ -197,10 +197,10 @@ clean_and_report_NA_columns <- function(df) {
 #'
 #' @param sce A `SingleCellExperiment` object.
 #' @param path Output file path for the `.h5ad` file.
-#' @param ... Additional arguments passed to [anndataR::write_h5ad()].
+#' @param ... Additional arguments passed to [zellkonverter::writeH5AD()].
 #'
 #' @return Called for its side effect of writing an `.h5ad` file.
-#' @inheritDotParams anndataR::write_h5ad
+#' @inheritDotParams zellkonverter::writeH5AD
 #' @examples
 #' data("pbmc3k_sce")
 #' save_sce_as_h5ad(pbmc3k_sce, tempfile(fileext=".h5ad"))
@@ -215,7 +215,9 @@ save_sce_as_h5ad <- function(sce, path, ...) {
   if (ncol(SummarizedExperiment::assay(sce)) == 1) {
     sce <- sce |> duplicate_single_column_assay()
   }
-  sce |> anndataR::write_h5ad(path, compression = "gzip", ...)
+
+  # anndataR does not support writing DelayedArray yet. Issue: https://github.com/scverse/anndataR/pull/387
+  sce |> zellkonverter::writeH5AD(path, compression = "gzip", ...)
 }
 
 #' Duplicate Single-Column Assay in SingleCellExperiment Object
