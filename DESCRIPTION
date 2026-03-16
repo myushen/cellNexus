@@ -159,3 +159,4 @@ Collate:
     'unharmonised.R'
     'zzz.R'
 Language: en-US
+SystemRequirements: Python
