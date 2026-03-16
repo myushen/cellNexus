@@ -19,5 +19,5 @@ test_that("get_default_cache_dir() returns a character path", {
 })
 
 test_that("clear_old_metadata() runs without error", {
-  expect_invisible(cellNexus:::clear_old_metadata("sample_metadata.1.3.0.parquet"))
+  expect_invisible(cellNexus:::clear_old_metadata("sample_metadata.2.0.0.parquet"))
 })

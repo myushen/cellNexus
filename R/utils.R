@@ -201,9 +201,8 @@ clean_and_report_NA_columns <- function(df) {
 #'
 #' @return Called for its side effect of writing an `.h5ad` file.
 #' @inheritDotParams zellkonverter::writeH5AD
-#' @examples
-#' data("pbmc3k_sce")
-#' save_sce_as_h5ad(pbmc3k_sce, tempfile(fileext=".h5ad"))
+#' @keywords internal
+#' @noRd
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 save_sce_as_h5ad <- function(sce, path, ...) {
   # Remove columns in colData that are all NA and warn the user
