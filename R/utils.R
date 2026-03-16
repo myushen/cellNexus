@@ -14,11 +14,6 @@ url_file_size <- function(urls){
             HEAD(url)$headers$`content-length` 
         ) / 10^9
     })
-  map_dbl(urls, function(url){
-    as.numeric(
-      HEAD(url)$headers$`content-length` 
-    ) / 10^9
-  })
 }
 
 #' Prints a message indicating the size of a download

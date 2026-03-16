@@ -98,97 +98,18 @@ get_single_cell_experiment <- function(data,
     check_true(inherits(raw_data, "tbl")),
     check_subset(c("cell_id", "file_id_cellNexus_single_cell", "atlas_id"), names(raw_data))
   )
-  
-  atlas_name <- raw_data |> distinct(atlas_id) |> pull()
-  parameter_validation_list <-
-    validate_data(data, assays, cell_aggregation, cache_directory,
-                  repository, features)
-  
-  versioned_cache_directory <- parameter_validation_list$cache_directory
-  atlas_name <- parameter_validation_list$atlas_name
-  grouping_column <- "file_id_cellNexus_single_cell"
-  
-  subdirs <- assay_map[assays]
-  
-  # The repository is optional. If not provided we load only from the cache
-  if (!is.null(repository)) {
-    cli_alert_info("Synchronising files")
-    parsed_repo <- parse_url(repository)
-    assert(check_true(parsed_repo$scheme %in% c("http", "https")))
-    
-    files_to_read <-
-      raw_data |>
-      transmute(
-        files = .data[[grouping_column]],
-        atlas_name = atlas_id,
-        cache_dir = cache_directory
-      ) |>
-      distinct() |>
-      pmap(function(files, atlas_name, cache_dir) {
-        sync_assay_files(
-          files = files,
-          atlas_name = atlas_name,
-          cache_dir = cache_dir,
-          url = parsed_repo,
-          cell_aggregation = cell_aggregation,
-          subdirs = subdirs
-        )
-      })
-  }
-  
-  cli_alert_info("Reading files.")
-  experiments <- subdirs |>
-    imap(function(current_subdir, current_assay) {
-      # Build up an experiment for each assay
-      dir_prefix <- file.path(
-        versioned_cache_directory,
-        current_subdir
-      )
-      
-      experiment_list <- raw_data |>
-        mutate(dir_prefix = file.path(cache_directory, atlas_id, current_subdir)) |>
-        dplyr::group_by(.data[[grouping_column]], dir_prefix) |>
-        dplyr::summarise(experiments = list(
-          group_to_data_container(
-            dplyr::cur_group_id(),
-            dplyr::cur_data_all(),
-            unique(dir_prefix),
-            features,
-            grouping_column
-          )
-        )) |>
-        dplyr::pull(experiments)
-      
-      # If features provided, drop experiments missing any requested features
-      # and align rows to the requested features; otherwise intersect genes.
-      if (!is.null(features)) {
-        keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
-        dropped_count <- sum(!keep_idx)
-        if (all(!keep_idx)) {
-          cli_alert_warning("cellNexus says: None of the experiments contain all requested features. Please select different features.")
-        } else if (dropped_count > 0) {
-          cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
-        }
-        experiment_list <- experiment_list[keep_idx]
-        experiment_list <- purrr::map(experiment_list, function(exp) exp[features, ])
-      } else {
-        commonGenes <- experiment_list |> check_gene_overlap()
-        experiment_list <- map(experiment_list, function(exp) exp[commonGenes,])
-      }
-      experiment_list |> do.call(cbind, args = _)
-    })
-  
-  cli_alert_info("Compiling Experiment.")
-  
-  # Combine all the assays
-  # Get a donor SCE
-  experiment <- experiments[[1]]
-  
-  SummarizedExperiment::assays(experiment) <- map(experiments, function(exp) {
-    SummarizedExperiment::assays(exp)[[1]]
-  })
-  
-  experiment
+
+  validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
+
+  .fetch_experiments(
+    raw_data = raw_data,
+    assays = assays,
+    cell_aggregation = cell_aggregation,
+    cache_directory = cache_directory,
+    repository = repository,
+    grouping_column = "file_id_cellNexus_single_cell",
+    features = features
+  )
 }
 
 #' Gets a Pseudobulk from curated metadata
@@ -252,108 +173,18 @@ get_pseudobulk <- function(data,
     check_subset(c("cell_id", "file_id_cellNexus_pseudobulk", "sample_id", "cell_type_unified_ensemble",
                    "atlas_id"), names(raw_data))
   )
-  atlas_name <- raw_data |> distinct(atlas_id) |> pull()
-  parameter_validation_list <-
-    validate_data(data, assays, cell_aggregation, cache_directory,
-                  repository, features)
-  
-  versioned_cache_directory <- parameter_validation_list$cache_directory
-  atlas_name <- parameter_validation_list$atlas_name
-  grouping_column <- "file_id_cellNexus_pseudobulk"
-  
-  subdirs <- assay_map[assays]
-  
-  # The repository is optional. If not provided we load only from the cache
-  if (!is.null(repository)) {
-    cli_alert_info("Synchronising files")
-    parsed_repo <- parse_url(repository)
-    assert(check_true(parsed_repo$scheme %in% c("http", "https")))
-    
-    files_to_read <-
-      raw_data |>
-      transmute(
-        files = .data[[grouping_column]],
-        atlas_name = atlas_id,
-        cache_dir = cache_directory
-      ) |>
-      distinct() |>
-      pmap(function(files, atlas_name, cache_dir) {
-        sync_assay_files(
-          files = files,
-          atlas_name = atlas_name,
-          cache_dir = cache_dir,
-          url = parsed_repo,
-          cell_aggregation = cell_aggregation,
-          subdirs = subdirs
-        )
-      })
-  }
 
-  cli_alert_info("Reading files.")
-  experiments <- subdirs |>
-    imap(function(current_subdir, current_assay) {
-      # Build up an experiment for each assay
-      dir_prefix <- file.path(
-        versioned_cache_directory,
-        current_subdir
-      )
-      experiment_list <- raw_data |>
-        mutate(dir_prefix = dir_prefix) |>
-        dplyr::group_by(.data[[grouping_column]], dir_prefix) |>
-        dplyr::summarise(experiments = list(
-          group_to_data_container(
-            dplyr::cur_group_id(),
-            dplyr::cur_data_all(),
-            unique(dir_prefix),
-            features,
-            grouping_column
-          )
-        )) |>
-        dplyr::pull(experiments)
-      
-      
-      # If features is defined, drop all experiments which do not contain all the features
-      # The logic is that if the user requests a subset of features, 
-      # they prefer to preserve all requested features rather than all experiments
-      if (!is.null(features)) {
-        
-        # Check if all experiments contain all the features
-        keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
-        dropped_count <- sum(!keep_idx)
-        if (all(!keep_idx)) {
-          cli_alert_warning("cellNexus says: None of the experiments contain all requested features. Please select different features.")
-        }
-        else if (dropped_count > 0) {
-          cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
-        }
-        experiment_list <- experiment_list[keep_idx]
-        # Ensure identical row order across experiments for cbind
-        experiment_list <- purrr::map(experiment_list, function(exp) {
-          exp[features, ]
-        })
-      } else {
-        
-        commonGenes <- experiment_list |> check_gene_overlap()
-        experiment_list <- experiment_list |> map(function(exp) {
-          exp[commonGenes,]
-        })
-      }
-      
-      experiment_list |>
-        do.call(cbind, args = _)
-    })
-  
-  cli_alert_info("Compiling Experiment.")
-  
-  # Combine all the assays
-  # Get a donor SCE
-  experiment <- experiments[[1]]
-  
-  SummarizedExperiment::assays(experiment) <- map(experiments, function(exp) {
-    SummarizedExperiment::assays(exp)[[1]]
-  })
-  
-  experiment
+  validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
+
+  .fetch_experiments(
+    raw_data = raw_data,
+    assays = assays,
+    cell_aggregation = cell_aggregation,
+    cache_directory = cache_directory,
+    repository = repository,
+    grouping_column = "file_id_cellNexus_pseudobulk",
+    features = features
+  )
 }
 
 #' Gets a Metacell from curated metadata
@@ -417,30 +248,67 @@ get_metacell <- function(data,
     check_subset(c("sample_id", "file_id_cellNexus_single_cell", "atlas_id"), names(raw_data)),
     check_true(any(grepl("^metacell", names(raw_data))))
   )
+  # Separate metacell and single_cell in group_to_data_container without
+  # producing a repetitive column in the metadata
   raw_data <- raw_data |>
-    # This is to separate metacell and single_cell in group_to_data_container, also
-    #    not to produce repetitive column in the metadata
     mutate(file_id_cellNexus_metacell = file_id_cellNexus_single_cell)
-  
-  atlas_name <- raw_data |> distinct(atlas_id) |> pull()
-  parameter_validation_list <- 
-    validate_data(data, assays, cell_aggregation, cache_directory, 
-                  repository, features)
-  
-  versioned_cache_directory <- parameter_validation_list$cache_directory
-  atlas_name <- parameter_validation_list$atlas_name
-  grouping_column <- "file_id_cellNexus_metacell"
-  
+
+  validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
+
+  .fetch_experiments(
+    raw_data = raw_data,
+    assays = assays,
+    cell_aggregation = cell_aggregation,
+    cache_directory = cache_directory,
+    repository = repository,
+    grouping_column = "file_id_cellNexus_metacell",
+    features = features,
+    metacell_column = cell_aggregation
+  )
+}
+
+#' Sync, read, filter and compile experiments from cache
+#'
+#' Shared internal implementation used by [get_single_cell_experiment()],
+#' [get_pseudobulk()] and [get_metacell()].  Handles file synchronisation,
+#' per-assay reading, feature filtering and experiment assembly.
+#'
+#' @param raw_data A collected (in-memory) tibble of metadata.
+#' @param assays Character vector of assay names.
+#' @param cell_aggregation Aggregation level string (e.g. \code{""}, \code{"pseudobulk"}, \code{"metacell_2"}).
+#' @param cache_directory Local cache root path.
+#' @param repository Base HTTP URL for remote files, or \code{NULL}.
+#' @param grouping_column Name of the file-ID column used to group cells.
+#' @param features Optional character vector of requested gene features.
+#' @param metacell_column For metacell data, the metacell column name; \code{NULL} otherwise.
+#' @return A \code{SingleCellExperiment} or \code{SummarizedExperiment} object.
+#' @importFrom httr parse_url
+#' @importFrom dplyr transmute distinct mutate
+#' @importFrom purrr pmap imap map map_lgl
+#' @importFrom cli cli_alert_info cli_alert_warning
+#' @importFrom checkmate assert check_true
+#' @importFrom SummarizedExperiment assays<-
+#' @importFrom BiocGenerics cbind
+#' @keywords internal
+#' @noRd
+.fetch_experiments <- function(
+    raw_data,
+    assays,
+    cell_aggregation,
+    cache_directory,
+    repository,
+    grouping_column,
+    features,
+    metacell_column = NULL
+) {
   subdirs <- assay_map[assays]
-  
-  # The repository is optional. If not provided we load only from the cache
+
   if (!is.null(repository)) {
     cli_alert_info("Synchronising files")
     parsed_repo <- parse_url(repository)
     assert(check_true(parsed_repo$scheme %in% c("http", "https")))
-    
-    files_to_read <-
-      raw_data |>
+
+    raw_data |>
       transmute(
         files = .data[[grouping_column]],
         atlas_name = atlas_id,
@@ -462,13 +330,16 @@ get_metacell <- function(data,
   cli_alert_info("Reading files.")
   experiments <- subdirs |>
     imap(function(current_subdir, current_assay) {
-      # Build up an experiment for each assay
-      dir_prefix <- file.path(
-        versioned_cache_directory,
+      # Build up an experiment for each assay, apply to cache folder hierarchy.
+
+      base_path <- if (nchar(cell_aggregation) > 0) {
+        file.path(cell_aggregation, current_subdir)
+      } else {
         current_subdir
-      )
+      }
+
       experiment_list <- raw_data |>
-        mutate(dir_prefix = dir_prefix) |>
+        mutate(dir_prefix = file.path(cache_directory, .data$atlas_id, base_path)) |>
         dplyr::group_by(.data[[grouping_column]], dir_prefix) |>
         dplyr::summarise(experiments = list(
           group_to_data_container(
@@ -477,7 +348,7 @@ get_metacell <- function(data,
             unique(dir_prefix),
             features,
             grouping_column,
-            metacell_column = cell_aggregation
+            metacell_column = metacell_column
           )
         )) |>
         dplyr::pull(experiments)
@@ -493,26 +364,20 @@ get_metacell <- function(data,
           cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
         }
         experiment_list <- experiment_list[keep_idx]
-        experiment_list <- purrr::map(experiment_list, function(exp) exp[features, ])
+        experiment_list <- map(experiment_list, function(exp) exp[features, ])
       } else {
-        commonGenes <- experiment_list |> check_gene_overlap()
-        experiment_list <- map(experiment_list, function(exp) {
-          exp[commonGenes,]
-        })
+        commonGenes <- check_gene_overlap(experiment_list)
+        experiment_list <- map(experiment_list, function(exp) exp[commonGenes, ])
       }
+
       experiment_list |> do.call(cbind, args = _)
     })
-  
+
   cli_alert_info("Compiling Experiment.")
-  
-  # Combine all the assays
-  # Get a donor SCE
   experiment <- experiments[[1]]
-  
   SummarizedExperiment::assays(experiment) <- map(experiments, function(exp) {
     SummarizedExperiment::assays(exp)[[1]]
   })
-  
   experiment
 }
 
