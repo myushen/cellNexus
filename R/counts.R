@@ -140,7 +140,11 @@ get_single_cell_experiment <- function(data,
 #'   contain all requested features are dropped. This preserves the full set
 #'   of requested features at the cost of potentially fewer samples.
 #'   A warning is emitted when samples are dropped.
-#' @return A `SummarizedExperiment` object.
+#' @param as_SummarizedExperiment If `TRUE`, coerce the result to a
+#'   `SummarizedExperiment`. Note that `as(x, "SummarizedExperiment")` drops
+#'   feature rownames; `get_pseudobulk()` restores them after coercion.
+#' @return By default, a `SingleCellExperiment` object. If
+#'   `as_SummarizedExperiment` is `TRUE`, a `SummarizedExperiment` object.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
 #' @importFrom purrr reduce map map_int imap 
@@ -166,7 +170,8 @@ get_pseudobulk <- function(data,
                            cell_aggregation = "pseudobulk",
                            cache_directory = get_default_cache_dir(),
                            repository = COUNTS_URL,
-                           features = NULL) {
+                           features = NULL,
+                           as_SummarizedExperiment = FALSE) {
   raw_data <- collect(data)
   assert(
     check_true(inherits(raw_data, "tbl")),
@@ -176,7 +181,7 @@ get_pseudobulk <- function(data,
 
   validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
 
-  .fetch_experiments(
+  res <- .fetch_experiments(
     raw_data = raw_data,
     assays = assays,
     cell_aggregation = cell_aggregation,
@@ -185,6 +190,14 @@ get_pseudobulk <- function(data,
     grouping_column = "file_id_cellNexus_pseudobulk",
     features = features
   )
+
+  if (as_SummarizedExperiment) {
+    rn <- rownames(res)
+    res <- as(res, "SummarizedExperiment")
+    rownames(res) <- rn
+  }
+
+  res
 }
 
 #' Gets a Metacell from curated metadata

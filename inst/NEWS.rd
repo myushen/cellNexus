@@ -1,6 +1,12 @@
 \name{NEWS}
 \title{News for Package \pkg{cellNexus}}
 
+\section{News in version 0.99.10}{
+\itemize{
+    \item \code{get_pseudobulk()} gained \code{as_SummarizedExperiment} to optionally return a \code{SummarizedExperiment}. Coercion restores feature rownames, which are otherwise dropped by \code{as(x, "SummarizedExperiment")}.
+    \item Tests. Added a test ensuring feature rownames are preserved when \code{as_SummarizedExperiment = TRUE}.
+}}
+
 \section{News in version 0.99.4}{
 \itemize{
     \item Consistent features handling across retrieval functions. \code{get_pseudobulk()}, \code{get_single_cell_experiment()}, and \code{get_metacell()} now drop experiments/samples that do not contain all requested features and align rows to the requested feature set before merging. A warning indicates how many experiments were dropped.
