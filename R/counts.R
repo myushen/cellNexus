@@ -143,8 +143,8 @@ get_single_cell_experiment <- function(data,
 #' @param as_SummarizedExperiment If `TRUE`, coerce the result to a
 #'   `SummarizedExperiment`. Note that `as(x, "SummarizedExperiment")` drops
 #'   feature rownames; `get_pseudobulk()` restores them after coercion.
-#' @return A `SingleCellExperiment` object, or a `SummarizedExperiment` object
-#'   when `as_SummarizedExperiment` is `TRUE`.
+#' @return By default, a `SingleCellExperiment` object. If
+#'   `as_SummarizedExperiment` is `TRUE`, a `SummarizedExperiment` object.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
 #' @importFrom purrr reduce map map_int imap 
