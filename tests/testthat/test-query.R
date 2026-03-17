@@ -13,8 +13,8 @@ test_that("get_default_cache_dir() returns the correct directory on Linux", {
 
 test_that("sync_assay_files() syncs appropriate files", {
     temp <- tempfile()
-    test_file <- "4164d0eb972ad5e12719b6858c9559ea___1.h5ad"
     
+    test_file <- "03319e4f54220f534de2c4e42e607126___1.h5ad"
     atlas_name <- "cellxgene/21-08-2025"
 
     sync_assay_files(

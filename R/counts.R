@@ -769,21 +769,31 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   }
 }
 
-#' Synchronises one or more remote assays with a local copy
-#' @param url A character vector of length one. The base HTTP URL from which to
-#'   obtain the files.
-#' @param cache_dir A character vector of length one. The local filepath to
-#'   synchronise files to.
-#' @param subdirs A character vector of subdirectories within the root URL to
-#'   sync. These correspond to assays.
-#' @param files A character vector containing one or more file_id_cellNexus_single_cell entries
-#' @returns A character vector consisting of file paths to all the newly
-#'   downloaded files
-#' @return A character vector of files that have been downloaded
-#' @importFrom purrr pmap_chr map_chr
-#' @importFrom httr modify_url
-#' @importFrom dplyr transmute filter
+#' Synchronise one or more remote assay files to a local cache
+#'
+#' Convenience wrapper that calls `build_assay_file_list()` to construct the
+#' set of remote URLs and local destinations, then passes the result to
+#' `sync_all_assay_files()` to perform the download. Use this for simple
+#' single-call download scenarios; for batched parallel downloads across many
+#' atlases, call `build_assay_file_list()` and `sync_all_assay_files()`
+#' directly.
+#'
+#' @param url A parsed URL object (from [httr::parse_url()]). Defaults to the
+#'   package-level `COUNTS_URL`.
+#' @param atlas_name A character vector. Atlas identifier(s) used as path
+#'   components (e.g. `"cellxgene/01-07-2024"`).
+#' @param cell_aggregation A character vector. Cell aggregation level(s). Pass
+#'   `""` for unaggregated (single-cell) data.
+#' @param cache_dir A character vector of length one. Root local directory
+#'   under which files are cached.
+#' @param subdirs A character vector. Assay subdirectory name(s) (e.g.
+#'   `"counts"`, `"cpm"`).
+#' @param files A character vector. One or more `file_id_cellNexus_single_cell`
+#'   values (H5AD file names) to download.
+#' @return Invisibly, a character vector of local file paths for all requested
+#'   files (whether newly downloaded or already cached).
 #' @importFrom httr parse_url
+#' @keywords internal 
 #' @noRd
 sync_assay_files <- function(
     url = parse_url(COUNTS_URL),
@@ -793,8 +803,6 @@ sync_assay_files <- function(
     subdirs,
     files
 ) {
-  # Build file list and return it without downloading
-  # Downloads are handled by sync_all_assay_files for parallelism
   build_assay_file_list(
     url = url,
     atlas_name = atlas_name,
@@ -802,10 +810,43 @@ sync_assay_files <- function(
     cache_dir = cache_dir,
     subdirs = subdirs,
     files = files
-  )
+  ) |>
+    sync_all_assay_files()
 }
 
-#' Build a list of files to download without downloading them
+#' Build a data frame of remote URLs and local output paths for assay files
+#'
+#' Constructs all combinations of atlas, cell aggregation, assay subdirectory,
+#' and file, returning a data frame with the remote URL and local destination
+#' path for each file. No downloading is performed; this is used to collect
+#' all targets before passing them to `sync_all_assay_files()` for a single
+#' parallel download batch.
+#'
+#' @param url A parsed URL object (from [httr::parse_url()]). The base HTTP
+#'   URL of the remote file store.
+#' @param atlas_name A character vector. One or more atlas identifiers (e.g.
+#'   `"cellxgene/21-08-2025"`), used as path components in both the remote URL
+#'   and the local cache path.
+#' @param cell_aggregation A character vector. Cell aggregation level(s) used
+#'   as a path component. Pass `""` for unaggregated (single-cell) data.
+#' @param cache_dir A character vector of length one. Root local directory
+#'   under which files are cached.
+#' @param subdirs A character vector. Subdirectory name(s) corresponding to
+#'   assay types (e.g. `"counts"`, `"cpm"`).
+#' @param files A character vector. One or more
+#'   `file_id_cellNexus_single_cell` values (H5AD file names) to include.
+#' @return A data frame with columns:
+#'   \describe{
+#'     \item{`full_url`}{Character. The fully-qualified remote URL for each
+#'       file.}
+#'     \item{`output_file`}{Character. The absolute local file path where
+#'       the file should be saved.}
+#'   }
+#' @importFrom purrr map_chr
+#' @importFrom httr modify_url
+#' @importFrom dplyr transmute
+#' @importFrom rlang .data
+#' @keywords internal 
 #' @noRd
 build_assay_file_list <- function(
     url,
