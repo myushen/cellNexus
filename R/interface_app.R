@@ -140,7 +140,7 @@ organize_inputs <- function(
 #'   verbatimTextOutput renderText shinyApp h3 h4 p a tagList reactiveValues selectInput hr
 #'   conditionalPanel fluidRow column uiOutput renderUI icon tags
 #' @importFrom shinyWidgets pickerInput pickerOptions
-#' @importFrom rclipboard rclipboardSetup rclipButton
+#' @importFrom shiny actionButton
 #' @importFrom dplyr filter distinct
 #'
 #' @examples
@@ -257,7 +257,7 @@ create_interface_app <- function(ui_choices, return_as_list = FALSE) {
     )
 
     ui <- fluidPage(
-        rclipboardSetup(),
+        if (requireNamespace("rclipboard", quietly = TRUE)) rclipboard::rclipboardSetup(),
         titlePanel("cellNexus Query Builder"),
         sidebarLayout(
             sidebarPanel(width = 5,
@@ -474,21 +474,29 @@ create_interface_app <- function(ui_choices, return_as_list = FALSE) {
         })
 
         output$r_copy_btn <- renderUI({
-            rclipButton(
-                inputId = "r_clip",
-                label = "",
-                clipText = full_code(),
-                icon = icon("clipboard")
-            )
+            if (requireNamespace("rclipboard", quietly = TRUE)) {
+                rclipboard::rclipButton(
+                    inputId = "r_clip",
+                    label = "",
+                    clipText = full_code(),
+                    icon = icon("clipboard")
+                )
+            } else {
+                actionButton("r_clip", label = "", icon = icon("clipboard"))
+            }
         })
 
         output$py_copy_btn <- renderUI({
-            rclipButton(
-                inputId = "py_clip",
-                label = "",
-                clipText = python_full_code(),
-                icon = icon("clipboard")
-            )
+            if (requireNamespace("rclipboard", quietly = TRUE)) {
+                rclipboard::rclipButton(
+                    inputId = "py_clip",
+                    label = "",
+                    clipText = python_full_code(),
+                    icon = icon("clipboard")
+                )
+            } else {
+                actionButton("py_clip", label = "", icon = icon("clipboard"))
+            }
         })
     }
 
