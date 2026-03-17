@@ -109,7 +109,6 @@ Imports:
     shiny,
     shinyWidgets
 Suggests:
-    rclipboard,
     rmarkdown,
     knitr,
     testthat,
