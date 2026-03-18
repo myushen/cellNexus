@@ -36,4 +36,8 @@ queries when the app starts.
 See \code{dev/generate_ui_choices.R} for the creation script.
 Run this script to regenerate the choices when metadata columns change.
 }
+\examples{
+data(ui_choices)
+ui_choices
+}
 \keyword{datasets}

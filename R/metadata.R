@@ -326,7 +326,7 @@ join_metacell_table <- function(tbl,
   # Fetch current connection
   conn <- dbplyr::remote_con(tbl)
   # Register the metacell parquet as a lazy table
-  metacell_tbl <- read_parquet(conn, parquet_path, ...)
+  metacell_tbl <- duckdb_read_parquet(conn, parquet_path, ...)
   # Join to the incoming tbl_lazy
   tbl |> left_join(metacell_tbl, by = join_keys )
 }
@@ -368,7 +368,7 @@ join_census_table <- function(tbl,
   # Fetch current connection
   conn <- dbplyr::remote_con(tbl)
   # Register the census parquet as a lazy table
-  census_tbl <- read_parquet(conn, parquet_path, ...)
+  census_tbl <- duckdb_read_parquet(conn, parquet_path, ...)
   # Join to the incoming tbl_lazy
   tbl |> left_join(census_tbl, by = join_keys )
 }

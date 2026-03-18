@@ -150,4 +150,7 @@
 #'   Run this script to regenerate the choices when metadata columns change.
 #' @keywords datasets
 #' @docType data
+#' @examples
+#' data(ui_choices)
+#' ui_choices
 "ui_choices"

@@ -112,6 +112,7 @@ Imports:
     stringr,
     scuttle
 Suggests:
+    rclipboard,
     BiocStyle,
     knitr,
     rmarkdown,

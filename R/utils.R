@@ -85,11 +85,11 @@ clear_cache <- function() {
 }
 
 #' Clear the outdated metadata in the default cache directory.
-#' @param updated_data A character vector of outdated metadata name
+#' @param updated_data A character vector of new metadata file name
 #' @return `NULL`, invisibly
 #' @keywords internal
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-clear_old_metadata <- function(metadata) {
+keep_updated_metadata <- function(updated_data) {
   cache_directory <- get_default_cache_dir()
   files_in_cache <- list.files(cache_directory)
   pattern <- "\\.parquet$"
