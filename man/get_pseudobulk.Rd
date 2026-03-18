@@ -51,8 +51,8 @@ A warning is emitted when samples are dropped.}
 feature rownames; \code{get_pseudobulk()} restores them after coercion.}
 }
 \value{
-A \code{SingleCellExperiment} object, or a \code{SummarizedExperiment} object
-when \code{as_SummarizedExperiment} is \code{TRUE}.
+By default, a \code{SingleCellExperiment} object. If
+\code{as_SummarizedExperiment} is \code{TRUE}, a \code{SummarizedExperiment} object.
 }
 \description{
 Given a data frame of Curated Atlas metadata obtained from \code{\link[=get_metadata]{get_metadata()}},

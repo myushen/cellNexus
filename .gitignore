@@ -16,3 +16,4 @@ dev/
 README.html
 # Internal docs
 INTERNAL_*
+^\.vscode$

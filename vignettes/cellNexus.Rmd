@@ -134,7 +134,6 @@ metadata
 
 Metadata is saved to `get_default_cache_dir()` unless a custom path is provided via the cache_directory argument. The `metadata` variable can then be re-used for all subsequent queries. 
 
-
 ### Explore the tissue 
 
 ```{r}
@@ -146,11 +145,9 @@ metadata |>
 cellNexus metadata applies standardised quality control to filter out empty droplets, dead or damaged cells, doublets, and samples with low gene counts.
 
 ```{r}
-metadata <- metadata |>
-  dplyr::filter(empty_droplet == FALSE,
-         alive == TRUE,
-         scDblFinder.class != "doublet",
-         feature_count >= 5000)
+metadata = metadata |> 
+  dplyr::filter(feature_count >= 5000) |> 
+  keep_quality_cells()
 ```
 
 

@@ -61,11 +61,6 @@ get_SingleCellExperiment <- function(...){
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#'   When provided, the returned object will contain exactly the requested
-#'   features (row order preserved), and any experiments/samples that do not
-#'   contain all requested features are dropped. This preserves the full set
-#'   of requested features at the cost of potentially fewer samples.
-#'   A warning is emitted when samples are dropped.
 #' @return A `SingleCellExperiment` object.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
@@ -222,11 +217,6 @@ get_pseudobulk <- function(data,
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#'   When provided, the returned object will contain exactly the requested
-#'   features (row order preserved), and any experiments/samples that do not
-#'   contain all requested features are dropped. This preserves the full set
-#'   of requested features at the cost of potentially fewer samples.
-#'   A warning is emitted when samples are dropped.
 #' @return A `SingleCellExperiment` object.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
@@ -321,7 +311,8 @@ get_metacell <- function(data,
     parsed_repo <- parse_url(repository)
     assert(check_true(parsed_repo$scheme %in% c("http", "https")))
 
-    raw_data |>
+    # Build complete file list first, then download all in parallel
+    file_lists <- raw_data |> 
       transmute(
         files = .data[[grouping_column]],
         atlas_name = atlas_id,
@@ -329,7 +320,7 @@ get_metacell <- function(data,
       ) |>
       distinct() |>
       pmap(function(files, atlas_name, cache_dir) {
-        sync_assay_files(
+        build_assay_file_list(
           files = files,
           atlas_name = atlas_name,
           cache_dir = cache_dir,
@@ -338,6 +329,10 @@ get_metacell <- function(data,
           subdirs = subdirs
         )
       })
+    
+    # Combine all file lists and download in one parallel batch
+    all_files <- do.call(rbind, file_lists)
+    sync_all_assay_files(all_files)
   }
 
   cli_alert_info("Reading files.")
@@ -652,20 +647,29 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   }
 }
 
-#' Synchronises one or more remote assays with a local copy
-#' @param url A character vector of length one. The base HTTP URL from which to
-#'   obtain the files.
-#' @param cache_dir A character vector of length one. The local filepath to
-#'   synchronise files to.
-#' @param subdirs A character vector of subdirectories within the root URL to
-#'   sync. These correspond to assays.
-#' @param files A character vector containing one or more file_id_cellNexus_single_cell entries
-#' @returns A character vector consisting of file paths to all the newly
-#'   downloaded files
-#' @return A character vector of files that have been downloaded
-#' @importFrom purrr pmap_chr map_chr
-#' @importFrom httr modify_url
-#' @importFrom dplyr transmute filter
+#' Synchronise one or more remote assay files to a local cache
+#'
+#' Convenience wrapper that calls `build_assay_file_list()` to construct the
+#' set of remote URLs and local destinations, then passes the result to
+#' `sync_all_assay_files()` to perform the download. Use this for simple
+#' single-call download scenarios; for batched parallel downloads across many
+#' atlases, call `build_assay_file_list()` and `sync_all_assay_files()`
+#' directly.
+#'
+#' @param url A parsed URL object (from [httr::parse_url()]). Defaults to the
+#'   package-level `COUNTS_URL`.
+#' @param atlas_name A character vector. Atlas identifier(s) used as path
+#'   components (e.g. `"cellxgene/01-07-2024"`).
+#' @param cell_aggregation A character vector. Cell aggregation level(s). Pass
+#'   `""` for unaggregated (single-cell) data.
+#' @param cache_dir A character vector of length one. Root local directory
+#'   under which files are cached.
+#' @param subdirs A character vector. Assay subdirectory name(s) (e.g.
+#'   `"counts"`, `"cpm"`).
+#' @param files A character vector. One or more `file_id_cellNexus_single_cell`
+#'   values (H5AD file names) to download.
+#' @return Invisibly, a character vector of local file paths for all requested
+#'   files (whether newly downloaded or already cached).
 #' @importFrom httr parse_url
 #' @keywords internal
 #' @noRd
@@ -677,9 +681,62 @@ sync_assay_files <- function(
     subdirs,
     files
 ) {
+  build_assay_file_list(
+    url = url,
+    atlas_name = atlas_name,
+    cell_aggregation = cell_aggregation,
+    cache_dir = cache_dir,
+    subdirs = subdirs,
+    files = files
+  ) |>
+    sync_all_assay_files()
+}
+
+#' Build a data frame of remote URLs and local output paths for assay files
+#'
+#' Constructs all combinations of atlas, cell aggregation, assay subdirectory,
+#' and file, returning a data frame with the remote URL and local destination
+#' path for each file. No downloading is performed; this is used to collect
+#' all targets before passing them to `sync_all_assay_files()` for a single
+#' parallel download batch.
+#'
+#' @param url A parsed URL object (from [httr::parse_url()]). The base HTTP
+#'   URL of the remote file store.
+#' @param atlas_name A character vector. One or more atlas identifiers (e.g.
+#'   `"cellxgene/21-08-2025"`), used as path components in both the remote URL
+#'   and the local cache path.
+#' @param cell_aggregation A character vector. Cell aggregation level(s) used
+#'   as a path component. Pass `""` for unaggregated (single-cell) data.
+#' @param cache_dir A character vector of length one. Root local directory
+#'   under which files are cached.
+#' @param subdirs A character vector. Subdirectory name(s) corresponding to
+#'   assay types (e.g. `"counts"`, `"cpm"`).
+#' @param files A character vector. One or more
+#'   `file_id_cellNexus_single_cell` values (H5AD file names) to include.
+#' @return A data frame with columns:
+#'   \describe{
+#'     \item{`full_url`}{Character. The fully-qualified remote URL for each
+#'       file.}
+#'     \item{`output_file`}{Character. The absolute local file path where
+#'       the file should be saved.}
+#'   }
+#' @importFrom purrr map_chr
+#' @importFrom httr modify_url
+#' @importFrom dplyr transmute
+#' @importFrom rlang .data
+#' @keywords internal 
+#' @noRd
+build_assay_file_list <- function(
+    url,
+    atlas_name,
+    cell_aggregation,
+    cache_dir,
+    subdirs,
+    files
+) {
   # Find every combination of file name, sample id, and assay, since each
   # will be a separate file we need to download
-  files <- expand.grid(
+  expand.grid(
     atlas_name = atlas_name,
     cell_aggregation = cell_aggregation,
     sample_id = files,
@@ -712,21 +769,31 @@ sync_assay_files <- function(
         .data$subdir,
         .data$sample_id
       )
-    ) |>
-    filter(
-      # Don't bother downloading files that don't exist TODO: use some
-      # kind of hashing to check if the remote file has changed, and
-      # proceed with the download if it has. However this is low
-      # importance as the repository is not likely to change often
-      !file.exists(.data$output_file)
     )
+}
+
+#' Download all assay files in parallel
+#' 
+#' Collects all file URLs and downloads them in a single parallel batch.
+#' @param file_list A data frame with full_url and output_file columns
+#' @importFrom cli cli_alert_info
+#' @noRd
+sync_all_assay_files <- function(file_list) {
+  if (nrow(file_list) == 0) return(invisible(character(0)))
   
-  if (nrow(files) > 0) report_file_sizes(files$full_url)
+  # Filter to only files that don't already exist
+  to_download <- !file.exists(file_list$output_file)
   
-  pmap_chr(files, function(full_url, output_dir, output_file) {
-    sync_remote_file(full_url, output_file)
-    output_file
-  }, .progress = list(name = "Downloading files"))
+  if (sum(to_download) > 0) {
+    report_file_sizes(file_list$full_url[to_download])
+    sync_remote_files(
+      file_list$full_url[to_download], 
+      file_list$output_file[to_download], 
+      progress = TRUE
+    )
+  }
+  
+  invisible(file_list$output_file)
 }
 
 #' Checks whether genes in a list of SummarizedExperiment objects overlap
