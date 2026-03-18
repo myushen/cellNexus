@@ -5,7 +5,7 @@ Clear the outdated metadata in the default cache directory.
 ## Usage
 
 ``` r
-clear_old_metadata(updated_data)
+clear_old_metadata(metadata)
 ```
 
 ## Source
