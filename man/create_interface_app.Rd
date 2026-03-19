@@ -3,11 +3,16 @@
 \name{create_interface_app}
 \alias{create_interface_app}
 \title{Create a Shiny app that allows users to generate filtering & retreival code for cellNexus}
+\source{
+\href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
+}
 \usage{
-create_interface_app(metadata)
+create_interface_app(ui_choices, return_as_list = FALSE)
 }
 \arguments{
-\item{metadata}{cellNexus metadata as returned by \code{get_metadata()}.}
+\item{ui_choices}{A list of pre-computed unique values for each filterable column in the metadata.}
+
+\item{return_as_list}{If TRUE, returns a list with 'ui' and 'server' components instead of a Shiny app object.}
 }
 \value{
 A Shiny app that allows users to filter cellNexus metadata and generate code for retrieval
@@ -17,14 +22,14 @@ in the selected format.
 Create a Shiny app that allows users to generate filtering & retreival code for cellNexus
 }
 \examples{
-\dontrun{
+get_default_cache_dir()
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 # Create the interface app with metadata
-# For fast build purpose only, you do not need to specify anything in cloud_metadata.
-metadata <-get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
+metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
 app <- create_interface_app(metadata)
 # Run the app
 shiny::runApp(app)
-}
+\dontshow{\}) # examplesIf}
 }
 \author{
 Jared Andrews

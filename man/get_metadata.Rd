@@ -36,7 +36,14 @@ be created no matter what.}
 \item{use_split_files}{Optional logical scalar. If \code{TRUE}, uses split metadata files
 instead of the single combined metadata file.}
 
-\item{...}{Additional arguments passed to \code{\link[=read_parquet]{read_parquet()}}.}
+\item{...}{
+  Arguments passed on to \code{\link[=duckdb_read_parquet]{duckdb_read_parquet}}
+  \describe{
+    \item{\code{conn}}{A DuckDB connection.}
+    \item{\code{path}}{Path(s) to parquet file(s).}
+    \item{\code{filename_column}}{A column name to the metadata that indicates which row came from which file.
+By default it does not add the column.}
+  }}
 }
 \value{
 A lazy data.frame subclass containing the metadata. You can interact

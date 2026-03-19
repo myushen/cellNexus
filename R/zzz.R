@@ -51,6 +51,8 @@
 #' See \code{vignette("cellNexus", package = "cellNexus")} for a comprehensive
 #' introduction to using the package.
 #'
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#'
 #' @references
 #' Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
 #' A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
@@ -62,17 +64,50 @@
 #' @aliases cellNexus-package cellNexus
 NULL
 
+.onLoad <- function(libname, pkgname) {
+    # Set default package options for parallel downloads
+    op <- options()
+    op.cellNexus <- list(
+        cellNexus.parallel_downloads = TRUE,
+        cellNexus.download_connections = 6L
+    )
+    toset <- !(names(op.cellNexus) %in% names(op))
+    if (any(toset)) options(op.cellNexus[toset])
+    invisible()
+}
+
 #' @importFrom purrr walk
 #' @importFrom dbplyr remote_con
 #' @importFrom DBI dbDisconnect
-.onUnload <- function(libname, pkgname){
+#' @keywords internal
+#' @noRd
+.onUnload <- function(libname, pkgname) {
     # Close connections to all cached tables. This should avoid most of the
     # "Connection is garbage-collected" messages
     cache$metadata_table |>
         as.list() |>
-        walk(function(table){
+        walk(function(table) {
             table |>
                 remote_con() |>
                 dbDisconnect()
         })
 }
+
+#' Attach `dplyr` on package attach
+#'
+#' This hook attaches `dplyr` when `cellNexus` is attached (e.g.
+#' `library(cellNexus)`), so users can use common `dplyr` verbs without the
+#' `dplyr::` prefix in interactive workflows. Startup messages are suppressed.
+#'
+#' @param libname The library path where the package is installed.
+#' @param pkgname The name of the package being attached.
+#' @keywords internal
+#' @noRd
+.onAttach <- function(libname, pkgname) {
+  if (!"package:dplyr" %in% search()) {
+    if (requireNamespace("dplyr", quietly = TRUE)) {
+      suppressPackageStartupMessages(attachNamespace("dplyr"))
+    }
+  }
+}
+

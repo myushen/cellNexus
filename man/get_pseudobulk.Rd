@@ -13,7 +13,8 @@ get_pseudobulk(
   cell_aggregation = "pseudobulk",
   cache_directory = get_default_cache_dir(),
   repository = COUNTS_URL,
-  features = NULL
+  features = NULL,
+  as_SummarizedExperiment = FALSE
 )
 }
 \arguments{
@@ -24,11 +25,7 @@ and atlas name in format (e.g cellxgene/06-02-2025) for internal use.
 They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
 
 \item{assays}{A character vector specifying the desired assay(s) to be requested.
-Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or
-"counts" for pseudobulk analyses.
-The default setting retrieves only the counts assay.
-If your analysis involves a smaller set of genes, consider using the "cpm" assay.
-The "rank" assay is suited for signature calculations across millions of cells.}
+The default setting retrieves only the counts assay.}
 
 \item{cell_aggregation}{A character vector that specifies which cell aggregation
 strategy should be applied. This will create a corresponding subdirectory
@@ -42,10 +39,20 @@ files should be copied.}
 an HTTP URL pointing to the location where the single cell data is stored.}
 
 \item{features}{An optional character vector of features (ie genes) to return
-the counts for. By default counts for all features will be returned.}
+the counts for. By default counts for all features will be returned.
+When provided, the returned object will contain exactly the requested
+features (row order preserved), and any experiments/samples that do not
+contain all requested features are dropped. This preserves the full set
+of requested features at the cost of potentially fewer samples.
+A warning is emitted when samples are dropped.}
+
+\item{as_SummarizedExperiment}{If \code{TRUE}, coerce the result to a
+\code{SummarizedExperiment}. Note that \code{as(x, "SummarizedExperiment")} drops
+feature rownames; \code{get_pseudobulk()} restores them after coercion.}
 }
 \value{
-A \code{SummarizedExperiment} object.
+By default, a \code{SingleCellExperiment} object. If
+\code{as_SummarizedExperiment} is \code{TRUE}, a \code{SummarizedExperiment} object.
 }
 \description{
 Given a data frame of Curated Atlas metadata obtained from \code{\link[=get_metadata]{get_metadata()}},

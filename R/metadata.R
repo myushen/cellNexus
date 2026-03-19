@@ -4,6 +4,7 @@
 NULL
 
 #' Environment that we use to cache the DuckDB connections
+#' @keywords internal
 #' @noRd
 cache <- rlang::env(
   metadata_table = rlang::env()
@@ -11,8 +12,7 @@ cache <- rlang::env(
 
 #' Returns the URLs for all metadata files 
 #' @param databases A character vector specifying the names of the metadata files. 
-#'   Download the specific metadata by defining the metadata version. By default, it uses
-#'   metadata.1.3.0.parquet
+#'   Download the specific metadata by defining the metadata version. 
 #' @param use_split_files Logical, default `FALSE`. If `TRUE`, returns 
 #'   URLs for the split metadata files.
 #' @param use_census Logical, default `FALSE`. If `TRUE`, returns the URL 
@@ -22,30 +22,30 @@ cache <- rlang::env(
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
-#' get_metadata_url("metadata.1.3.0.parquet")
+#' get_metadata_url("metadata.2.0.0.parquet")
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata_url <- function(databases  = "metadata.1.3.0.parquet", 
+get_metadata_url <- function(databases  = "metadata.2.0.0.parquet", 
                              use_split_files = FALSE,
                              use_census = FALSE,
                              use_metacell = FALSE) {
   #clear_old_metadata(databases)
   if (use_split_files) {
     # Return URLs for the three split files
-    databases <- "cellnexus_metadata.1.3.0.parquet"
+    databases <- "cellnexus_metadata.2.0.0.parquet"
   }
   
   if (use_census) {
     # Returns the URL for census metadata file
-    databases <- "census_cell_metadata.1.3.0.parquet"
+    databases <- "census_cell_metadata.2.0.0.parquet"
   }
   
   if (use_metacell) {
     # Returns the URL for metacell metadata file
-    databases <- "metacell_metadata.1.3.0.parquet"
+    databases <- "metacell_metadata.2.0.0.parquet"
   }
 
   glue::glue(
@@ -63,11 +63,7 @@ get_metadata_url <- function(databases  = "metadata.1.3.0.parquet",
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-SAMPLE_DATABASE_URL <- single_line_str(
-  "https://object-store.rc.nectar.org.au/v1/
-    AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/
-    sample_metadata.1.3.0.parquet"
-)
+SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.2.0.0.parquet"
 
 #' Gets the CellNexus metadata as a data frame.
 #'
@@ -191,6 +187,8 @@ SAMPLE_DATABASE_URL <- single_line_str(
 #' get_metadata(cache_directory = path.expand('~'))
 #' ```
 #' 
+#' @inheritDotParams duckdb_read_parquet
+#' 
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
@@ -207,17 +205,18 @@ get_metadata <- function(cloud_metadata = get_metadata_url(),
     cloud_metadata <- get_metadata_url(use_split_files = TRUE)
   }
   
-  # Synchronize remote files
-  walk(cloud_metadata, function(url) {
-    # Calculate the file path from the URL
-    path <- file.path(cache_directory, url |> basename())
-    if (!file.exists(path)) {
-      report_file_sizes(url)
-      sync_remote_file(url,
-                       path,
-                       progress(type = "down", con = stderr()))
+  # Synchronize remote files using parallel downloads
+  if (!is.null(cloud_metadata) && length(cloud_metadata) > 0) {
+    output_paths <- file.path(cache_directory, basename(cloud_metadata))
+    # Filter to only files that need downloading
+    to_download <- !file.exists(output_paths)
+    if (any(to_download)) {
+      report_file_sizes(cloud_metadata[to_download])
+      sync_remote_files(cloud_metadata[to_download], 
+                        output_paths[to_download], 
+                        progress = TRUE)
     }
-  })
+  }
   
   if (is.null(cloud_metadata)) all_parquet <- c(local_metadata)
   if (!is.null(cloud_metadata)) all_parquet <- c(file.path(cache_directory, 
@@ -235,13 +234,58 @@ get_metadata <- function(cloud_metadata = get_metadata_url(),
     cached_connection
   }
   else {
-      # Handle single file or multiple files without joins
-      table <- duckdb() |>
-        dbConnect(drv = _, read_only = TRUE) |>
-        read_parquet(path = all_parquet, ...)
+    table <- duckdb() |>
+      dbConnect(drv = _, read_only = TRUE) |>
+      duckdb_read_parquet(path = all_parquet, ...)
     cache$metadata_table[[hash]] <- table
     table
   }
+}
+
+#' Retrieve cellNexus cell communication ligand–receptor strength as a data frame.
+#' 
+#' Downloads a parquet database of the cell communication strength to a local
+#' cache, and then opens it as a data frame. It can then be filtered.
+#'
+#' @param cloud_metadata Character vector of any length. HTTP URL/URLs pointing
+#'   to the name and location of parquet database/databases. By default, it points to 
+#'   cell communication metadata in cellNexus ARDC Nectar Research Cloud. 
+#'   Assign `NULL` to query local_metadata only if exists. 
+#' @param local_metadata Optional character vector of any length representing the local
+#'   path of parquet database(s).
+#' @param cache_directory Optional character vector of length 1. A file path on
+#'   your local system to a directory (not a file) that will be used to store
+#'   `metadata.parquet`
+#' @param use_cache Optional logical scalar. If `TRUE` (the default), and this
+#'   function has been called before with the same parameters, then a cached
+#'   reference to the table will be returned. If `FALSE`, a new connect138/4.7ion will
+#'   be created no matter what.
+#' @return A lazy data.frame subclass containing the metadata. You can interact
+#'   with this object using most standard dplyr functions. For string matching,
+#'   it is recommended that you use `stringr::str_like` to filter character
+#'   columns, as `stringr::str_match` will not work.
+#' @details
+#' The returned table integrates three levels of cell communication 
+#'   inference from `CellChat`, for each sample:
+#'   (i) ligand–receptor–level communication (\code{lr_prob}, \code{lr_pval}),
+#'   (ii) pathway-level aggregated signaling (\code{pathway_prob}, \code{pathway_pval}),
+#'   (iii) cell-pair–level summaries of communication breadth
+#'   (\code{interaction_count} - number of significant LR interactions) and 
+#'   intensity (\code{interaction_weight} - overall communication strength).
+#'
+#'   Together, these metrics allow simultaneous assessment of signaling specificity,
+#'   pathway dominance, and global communication structure between cell populations.
+#' @examples
+#' # For fast build purpose only, you do not need to specify anything in the function.
+#' communication_meta <- get_cell_communication_strength(cloud_metadata = SAMPLE_DATABASE_URL)
+#' @export
+get_cell_communication_strength <- function(
+    cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength.parquet"),
+    local_metadata = NULL,
+    cache_directory = get_default_cache_dir(),
+    use_cache = TRUE
+) {
+  get_metadata(cloud_metadata, local_metadata, cache_directory, use_cache)
 }
 
 #' Join metacell metadata to an existing data frame
@@ -282,7 +326,7 @@ join_metacell_table <- function(tbl,
   # Fetch current connection
   conn <- dbplyr::remote_con(tbl)
   # Register the metacell parquet as a lazy table
-  metacell_tbl <- read_parquet(conn, parquet_path, ...)
+  metacell_tbl <- duckdb_read_parquet(conn, parquet_path, ...)
   # Join to the incoming tbl_lazy
   tbl |> left_join(metacell_tbl, by = join_keys )
 }
@@ -324,8 +368,7 @@ join_census_table <- function(tbl,
   # Fetch current connection
   conn <- dbplyr::remote_con(tbl)
   # Register the census parquet as a lazy table
-  census_tbl <- read_parquet(conn, parquet_path, ...)
+  census_tbl <- duckdb_read_parquet(conn, parquet_path, ...)
   # Join to the incoming tbl_lazy
   tbl |> left_join(census_tbl, by = join_keys )
 }
-

@@ -11,15 +11,14 @@ NULL
 assay_map <- c(
   counts = "counts",
   cpm = "cpm",
-  rank = "rank"
+  rank = "rank",
+  sct = "sct"
 )
 
 #' Base URL pointing to the count data at the current version
+#' @keywords internal
 #' @noRd
-COUNTS_URL <- single_line_str(
-  "https://object-store.rc.nectar.org.au/v1/
-    AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata"
-)
+COUNTS_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata"
 
 #' @inherit get_single_cell_experiment
 #' @inheritDotParams get_single_cell_experiment
@@ -32,9 +31,8 @@ COUNTS_URL <- single_line_str(
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_SingleCellExperiment <- function(...){
-  single_line_str("This function name is deprecated. 
-                    Please use `get_single_cell_experiment()` instead") |>
-    cli_alert_warning()
+  cli_alert_warning(paste("This function name is deprecated.",
+                          "Please use {.fun get_single_cell_experiment} instead"))
   
   get_single_cell_experiment(...)
 }
@@ -49,8 +47,7 @@ get_SingleCellExperiment <- function(...){
 #'   and atlas name in format (e.g cellxgene/06-02-2025) for internal use.
 #'   They can be obtained from the [get_metadata()] function.
 #' @param assays A character vector specifying the desired assay(s) to be requested. 
-#'   Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or 
-#'   "counts" for pseudobulk analyses. 
+#'   Valid elements include "counts", "cpm", "rank", and "sct" for single-cell analyses
 #'   The default setting retrieves only the counts assay.
 #'   If your analysis involves a smaller set of genes, consider using the "cpm" assay. 
 #'   The "rank" assay is suited for signature calculations across millions of cells.
@@ -67,12 +64,11 @@ get_SingleCellExperiment <- function(...){
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
 #' @return A `SingleCellExperiment` object.
 #' @importFrom tibble column_to_rownames
-#' @importFrom purrr reduce map map_int imap pmap
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
 #' @importFrom SummarizedExperiment colData assayNames<-
-#' @importFrom assertthat assert_that has_name
-#' @importFrom cli cli_alert_success cli_alert_info cli_progress_bar cli_progress_update cli_progress_done
+#' @importFrom checkmate assert check_subset check_true
+#' @importFrom cli cli_alert_success cli_alert_info cli_alert_warning
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
@@ -92,96 +88,22 @@ get_single_cell_experiment <- function(data,
                                        repository = COUNTS_URL,
                                        features = NULL){
   raw_data <- collect(data)
-  assert_that(
-    inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_id", "file_id_cellNexus_single_cell", "atlas_id"))
+  assert(
+    check_true(inherits(raw_data, "tbl")),
+    check_subset(c("cell_id", "file_id_cellNexus_single_cell", "atlas_id"), names(raw_data))
   )
   
-  atlas_name <- raw_data |> distinct(atlas_id) |> pull()
-  parameter_validation_list <- 
-    validate_data(data, assays, cell_aggregation, cache_directory, 
-                  repository, features)
+  validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
   
-  versioned_cache_directory <- parameter_validation_list$cache_directory
-  atlas_name <- parameter_validation_list$atlas_name
-  grouping_column <- "file_id_cellNexus_single_cell"
-  
-  subdirs <- assay_map[assays]
-  
-  # The repository is optional. If not provided we load only from the cache
-  if (!is.null(repository)) {
-    cli_alert_info("Synchronising files")
-    parsed_repo <- parse_url(repository)
-    parsed_repo$scheme |>
-      `%in%`(c("http", "https")) |>
-      assert_that()
-    
-    files_to_read <-
-      raw_data |> 
-      transmute(
-        files = .data[[grouping_column]], 
-        atlas_name = atlas_id, 
-        cache_dir = cache_directory
-      ) |>  distinct() |> 
-      pmap(function(files, atlas_name, cache_dir) {
-        sync_assay_files(
-          files = files,
-          atlas_name = atlas_name,
-          cache_dir = cache_dir,
-          url = parsed_repo,
-          cell_aggregation = cell_aggregation,
-          subdirs = subdirs
-        )
-      })
-  }
-  
-  cli_alert_info("Reading files.")
-  
-  # Group by file only, not by dir_prefix
-  groups <- raw_data |>
-    group_split(.data[[grouping_column]])
-  
-  # Calculate total progress: number of files * number of assays
-  total_progress <- length(groups) * length(assays)
-  pb <- cli_progress_bar("Reading files", total = total_progress)
-  
-  experiment_list <- map(seq_along(groups), function(i) {
-    gr <- groups[[i]]
-    res <- group_to_data_container(
-      i, gr,
-      dir_prefix = file.path(cache_directory, unique(gr$atlas_id)),
-      features = features,
-      grouping_column = grouping_column,
-      assays = assays,
-      subdirs = subdirs
-    )
-    # Update bar after finishing one file (which may contain multiple assays)
-    cli_progress_update(id = pb, inc = length(assays))
-    res
-  })
-  cli_progress_done(id = pb)
-  
-  # If features provided, drop experiments missing any requested features
-  # and align rows to the requested features; otherwise intersect genes.
-  if (!is.null(features)) {
-    keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
-    dropped_count <- sum(!keep_idx)
-    if (all(!keep_idx)) {
-      cli_alert_warning("cellNexus says: None of the experiments contain all requested features. Please select different features.")
-    } else if (dropped_count > 0) {
-      cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
-    }
-    experiment_list <- experiment_list[keep_idx]
-    experiment_list <- purrr::map(experiment_list, function(exp) exp[features, ])
-  } else {
-    commonGenes <- experiment_list |> check_gene_overlap()
-    experiment_list <- map(experiment_list, function(exp) exp[commonGenes,])
-  }
-  
-  cli_alert_info("Compiling Experiment.")
-  
-  experiment_list |> 
-    do.call(cbind, args = _)
+  .fetch_experiments(
+    raw_data = raw_data,
+    assays = assays,
+    cell_aggregation = cell_aggregation,
+    cache_directory = cache_directory,
+    repository = repository,
+    grouping_column = "file_id_cellNexus_single_cell",
+    features = features
+  )
 }
 
 #' Gets a Pseudobulk from curated metadata
@@ -196,14 +118,10 @@ get_single_cell_experiment <- function(data,
 #'   and atlas name in format (e.g cellxgene/06-02-2025) for internal use.
 #'   They can be obtained from the [get_metadata()] function.
 #' @param assays A character vector specifying the desired assay(s) to be requested. 
-#'   Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or 
-#'   "counts" for pseudobulk analyses. 
 #'   The default setting retrieves only the counts assay.
-#'   If your analysis involves a smaller set of genes, consider using the "cpm" assay. 
-#'   The "rank" assay is suited for signature calculations across millions of cells.
 #' @param cell_aggregation A character vector that specifies which cell aggregation 
 #'   strategy should be applied. This will create a corresponding subdirectory 
-#'   in the cache directory. 
+#'   in the cache directory.
 #' @param cache_directory An optional character vector of length one. If
 #'   provided, it should indicate a local file path where any remotely accessed
 #'   files should be copied.
@@ -211,15 +129,23 @@ get_single_cell_experiment <- function(data,
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
-#' @return A `SummarizedExperiment` object.
+#'   When provided, the returned object will contain exactly the requested
+#'   features (row order preserved), and any experiments/samples that do not
+#'   contain all requested features are dropped. This preserves the full set
+#'   of requested features at the cost of potentially fewer samples.
+#'   A warning is emitted when samples are dropped.
+#' @param as_SummarizedExperiment If `TRUE`, coerce the result to a
+#'   `SummarizedExperiment`. Note that `as(x, "SummarizedExperiment")` drops
+#'   feature rownames; `get_pseudobulk()` restores them after coercion.
+#' @return By default, a `SingleCellExperiment` object. If
+#'   `as_SummarizedExperiment` is `TRUE`, a `SummarizedExperiment` object.
+#' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
-#' @importFrom purrr reduce map map_int imap pmap
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
 #' @importFrom SummarizedExperiment colData assayNames<-
-#' @importFrom assertthat assert_that has_name
-#' @importFrom cli cli_alert_success cli_alert_info cli_progress_bar cli_progress_update cli_progress_done
+#' @importFrom checkmate assert check_subset check_true
+#' @importFrom cli cli_alert_success cli_alert_info cli_alert_warning
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
@@ -237,107 +163,34 @@ get_pseudobulk <- function(data,
                            cell_aggregation = "pseudobulk",
                            cache_directory = get_default_cache_dir(),
                            repository = COUNTS_URL,
-                           features = NULL) {
+                           features = NULL,
+                           as_SummarizedExperiment = FALSE) {
   raw_data <- collect(data)
-  assert_that(
-    inherits(raw_data, "tbl"),
-    has_name(raw_data, c("cell_id", "file_id_cellNexus_pseudobulk", "sample_id", "cell_type_unified_ensemble",
-                         "atlas_id"))
+  assert(
+    check_true(inherits(raw_data, "tbl")),
+    check_subset(c("cell_id", "file_id_cellNexus_pseudobulk", "sample_id", "cell_type_unified_ensemble",
+                   "atlas_id"), names(raw_data))
   )
-  atlas_name <- raw_data |> distinct(atlas_id) |> pull()
-  parameter_validation_list <- 
-    validate_data(data, assays, cell_aggregation, cache_directory, 
-                  repository, features)
   
-  versioned_cache_directory <- parameter_validation_list$cache_directory
-  atlas_name <- parameter_validation_list$atlas_name
-  grouping_column <- "file_id_cellNexus_pseudobulk"
+  validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
   
-  subdirs <- assay_map[assays]
+  res <- .fetch_experiments(
+    raw_data = raw_data,
+    assays = assays,
+    cell_aggregation = cell_aggregation,
+    cache_directory = cache_directory,
+    repository = repository,
+    grouping_column = "file_id_cellNexus_pseudobulk",
+    features = features
+  )
   
-  # The repository is optional. If not provided we load only from the cache
-  if (!is.null(repository)) {
-    cli_alert_info("Synchronising files")
-    parsed_repo <- parse_url(repository)
-    parsed_repo$scheme |>
-      `%in%`(c("http", "https")) |>
-      assert_that()
-    
-    files_to_read <-
-      raw_data |> 
-      transmute(
-        files = .data[[grouping_column]], 
-        atlas_name = atlas_id, 
-        cache_dir = cache_directory
-      ) |> distinct() |>
-      pmap(function(files, atlas_name, cache_dir) {
-        sync_assay_files(
-          files = files,
-          atlas_name = atlas_name,
-          cache_dir = cache_dir,
-          url = parsed_repo,
-          cell_aggregation = cell_aggregation,
-          subdirs = subdirs
-        )
-      })
+  if (as_SummarizedExperiment) {
+    rn <- rownames(res)
+    res <- as(res, "SummarizedExperiment")
+    rownames(res) <- rn
   }
   
-  cli_alert_info("Reading files.")
-  
-  # Group by file only, not by dir_prefix
-  groups <- raw_data |>
-    group_split(.data[[grouping_column]])
-  
-  # Add progress bar for reading files 
-  pb <- cli_progress_bar("Reading files", total = length(groups))
-  
-  experiment_list <- map(seq_along(groups), function(i) {
-    gr <- groups[[i]]
-    res <- group_to_data_container(
-      i, gr,
-      dir_prefix = file.path(versioned_cache_directory),
-      features = features,
-      grouping_column = grouping_column,
-      assays = assays,
-      subdirs = subdirs
-    )
-    # Update bar after finishing one file
-    cli_progress_update(id = pb)
-    res
-  })
-  cli_progress_done(id = pb)
-  
-  # If features is defined, drop all experiments which do not contain all the features
-  # The logic is that if the user requests a subset of features, 
-  # they prefer to preserve all requested features rather than all experiments
-  if (!is.null(features)) {
-    
-    # Check if all experiments contain all the features
-    keep_idx <- purrr::map_lgl(experiment_list, function(exp) all(features %in% rownames(exp)))
-    dropped_count <- sum(!keep_idx)
-    if (all(!keep_idx)) {
-      cli_alert_warning("cellNexus says: None of the experiments contain all requested features. Please select different features.")
-    }
-    else if (dropped_count > 0) {
-      cli_alert_warning("cellNexus says: {dropped_count} experiment(s) were dropped because they did not contain all requested features.")
-    }
-    experiment_list <- experiment_list[keep_idx]
-    # Ensure identical row order across experiments for cbind
-    experiment_list <- purrr::map(experiment_list, function(exp) {
-      exp[features, ]
-    })
-  } else {
-    
-    commonGenes <- experiment_list |> check_gene_overlap()
-    experiment_list <- experiment_list |> map(function(exp) {
-      exp[commonGenes,]
-    })
-  }
-  
-  cli_alert_info("Compiling Experiment.")
-  
-  experiment_list |>
-    do.call(cbind, args = _)
+  res
 }
 
 #' Gets a Metacell from curated metadata
@@ -365,12 +218,11 @@ get_pseudobulk <- function(data,
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
 #' @return A `SingleCellExperiment` object.
 #' @importFrom tibble column_to_rownames
-#' @importFrom purrr reduce map map_int imap pmap
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
 #' @importFrom SummarizedExperiment colData assayNames<-
-#' @importFrom assertthat assert_that has_name
-#' @importFrom cli cli_alert_success cli_alert_info cli_progress_bar cli_progress_update cli_progress_done
+#' @importFrom checkmate assert check_subset check_true
+#' @importFrom cli cli_alert_success cli_alert_info cli_alert_warning
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
 #' @examples
@@ -389,46 +241,83 @@ get_metacell <- function(data,
                          cache_directory = get_default_cache_dir(),
                          repository = COUNTS_URL,
                          features = NULL
-                         ) {
+) {
   raw_data <- collect(data)
-  assert_that(
-    inherits(raw_data, "tbl"),
-    has_name(raw_data, c("sample_id", "file_id_cellNexus_single_cell", "atlas_id")),
-    any(grepl("^metacell", names(raw_data)))
+  assert(
+    check_true(inherits(raw_data, "tbl")),
+    check_subset(c("sample_id", "file_id_cellNexus_single_cell", "atlas_id"), names(raw_data)),
+    check_true(any(grepl("^metacell", names(raw_data))))
   )
-  raw_data = raw_data |> 
-    # This is to separate metacell and single_cell in group_to_data_container, also 
-    #    not to produce repetitive column in the metadata
+  # Separate metacell and single_cell in group_to_data_container without
+  # producing a repetitive column in the metadata
+  raw_data <- raw_data |>
     mutate(file_id_cellNexus_metacell = file_id_cellNexus_single_cell)
   
-  atlas_name <- raw_data |> distinct(atlas_id) |> pull()
-  parameter_validation_list <- 
-    validate_data(data, assays, cell_aggregation, cache_directory, 
-                  repository, features)
+  validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
   
-  versioned_cache_directory <- parameter_validation_list$cache_directory
-  atlas_name <- parameter_validation_list$atlas_name
-  grouping_column <- "file_id_cellNexus_metacell"
-  
+  .fetch_experiments(
+    raw_data = raw_data,
+    assays = assays,
+    cell_aggregation = cell_aggregation,
+    cache_directory = cache_directory,
+    repository = repository,
+    grouping_column = "file_id_cellNexus_metacell",
+    features = features,
+    metacell_column = cell_aggregation
+  )
+}
+
+#' Sync, read, filter and compile experiments from cache
+#'
+#' Shared internal implementation used by [get_single_cell_experiment()],
+#' [get_pseudobulk()] and [get_metacell()].  Handles file synchronisation,
+#' per-assay reading, feature filtering and experiment assembly.
+#'
+#' @param raw_data A collected (in-memory) tibble of metadata.
+#' @param assays Character vector of assay names.
+#' @param cell_aggregation Aggregation level string (e.g. \code{""}, \code{"pseudobulk"}, \code{"metacell_2"}).
+#' @param cache_directory Local cache root path.
+#' @param repository Base HTTP URL for remote files, or \code{NULL}.
+#' @param grouping_column Name of the file-ID column used to group cells.
+#' @param features Optional character vector of requested gene features.
+#' @param metacell_column For metacell data, the metacell column name; \code{NULL} otherwise.
+#' @return A \code{SingleCellExperiment} or \code{SummarizedExperiment} object.
+#' @importFrom httr parse_url
+#' @importFrom dplyr transmute distinct mutate
+#' @importFrom purrr pmap imap map map_lgl map2 reduce
+#' @importFrom cli cli_alert_info cli_alert_warning cli_progress_bar cli_progress_update cli_progress_done
+#' @importFrom checkmate assert check_true
+#' @importFrom SummarizedExperiment assays<-
+#' @importFrom BiocGenerics cbind
+#' @keywords internal
+#' @noRd
+.fetch_experiments <- function(
+    raw_data,
+    assays,
+    cell_aggregation,
+    cache_directory,
+    repository,
+    grouping_column,
+    features,
+    metacell_column = NULL
+) {
   subdirs <- assay_map[assays]
   
-  # The repository is optional. If not provided we load only from the cache
   if (!is.null(repository)) {
     cli_alert_info("Synchronising files")
     parsed_repo <- parse_url(repository)
-    parsed_repo$scheme |>
-      `%in%`(c("http", "https")) |>
-      assert_that()
+    assert(check_true(parsed_repo$scheme %in% c("http", "https")))
     
-    files_to_read <-
-      raw_data |> 
+    # Build complete file list first, then download all in parallel
+    file_lists <- raw_data |> 
       transmute(
-        files = .data[[grouping_column]], 
-        atlas_name = atlas_id, 
+        files = .data[[grouping_column]],
+        atlas_name = atlas_id,
         cache_dir = cache_directory
-      ) |> distinct() |>
+      ) |>
+      distinct() |>
       pmap(function(files, atlas_name, cache_dir) {
-        sync_assay_files(
+        build_assay_file_list(
           files = files,
           atlas_name = atlas_name,
           cache_dir = cache_dir,
@@ -437,6 +326,10 @@ get_metacell <- function(data,
           subdirs = subdirs
         )
       })
+    
+    # Combine all file lists and download in one parallel batch
+    all_files <- do.call(rbind, file_lists)
+    sync_all_assay_files(all_files)
   }
   
   cli_alert_info("Reading files.")
@@ -445,26 +338,49 @@ get_metacell <- function(data,
   groups <- raw_data |>
     group_split(.data[[grouping_column]])
   
-  # Add progress bar for reading files 
-  pb <- cli_progress_bar("Reading files", total = length(groups))
-  
-  experiment_list <- map(seq_along(groups), function(i) {
-    gr <- groups[[i]]
-    res <- group_to_data_container(
-      i, gr,
-      dir_prefix = file.path(versioned_cache_directory),
-      features = features,
-      grouping_column = grouping_column,
-      metacell_column = cell_aggregation,
-      assays = assays,
-      subdirs = subdirs
-    )
-    # Update bar after finishing one file
-    cli_progress_update(id = pb)
-    res
+  # Outer imap iterates over assays; each assay gets its own labelled progress bar.
+  # This also fixes dir_prefix construction: current_subdir is properly scoped here.
+  experiments <- imap(subdirs, function(current_subdir, current_assay) {
+    base_path <- if (nchar(cell_aggregation) > 0) {
+      file.path(cell_aggregation, current_subdir)
+    } else {
+      current_subdir
+    }
+    
+    pb <- cli_progress_bar(glue("Reading {current_assay}"), total = length(groups))
+    
+    per_group <- map(seq_along(groups), function(i) {
+      gr <- groups[[i]]
+      dir_prefix <- file.path(cache_directory, gr$atlas_id[1], base_path)
+      res <- group_to_data_container(
+        i, gr,
+        dir_prefix = dir_prefix,
+        features = features,
+        grouping_column = grouping_column,
+        metacell_column = cell_aggregation
+      )
+      cli_progress_update(id = pb)
+      res
+    })
+    
+    cli_progress_done(id = pb)
+    per_group
   })
-  cli_progress_done(id = pb)
   
+  # Base experiment list comes from the first assay.
+  # Additional assays are slotted into the base SCEs by name.
+  experiment_list <- experiments[[1]]
+  
+  experiment_list <- reduce(
+    names(experiments[-1]),
+    function(acc, extra_assay) {
+      map2(acc, experiments[[extra_assay]], function(base_exp, extra_exp) {
+        assay(base_exp, extra_assay) <- assay(extra_exp, assayNames(extra_exp)[1])
+        base_exp
+      })
+    },
+    .init = experiment_list
+  )
   
   # If features provided, drop experiments missing any requested features
   # and align rows to the requested features; otherwise intersect genes.
@@ -489,7 +405,6 @@ get_metacell <- function(data,
   
   experiment_list |> 
     do.call(cbind, args = _)
-
 }
 
 #' Validate data parameters
@@ -502,7 +417,7 @@ get_metacell <- function(data,
 #'   atlas name in format (e.g cellxgene/06-02-2025) for internal use.
 #'   They can be obtained from the [get_metadata()] function.
 #' @param assays A character vector specifying the desired assay(s) to be requested. 
-#'   Valid elements include "counts", "cpm", and "rank" for single-cell analyses, or 
+#'   Valid elements include "counts", "cpm", "rank", and "sct" for single-cell analyses, or 
 #'   "counts" for pseudobulk analyses. 
 #'   The default setting retrieves only the counts assay.
 #'   If your analysis involves a smaller set of genes, consider using the "cpm" assay. 
@@ -519,19 +434,17 @@ get_metacell <- function(data,
 #'   the counts for. By default counts for all features will be returned.
 #' @return A list containing validated parameters including data, repository, assays,
 #'   cache_directory, features, cell_aggregation, and atlas_name.
-#' @importFrom dplyr pull filter as_tibble inner_join collect
-#' @importFrom tibble column_to_rownames
-#' @importFrom purrr reduce map map_int imap 
-#' @importFrom BiocGenerics cbind
-#' @importFrom glue glue
-#' @importFrom SummarizedExperiment colData assayNames<-
-#' @importFrom assertthat assert_that has_name
-#' @importFrom cli cli_alert_info
+#' @importFrom dplyr pull distinct collect
+#' @importFrom purrr map
+#' @importFrom checkmate assert check_true
+#' @importFrom cli cli_alert_info cli_abort
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @keywords internal
+#' @noRd
 validate_data <- function(
     data,
     assays = "counts",
@@ -542,17 +455,14 @@ validate_data <- function(
     
 ) {
   # Parameter validation
-  assays %in% names(assay_map) |>
-    all() |>
-    assert_that(
-      msg = 'assays must be a character vector containing counts and/or
-            "cpm" and/or "rank"'
-    )
-  assert_that(
-    !anyDuplicated(assays),
-    inherits(cache_directory, "character"),
-    is.null(repository) || is.character(repository),
-    is.null(features) || is.character(features)
+  if (!all(assays %in% names(assay_map))) {
+    cli_abort('assays must be a character vector containing counts and/or "cpm" and/or "rank" and/or "sct"')
+  }
+  assert(
+    check_true(!anyDuplicated(assays)),
+    check_true(inherits(cache_directory, "character")),
+    check_true(is.null(repository) || is.character(repository)),
+    check_true(is.null(features) || is.character(features))
   )
   
   # Data parameter validation (last, because it's slower)
@@ -605,46 +515,19 @@ validate_data <- function(
 #' @importFrom utils head
 #' @importFrom cli cli_alert_warning cli_abort
 #' @importFrom glue glue
+#' @importFrom zellkonverter readH5AD
+#' @keywords internal
 #' @noRd
 group_to_data_container <- function(i, df, dir_prefix, features, grouping_column,
-                                    metacell_column = NULL, assays = NULL, subdirs = NULL) {
-  # Handle multiple assays
-  if (!is.null(assays) && length(assays) > 1) {
-    assay_data <- map(assays, function(assay) {
-      assay_path <- file.path(dir_prefix, assay_map[assay], df[[grouping_column]][1])
-      
-      if (!file.exists(assay_path)) {
-        cli_abort("Your cache does not contain the file {assay_path} you attempted to query. Please provide the repository parameter so that files can be synchronised from the internet")
-      }
-      
-      # Load experiment
-      zellkonverter::readH5AD(assay_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
-    })
-    
-    # Use the first assay as the base experiment and add other assays
-    experiment <- assay_data[[1]]
-    purrr::iwalk(assays[-1], function(a, j) {
-      assay(experiment, a) <<- assay_data[[j + 1]]
-    })
-    
-  } else {
-    # Original single assay
-    experiment_path <- df[[grouping_column]] |>
-      head(1) |>
-      file.path(
-        dir_prefix,
-        subdirs[1],  # Use first subdir for single assay
-        suffix=_
-      )
-    
-    # Check if file exists
-    if (!file.exists(experiment_path)) {
-      cli_abort("Your cache does not contain the file {experiment_path} you attempted to query. Please provide the repository parameter so that files can be synchronised from the internet")
-    }
-    
-    # Load experiment
-    experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |> suppressMessages()
+                                    metacell_column = NULL) {
+  experiment_path <- file.path(dir_prefix, df[[grouping_column]][1])
+  
+  if (!file.exists(experiment_path)) {
+    cli_abort("Your cache does not contain the file {experiment_path} you attempted to query. Please provide the repository parameter so that files can be synchronised from the internet")
   }
+  
+  experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |>
+    suppressMessages()
   
   # Fix for https://github.com/tidyverse/dplyr/issues/6746
   force(i)
@@ -654,12 +537,13 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     cells <- colnames(experiment) |> intersect(df$cell_id)
     
     if (length(cells) < nrow(df)){
-      single_line_str(
-        "The number of cells in the SingleCellExperiment will be less than the
-                number of cells you have selected from the metadata.
-                Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
-                "
-      ) |> cli_alert_warning()
+      cli_alert_warning(
+        paste(
+          "The number of cells in the SingleCellExperiment will be less than the number",
+          "of cells you have selected from the metadata.",
+          "Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?"
+        )
+      )
       df <- filter(df, .data$cell_id %in% cells)
     }
     else if (length(cells) > nrow(df)){
@@ -667,7 +551,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     }
     
     new_coldata <- df |>
-      mutate(original_cell_ = .data$cell_id, cell_id = glue("{cell_id}_{i}")) |>
+      mutate(original_cell_ = as.character(.data$cell_id), cell_id = glue("{cell_id}_{i}")) |>
       column_to_rownames("cell_id") |>
       as("DataFrame")
     
@@ -695,14 +579,14 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     new_coldata <- df |>
       select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
       # Remove metacell and single-cell level annotations in pseudobulk
-      select(-contains("metacell"), -matches("azimuth|monaco|blueprint|subsets_|high_")) |> 
+      select(-contains("metacell"), -matches("azimuth|monaco|blueprint|subsets_|high_")) |>
       distinct() |>
       mutate(
         sample_identifier = glue("{sample_id}___{cell_type_unified_ensemble}"),
         original_sample_id = .data$sample_identifier
       ) |>
       column_to_rownames("original_sample_id")
-
+    
     experiment <- `if`(
       is.null(features),
       experiment[, new_coldata$sample_identifier],
@@ -711,66 +595,83 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         experiment[genes, new_coldata$sample_identifier]
       }
     ) |>
-        `colnames<-`(new_coldata$sample_identifier) |>
-        `colData<-`(value = DataFrame(new_coldata))
+      `colnames<-`(new_coldata$sample_identifier) |>
+      `colData<-`(value = DataFrame(new_coldata))
     
     # Force renaming type class to save `SummarizedExperiment` object
     experiment <- experiment |> as("SingleCellExperiment")
-   
+    
   }
   else if (grouping_column == "file_id_cellNexus_metacell") {
-    # Select metacell level annotations
-    annotations <- metacell_column |> 
-      c( "dataset_id", "sample_id", "assay", "assay_ontology_term_id", 
-         "development_stage", "development_stage_ontology_term_id", "disease", "disease_ontology_term_id", 
-         "donor_id", "experiment___", "explorer_url", "feature_count", "is_primary_data", 
-         "organism", "organism_ontology_term_id", "published_at", "raw_data_location", 
-         "revised_at", "sample_heuristic", "schema_version", "self_reported_ethnicity", 
-         "self_reported_ethnicity_ontology_term_id", "sex", "sex_ontology_term_id", "tissue", 
-         "tissue_ontology_term_id", "tissue_type", "title", "tombstone", "url", "age_days", 
-         "tissue_groups", "atlas_id", "sample_chunk", "file_id_cellNexus_single_cell", 
-         "file_id_cellNexus_metacell", "dir_prefix") 
+    # Select relevant annotations to remove single-cell level annotations
+    annotations <- metacell_column |>
+      c("dataset_id", "sample_id", "assay", "assay_ontology_term_id", 
+        "development_stage", "development_stage_ontology_term_id", "disease", "disease_ontology_term_id", 
+        "donor_id", "experiment___", "explorer_url", "feature_count", "is_primary_data", 
+        "organism", "organism_ontology_term_id", "published_at", "raw_data_location", 
+        "revised_at", "sample_heuristic", "schema_version", "self_reported_ethnicity", 
+        "self_reported_ethnicity_ontology_term_id", "sex", "sex_ontology_term_id", "tissue", 
+        "tissue_ontology_term_id", "tissue_type", "title", "tombstone", "url", "age_days", 
+        "tissue_groups", "atlas_id", "sample_chunk", "file_id_cellNexus_single_cell", 
+        "file_id_cellNexus_metacell", "dir_prefix") 
+    
+    mapping_tbl <- as.data.frame(SummarizedExperiment::colData(experiment)) |>
+      dplyr::select(sample_id, !!rlang::sym(metacell_column), metacell_id)
     
     new_coldata <- df |>
-      select(any_of(annotations)) |>
+      left_join(
+        mapping_tbl,
+        by = c("sample_id", metacell_column)
+      ) |>
+      select(any_of(annotations), metacell_id) |>
       distinct() |>
       mutate(
-        metacell_identifier = glue("{sample_id}___{.data[[metacell_column]]}"),
-        original_metacell_id = .data$metacell_identifier
+        original_metacell_id = .data$metacell_id,
+        metacell_identifier = glue("{metacell_id}_{i}")
       ) |>
-      column_to_rownames("original_metacell_id")
+      column_to_rownames("metacell_identifier")
     
     experiment <- `if`(
       is.null(features),
-      experiment[, new_coldata$metacell_identifier],
+      experiment[, new_coldata$original_metacell_id],
       {
         # Optionally subset the genes
         genes <- rownames(experiment) |> intersect(features)
-        experiment[genes, new_coldata$metacell_identifier]
+        experiment[genes, new_coldata$original_metacell_id]
       }
     ) |>
-      `colnames<-`(new_coldata$metacell_identifier) |>
+      `colnames<-`(new_coldata$original_metacell_id) |>
       `colData<-`(value = DataFrame(new_coldata))
   }
   
   experiment
 }
 
-#' Synchronises one or more remote assays with a local copy
-#' @param url A character vector of length one. The base HTTP URL from which to
-#'   obtain the files.
-#' @param cache_dir A character vector of length one. The local filepath to
-#'   synchronise files to.
-#' @param subdirs A character vector of subdirectories within the root URL to
-#'   sync. These correspond to assays.
-#' @param files A character vector containing one or more file_id_cellNexus_single_cell entries
-#' @returns A character vector consisting of file paths to all the newly
-#'   downloaded files
-#' @return A character vector of files that have been downloaded
-#' @importFrom purrr pmap_chr map_chr
-#' @importFrom httr modify_url
-#' @importFrom dplyr transmute filter
+#' Synchronise one or more remote assay files to a local cache
+#'
+#' Convenience wrapper that calls `build_assay_file_list()` to construct the
+#' set of remote URLs and local destinations, then passes the result to
+#' `sync_all_assay_files()` to perform the download. Use this for simple
+#' single-call download scenarios; for batched parallel downloads across many
+#' atlases, call `build_assay_file_list()` and `sync_all_assay_files()`
+#' directly.
+#'
+#' @param url A parsed URL object (from [httr::parse_url()]). Defaults to the
+#'   package-level `COUNTS_URL`.
+#' @param atlas_name A character vector. Atlas identifier(s) used as path
+#'   components (e.g. `"cellxgene/01-07-2024"`).
+#' @param cell_aggregation A character vector. Cell aggregation level(s). Pass
+#'   `""` for unaggregated (single-cell) data.
+#' @param cache_dir A character vector of length one. Root local directory
+#'   under which files are cached.
+#' @param subdirs A character vector. Assay subdirectory name(s) (e.g.
+#'   `"counts"`, `"cpm"`).
+#' @param files A character vector. One or more `file_id_cellNexus_single_cell`
+#'   values (H5AD file names) to download.
+#' @return Invisibly, a character vector of local file paths for all requested
+#'   files (whether newly downloaded or already cached).
 #' @importFrom httr parse_url
+#' @keywords internal
 #' @noRd
 sync_assay_files <- function(
     url = parse_url(COUNTS_URL),
@@ -780,9 +681,62 @@ sync_assay_files <- function(
     subdirs,
     files
 ) {
+  build_assay_file_list(
+    url = url,
+    atlas_name = atlas_name,
+    cell_aggregation = cell_aggregation,
+    cache_dir = cache_dir,
+    subdirs = subdirs,
+    files = files
+  ) |>
+    sync_all_assay_files()
+}
+
+#' Build a data frame of remote URLs and local output paths for assay files
+#'
+#' Constructs all combinations of atlas, cell aggregation, assay subdirectory,
+#' and file, returning a data frame with the remote URL and local destination
+#' path for each file. No downloading is performed; this is used to collect
+#' all targets before passing them to `sync_all_assay_files()` for a single
+#' parallel download batch.
+#'
+#' @param url A parsed URL object (from [httr::parse_url()]). The base HTTP
+#'   URL of the remote file store.
+#' @param atlas_name A character vector. One or more atlas identifiers (e.g.
+#'   `"cellxgene/21-08-2025"`), used as path components in both the remote URL
+#'   and the local cache path.
+#' @param cell_aggregation A character vector. Cell aggregation level(s) used
+#'   as a path component. Pass `""` for unaggregated (single-cell) data.
+#' @param cache_dir A character vector of length one. Root local directory
+#'   under which files are cached.
+#' @param subdirs A character vector. Subdirectory name(s) corresponding to
+#'   assay types (e.g. `"counts"`, `"cpm"`).
+#' @param files A character vector. One or more
+#'   `file_id_cellNexus_single_cell` values (H5AD file names) to include.
+#' @return A data frame with columns:
+#'   \describe{
+#'     \item{`full_url`}{Character. The fully-qualified remote URL for each
+#'       file.}
+#'     \item{`output_file`}{Character. The absolute local file path where
+#'       the file should be saved.}
+#'   }
+#' @importFrom purrr map_chr
+#' @importFrom httr modify_url
+#' @importFrom dplyr transmute
+#' @importFrom rlang .data
+#' @keywords internal 
+#' @noRd
+build_assay_file_list <- function(
+    url,
+    atlas_name,
+    cell_aggregation,
+    cache_dir,
+    subdirs,
+    files
+) {
   # Find every combination of file name, sample id, and assay, since each
   # will be a separate file we need to download
-  files <- expand.grid(
+  expand.grid(
     atlas_name = atlas_name,
     cell_aggregation = cell_aggregation,
     sample_id = files,
@@ -815,21 +769,31 @@ sync_assay_files <- function(
         .data$subdir,
         .data$sample_id
       )
-    ) |>
-    filter(
-      # Don't bother downloading files that don't exist TODO: use some
-      # kind of hashing to check if the remote file has changed, and
-      # proceed with the download if it has. However this is low
-      # importance as the repository is not likely to change often
-      !file.exists(.data$output_file)
     )
+}
+
+#' Download all assay files in parallel
+#' 
+#' Collects all file URLs and downloads them in a single parallel batch.
+#' @param file_list A data frame with full_url and output_file columns
+#' @importFrom cli cli_alert_info
+#' @noRd
+sync_all_assay_files <- function(file_list) {
+  if (nrow(file_list) == 0) return(invisible(character(0)))
   
-  if (nrow(files) > 0) report_file_sizes(files$full_url)
+  # Filter to only files that don't already exist
+  to_download <- !file.exists(file_list$output_file)
   
-  pmap_chr(files, function(full_url, output_dir, output_file) {
-    sync_remote_file(full_url, output_file)
-    output_file
-    }, .progress = list(name = "Downloading files"))
+  if (sum(to_download) > 0) {
+    report_file_sizes(file_list$full_url[to_download])
+    sync_remote_files(
+      file_list$full_url[to_download], 
+      file_list$output_file[to_download], 
+      progress = TRUE
+    )
+  }
+  
+  invisible(file_list$output_file)
 }
 
 #' Checks whether genes in a list of SummarizedExperiment objects overlap
@@ -837,17 +801,18 @@ sync_assay_files <- function(
 #' @return A character vector of genes intersection across objects
 #' @importFrom purrr map reduce
 #' @importFrom cli cli_alert_warning
+#' @keywords internal
 #' @noRd
 check_gene_overlap <- function(obj_list) {
   gene_lists <- map(obj_list, rownames)
   common_genes <- reduce(gene_lists, intersect)
   if (any(lengths(gene_lists) != length(common_genes))) {
-    single_line_str(
-      "cellNexus says: Not all genes completely overlap across the provided objects.
-      Counts are generated by genes intersection. "
-    ) |> cli_alert_warning()
+    cli_alert_warning(
+      paste(
+        "cellNexus says: Not all genes completely overlap across the provided objects.",
+        "Counts are generated by genes intersection."
+      )
+    )
   }
-  
   common_genes
 }
-
