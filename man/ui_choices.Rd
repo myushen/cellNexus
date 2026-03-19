@@ -25,7 +25,7 @@ A named list where each element contains unique values for a column:
 Generated from cellNexus metadata
 }
 \usage{
-ui_choices
+data(ui_choices)
 }
 \description{
 A list of unique values for each filterable column used in the cellNexus
@@ -35,9 +35,5 @@ queries when the app starts.
 \details{
 See \code{dev/generate_ui_choices.R} for the creation script.
 Run this script to regenerate the choices when metadata columns change.
-}
-\examples{
-data(ui_choices)
-ui_choices
 }
 \keyword{datasets}

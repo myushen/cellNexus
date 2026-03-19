@@ -110,9 +110,9 @@ Imports:
     zellkonverter,
     anndataR,
     stringr,
-    scuttle
+    scuttle,
+    rclipboard
 Suggests:
-    rclipboard,
     BiocStyle,
     knitr,
     rmarkdown,
