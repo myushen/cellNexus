@@ -141,7 +141,7 @@ organize_inputs <- function(
 #'
 #' @importFrom shiny fluidPage sidebarLayout sidebarPanel mainPanel titlePanel textAreaInput reactive
 #'   verbatimTextOutput renderText shinyApp h3 h4 p a tagList reactiveValues selectInput hr
-#'   conditionalPanel fluidRow column uiOutput renderUI icon tags
+#'   conditionalPanel fluidRow column uiOutput renderUI icon tags observeEvent updateSelectInput
 #' @importFrom shinyWidgets pickerInput pickerOptions
 #' @importFrom rclipboard rclipboardSetup rclipButton
 #' @importFrom shiny actionButton
@@ -246,7 +246,7 @@ create_interface_app <- function(ui_choices, return_as_list = FALSE) {
         selectInput(
             inputId = "assay",
             label = "Assay",
-            choices = c("counts", "cpm"),
+            choices = c("counts", "cpm", "sct"),
             selected = "counts"
         ),
         conditionalPanel(
@@ -311,6 +311,23 @@ create_interface_app <- function(ui_choices, return_as_list = FALSE) {
         features <- reactive({
             # Parse the features input into a vector
             .string_to_vector(input$features)
+        })
+
+        # Restrict assay choices based on retrieval type:
+        # pseudobulk and metacell only support "counts"; SCE and Seurat support all three.
+        observeEvent(input$retrieval_type, {
+            if (input$retrieval_type %in% c("pseudobulk", "metacell")) {
+                updateSelectInput(session, "assay",
+                    choices  = c("counts"),
+                    selected = "counts"
+                )
+            } else {
+                current <- isolate(input$assay)
+                updateSelectInput(session, "assay",
+                    choices  = c("counts", "cpm", "sct"),
+                    selected = if (current %in% c("counts", "cpm", "sct")) current else "counts"
+                )
+            }
         })
 
         full_code <- reactive({

@@ -38,8 +38,7 @@ knit: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
     collapse = TRUE,
-    comment = "#>",
-    eval = FALSE
+    comment = "#>"
 )
 root_dir <- knitr::opts_knit$get("root.dir")
 if (!is.null(root_dir)){
