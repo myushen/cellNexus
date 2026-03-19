@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{duckdb_read_parquet}
 \alias{duckdb_read_parquet}
-\title{Returns a tibble from a parquet file path via DuckDB
+\title{Returns a tibble from a parquet file path
 Since dbplyr 2.4.0, raw file paths aren't handled very well
 See: \url{https://github.com/duckdb/duckdb-r/issues/38}
 Hence the need for this method}
@@ -24,7 +24,7 @@ By default it does not add the column.}
 An SQL data frame
 }
 \description{
-Returns a tibble from a parquet file path via DuckDB
+Returns a tibble from a parquet file path
 Since dbplyr 2.4.0, raw file paths aren't handled very well
 See: \url{https://github.com/duckdb/duckdb-r/issues/38}
 Hence the need for this method

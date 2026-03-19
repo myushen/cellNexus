@@ -18,6 +18,17 @@ test_that("get_default_cache_dir() returns a character path", {
   expect_true(grepl("cellNexus", d, fixed = TRUE))
 })
 
-test_that("clear_old_metadata() runs without error", {
-  expect_invisible(cellNexus:::clear_old_metadata("sample_metadata.2.0.0.parquet"))
+test_that("keep_updated_metadata() removes stale parquet files from the cache directory", {
+  cache_dir <- get_default_cache_dir()
+  dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+  
+  current_file <- file.path(cache_dir, "sample_metadata.2.0.0.parquet")
+  stale_file   <- file.path(cache_dir, "metadata.old.parquet")
+  file.create(current_file)
+  file.create(stale_file)
+  on.exit(unlink(c(current_file, stale_file)), add = TRUE)
+  
+  expect_invisible(cellNexus:::keep_updated_metadata("sample_metadata.2.0.0.parquet"))
+  expect_true( file.exists(current_file))
+  expect_false(file.exists(stale_file))
 })

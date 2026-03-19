@@ -3,6 +3,7 @@ library(dplyr)
 test_that("get_default_cache_dir() returns the correct directory on Linux", {
     grepl("linux", version$platform, fixed = TRUE) |>
         skip_if_not()
+    skip_if(nzchar(Sys.getenv("R_USER_CACHE_DIR")))
 
     "~/.cache/R/cellNexus" |>
         normalizePath() |>
@@ -13,8 +14,8 @@ test_that("get_default_cache_dir() returns the correct directory on Linux", {
 
 test_that("sync_assay_files() syncs appropriate files", {
     temp <- tempfile()
-    test_file <- "4164d0eb972ad5e12719b6858c9559ea___1.h5ad"
     
+    test_file <- "03319e4f54220f534de2c4e42e607126___1.h5ad"
     atlas_name <- "cellxgene/21-08-2025"
 
     sync_assay_files(
@@ -328,67 +329,63 @@ test_that("get_metacell() syncs appropriate files", {
   
 })
 
-# unharmonised_data is not implemented yet
-# test_that("get_unharmonised_dataset works with one ID", {
-#     dataset_id = "838ea006-2369-4e2c-b426-b2a744a2b02b"
-#     unharmonised_meta = get_unharmonised_dataset(dataset_id)
-# 
-#     expect_s3_class(unharmonised_meta, "tbl")
-# })
+test_that("get_metadata handles use_split_files correctly", {
+  cache = tempfile()
+  meta_single <- get_metadata(use_split_files = FALSE, cloud_metadata = SAMPLE_DATABASE_URL)
+  expect_s3_class(meta_single, "tbl_dbi") 
+  expect_gt(ncol(meta_single), 0)
+  
+  meta_split <- get_metadata(use_cache = FALSE, 
+                             use_split_files = TRUE)
+  expect_s3_class(meta_split, "tbl_dbi")
+  expect_gt(ncol(meta_split), 0)
+  
+  expect_gt(ncol(meta_single), ncol(meta_split))
+})
 
-# test_that("get_unharmonised_metadata() returns the appropriate data", {
-#     harmonised <- get_metadata() |> dplyr::filter(tissue == "kidney blood vessel")
-#     unharmonised <- get_unharmonised_metadata(harmonised)
-#     
-#     unharmonised |> is.data.frame() |> expect_true()
-#     expect_setequal(colnames(unharmonised), c("file_id_cellNexus_single_cell", "unharmonised"))
-#     
-#     # The number of cells in both harmonised and unharmonised should be the same
-#     expect_equal(
-#         dplyr::collect(harmonised) |> nrow(),
-#         unharmonised$unharmonised |> purrr::map_int(function(df) dplyr::tally(df) |> dplyr::pull(n)) |> sum()
-#     )
-#     
-#     # The number of datasets in both harmonised and unharmonised should be the same
-#     expect_equal(
-#         harmonised |> dplyr::group_by(file_id_cellNexus_single_cell) |> dplyr::n_groups(),
-#         nrow(unharmonised)
-#     )
-# })
+test_that("join_census_table() returns an unique column",{
+  cache = tempfile()
+  col <- "cell_type"
+  meta <- get_metadata(use_split_files = T, cloud_metadata = SAMPLE_DATABASE_URL) |> head() |> 
+    join_census_table()
+  expect_true(col %in% colnames(meta))
+})
 
+test_that("join_metacell_table() returns an unique column",{
+  cache = tempfile()
+  meta <- get_metadata(use_split_files = T, cloud_metadata = SAMPLE_DATABASE_URL) |> head() |> 
+    join_metacell_table()
+  cols <- colnames(meta)
+  
+  # Detect metacell-related columns
+  metacell_cols <- cols[grepl("metacell", cols, ignore.case = TRUE)] 
+  
+  # Expect that metacell columns exist
+  expect_true(length(metacell_cols) > 0)
+})
 
-# test_that("import_one_sce() loads metadata from a SingleCellExperiment object into a parquet file and generates pseudobulk", {
-#   # Test both functionalities together because if import them independently,
-#   # the sample data will be loaded into the cache, which causes the second import to fail the unique file check
-#   data(sample_sce_obj)
-#   temp <- tempfile()
-#   dataset_id <- "GSE122999"
-#   import_one_sce(sce_obj = sample_sce_obj,
-#                          cache_dir = temp,
-#                  pseudobulk = TRUE)
-#   
-#   dataset_id %in% (get_metadata(cache_directory = temp) |> 
-#                     dplyr::distinct(dataset_id) |> 
-#                     dplyr::pull()) |>
-#     expect(failure_message = "The correct metadata was not created")
-#   
-#   sme <- get_metadata(cache_directory = temp) |> filter(file_id_cellNexus_single_cell == "id1") |>
-#     get_pseudobulk(cache_directory = file.path(temp, "pseudobulk"))
-#   sme |>
-#     row.names() |>
-#     length() |>
-#     expect_gt(1)
-# })
-# 
-# 
-# test_that("get_single_cell_experiment() syncs prostate atlas", {
-#   temp <- tempfile()
-#   # A sample from prostate atlas
-#   sample <- "GSM4089151"
-#   meta <- get_metadata(cache_directory = temp) |> filter(sample_ == sample)
-#   sce <- meta |> get_single_cell_experiment(cache_directory = temp)
-#   sce |>
-#     row.names() |>
-#     length() |>
-#     expect_gt(1)
-# })
+test_that("keep_quality_cells() return high quality cells", {
+  cache = tempfile()
+  
+  empty_droplet_col = "empty_droplet"
+  alive_col = "alive"
+  doublet_col = "scDblFinder.class"
+  
+  meta_unfiltered <- get_metadata(use_split_files = T)
+  meta_filtered <- get_metadata(use_split_files = T) |> keep_quality_cells()
+  
+  # Filtered should have fewer rows
+  n_unfiltered <- meta_unfiltered |> dplyr::count() |> collect() |> pull(n)
+  n_filtered   <- meta_filtered   |> dplyr::count() |> collect() |> pull(n)
+  expect_gt(n_unfiltered, n_filtered)
+  
+  # No empty droplets remain
+  expect_true(meta_filtered |> distinct(.data[[empty_droplet_col]]) |> collect() |> pull() |> identical(FALSE))
+  
+  # All cells are alive
+  expect_true(meta_filtered |> distinct(.data[[alive_col]]) |> collect() |> pull() |> identical(TRUE))
+  
+  # No doublets present
+  expect_false("doublet" %in% (meta_filtered |> distinct(.data[[doublet_col]]) |> collect() |> pull()))
+})
+

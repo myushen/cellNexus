@@ -12,8 +12,13 @@ cache <- rlang::env(
 
 #' Returns the URLs for all metadata files 
 #' @param databases A character vector specifying the names of the metadata files. 
-#'   Download the specific metadata by defining the metadata version. The default is 
-#'   metadata.2.0.0.parquet
+#'   Download the specific metadata by defining the metadata version. 
+#' @param use_split_files Logical, default `FALSE`. If `TRUE`, returns 
+#'   URLs for the split metadata files.
+#' @param use_census Logical, default `FALSE`. If `TRUE`, returns the URL 
+#'   for the census metadata file.
+#' @param use_metacell Logical, default `FALSE`. If `TRUE`, returns the URL 
+#'   for the metacell metadata file.
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
@@ -23,8 +28,26 @@ cache <- rlang::env(
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata_url <- function(databases = c("metadata.2.0.0.parquet")) {
-  clear_old_metadata(updated_data = databases)
+get_metadata_url <- function(databases  = "metadata.2.0.0.parquet", 
+                             use_split_files = FALSE,
+                             use_census = FALSE,
+                             use_metacell = FALSE) {
+  #clear_old_metadata(databases)
+  if (use_split_files) {
+    # Return URLs for the three split files
+    databases <- "cellnexus_metadata.2.0.0.parquet"
+  }
+  
+  if (use_census) {
+    # Returns the URL for census metadata file
+    databases <- "census_cell_metadata.2.0.0.parquet"
+  }
+  
+  if (use_metacell) {
+    # Returns the URL for metacell metadata file
+    databases <- "metacell_metadata.2.0.0.parquet"
+  }
+
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}")
 }
@@ -56,12 +79,14 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #' @param local_metadata Optional character vector of any length representing the local
 #'   path of parquet database(s).
 #' @param cache_directory Optional character vector of length 1. A file path on
-#'   your local system to a directory (not a file) that will be used to store
-#'   `metadata.parquet`
+#'   your local system to a directory (not a file) that will be used to store metadata.
 #' @param use_cache Optional logical scalar. If `TRUE` (the default), and this
 #'   function has been called before with the same parameters, then a cached
 #'   reference to the table will be returned. If `FALSE`, a new connection will
 #'   be created no matter what.
+#' @param use_split_files Optional logical scalar. If `TRUE`, uses split metadata files
+#'   instead of the single combined metadata file.
+#' @param ... Additional arguments passed to [read_parquet()].
 #' @return A lazy data.frame subclass containing the metadata. You can interact
 #'   with this object using most standard dplyr functions. For string matching,
 #'   it is recommended that you use `stringr::str_like` to filter character
@@ -78,13 +103,17 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #'             cell_type %LIKE% "%CD4%"
 #'     )
 #'
+#' # Use split files for reduced download size (when available)
+#' metadata_split <- get_metadata(use_split_files = TRUE)
+#'
 #' @importFrom DBI dbConnect
 #' @importFrom duckdb duckdb
 #' @importFrom dplyr tbl
 #' @importFrom httr progress
 #' @importFrom cli cli_alert_info hash_sha256
-#' @importFrom glue glue
+#' @importFrom glue glue glue_sql
 #' @importFrom purrr walk
+#' @importFrom dbplyr sql
 #'
 #' @details
 #'
@@ -165,24 +194,29 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata <- function(
-    cloud_metadata = get_metadata_url(),
-    local_metadata = NULL,
-    cache_directory = get_default_cache_dir(),
-    use_cache = TRUE,
-    ...
-) {
-  # Synchronize remote files
-  walk(cloud_metadata, function(url) {
-    # Calculate the file path from the URL
-    path <- file.path(cache_directory, url |> basename())
-    if (!file.exists(path)) {
-      report_file_sizes(url)
-      sync_remote_file(url,
-                       path,
-                       progress(type = "down", con = stderr()))
+get_metadata <- function(cloud_metadata = get_metadata_url(),
+                         local_metadata = NULL,
+                         cache_directory = get_default_cache_dir(), 
+                         use_cache = TRUE, 
+                         use_split_files = FALSE,
+                         ...) {
+  # Handle split files
+  if (use_split_files) {
+    cloud_metadata <- get_metadata_url(use_split_files = TRUE)
+  }
+  
+  # Synchronize remote files using parallel downloads
+  if (!is.null(cloud_metadata) && length(cloud_metadata) > 0) {
+    output_paths <- file.path(cache_directory, basename(cloud_metadata))
+    # Filter to only files that need downloading
+    to_download <- !file.exists(output_paths)
+    if (any(to_download)) {
+      report_file_sizes(cloud_metadata[to_download])
+      sync_remote_files(cloud_metadata[to_download], 
+                        output_paths[to_download], 
+                        progress = TRUE)
     }
-  })
+  }
   
   if (is.null(cloud_metadata)) all_parquet <- c(local_metadata)
   if (!is.null(cloud_metadata)) all_parquet <- c(file.path(cache_directory, 
@@ -242,7 +276,7 @@ get_metadata <- function(
 #'   Together, these metrics allow simultaneous assessment of signaling specificity,
 #'   pathway dominance, and global communication structure between cell populations.
 #' @examples
-#' # For fast build purpose only, you do not need to specify anything in cloud_metadata.
+#' # For fast build purpose only, you do not need to specify anything in the function.
 #' communication_meta <- get_cell_communication_strength(cloud_metadata = SAMPLE_DATABASE_URL)
 #' @export
 get_cell_communication_strength <- function(
@@ -252,4 +286,89 @@ get_cell_communication_strength <- function(
     use_cache = TRUE
 ) {
   get_metadata(cloud_metadata, local_metadata, cache_directory, use_cache)
+}
+
+#' Join metacell metadata to an existing data frame
+#'
+#' Downloads and joins the metacell metadata with cellNexus metadata.
+#' This function creates indexed tables for efficient joining and returns a data frame.
+#'
+#' @param tbl A `tbl_sql` object (from get_metadata) or a database connection
+#' @param cache_directory A character string specifying the local cache
+#'   directory where remote parquet files will be stored. Defaults to
+#'   [get_default_cache_dir()].
+#' @param join_keys A character vector of column names used for the join.
+#'   Defaults to `c("sample_id", "dataset_id", "cell_id")`.
+#' @param ... Additional arguments passed to [read_parquet()].
+#' @examples 
+#' library(dplyr)
+#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |> 
+#'   join_metacell_table(cache_directory = tempdir())
+#' @return A lazy SQL table with metacell metadata joined to the cellNexus metadata.
+#' @export
+join_metacell_table <- function(tbl, 
+                                cache_directory = get_default_cache_dir(),
+                                join_keys = c("sample_id", "dataset_id", "cell_id"),
+                                ...) {
+  cloud_metadata <- get_metadata_url(use_metacell = TRUE)
+  # Synchronize remote files
+  walk(cloud_metadata, function(url) {
+    # Calculate the file path from the URL
+    path <- file.path(cache_directory, url |> basename())
+    if (!file.exists(path)) {
+      report_file_sizes(url)
+      sync_remote_file(url,
+                       path,
+                       progress(type = "down", con = stderr()))
+    }
+  })
+  parquet_path <- file.path(cache_directory, cloud_metadata |> basename())
+  # Fetch current connection
+  conn <- dbplyr::remote_con(tbl)
+  # Register the metacell parquet as a lazy table
+  metacell_tbl <- duckdb_read_parquet(conn, parquet_path, ...)
+  # Join to the incoming tbl_lazy
+  tbl |> left_join(metacell_tbl, by = join_keys )
+}
+
+#' Join Census metadata to an existing data frame
+#'
+#' Downloads and joins the Census metadata with cellNexus metadata.
+#' This function creates indexed tables for efficient joining and returns a data frame.
+#'
+#' @param tbl A `tbl_sql` object (from get_metadata) or a database connection.
+#' @param cache_directory A character string specifying the local cache
+#'   directory where remote parquet files will be stored. Defaults to
+#'   [get_default_cache_dir()].
+#' @param join_keys A character vector of column names used for the join.
+#'   Defaults to `c("sample_id", "dataset_id", "observation_joinid")`.
+#' @param ... Additional arguments passed to [read_parquet()].
+#' library(dplyr)
+#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |> 
+#'   join_census_table(cache_directory = tempdir())
+#' @return A lazy SQL table with Census metadata joined to the cellNexus metadata.
+#' @export
+join_census_table <- function(tbl, 
+                              cache_directory = get_default_cache_dir(), 
+                              join_keys = c("sample_id", "dataset_id", "observation_joinid"),
+                              ...) {
+  cloud_metadata <- get_metadata_url(use_census = TRUE)
+  # Synchronize remote files
+  walk(cloud_metadata, function(url) {
+    # Calculate the file path from the URL
+    path <- file.path(cache_directory, url |> basename())
+    if (!file.exists(path)) {
+      report_file_sizes(url)
+      sync_remote_file(url,
+                       path,
+                       progress(type = "down", con = stderr()))
+    }
+  })
+  parquet_path <- file.path(cache_directory, cloud_metadata |> basename())
+  # Fetch current connection
+  conn <- dbplyr::remote_con(tbl)
+  # Register the census parquet as a lazy table
+  census_tbl <- duckdb_read_parquet(conn, parquet_path, ...)
+  # Join to the incoming tbl_lazy
+  tbl |> left_join(census_tbl, by = join_keys )
 }

@@ -7,10 +7,12 @@
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
 }
 \usage{
-create_interface_app(metadata)
+create_interface_app(ui_choices, return_as_list = FALSE)
 }
 \arguments{
-\item{metadata}{cellNexus metadata as returned by \code{get_metadata()}.}
+\item{ui_choices}{A list of pre-computed unique values for each filterable column in the metadata.}
+
+\item{return_as_list}{If TRUE, returns a list with 'ui' and 'server' components instead of a Shiny app object.}
 }
 \value{
 A Shiny app that allows users to filter cellNexus metadata and generate code for retrieval

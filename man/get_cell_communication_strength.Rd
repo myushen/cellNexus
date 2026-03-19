@@ -52,6 +52,6 @@ Together, these metrics allow simultaneous assessment of signaling specificity,
 pathway dominance, and global communication structure between cell populations.
 }
 \examples{
-# For fast build purpose only, you do not need to specify anything in cloud_metadata.
+# For fast build purpose only, you do not need to specify anything in the function.
 communication_meta <- get_cell_communication_strength(cloud_metadata = SAMPLE_DATABASE_URL)
 }
