@@ -67,7 +67,7 @@ metadata
 ```
 
     #> ℹ Downloading 1 file, totalling 0 GB
-    #> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.2.0.0.parquet to /tmp/RtmptQnm9T/sample_metadata.2.0.0.parquet
+    #> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.2.0.0.parquet to /tmp/RtmpmUNstQ/sample_metadata.2.0.0.parquet
     #> # Source:   SQL [?? x 89]
     #> # Database: DuckDB 1.5.0 [unknown@Linux 6.14.0-1017-azure:R 4.5.3/:memory:]
     #>    cell_id dataset_id                     observation_joinid sample_id cell_type
@@ -102,18 +102,18 @@ metadata |>
     dplyr::distinct(tissue, cell_type_unified_ensemble) 
 #> # Source:   SQL [?? x 2]
 #> # Database: DuckDB 1.5.0 [unknown@Linux 6.14.0-1017-azure:R 4.5.3/:memory:]
-#>    tissue               cell_type_unified_ensemble
-#>    <chr>                <chr>                     
-#>  1 breast               cd14 mono                 
-#>  2 lung                 cd4 th2 em                
-#>  3 respiratory airway   cd4 th1 em                
-#>  4 lung parenchyma      cd4 fh em                 
-#>  5 lung                 treg                      
-#>  6 heart left ventricle cd14 mono                 
-#>  7 blood                nk                        
-#>  8 frontal lobe         nk                        
-#>  9 lung parenchyma      cd4 tcm                   
-#> 10 bone marrow          cd14 mono                 
+#>    tissue              cell_type_unified_ensemble
+#>    <chr>               <chr>                     
+#>  1 kidney              epithelial                
+#>  2 kidney blood vessel epithelial                
+#>  3 lung parenchyma     cd4 th2 em                
+#>  4 lung                cd4 fh em                 
+#>  5 lung parenchyma     treg                      
+#>  6 forebrain           nk                        
+#>  7 kidney              nk                        
+#>  8 lung                cd4 tcm                   
+#>  9 body of stomach     nk                        
+#> 10 respiratory airway  cd4 th1/th17 em           
 #> # ℹ more rows
 ```
 
@@ -567,14 +567,14 @@ get_metadata(cloud_metadata = METADATA_URL,
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Downloading 1 file, totalling 0.01 GB
-#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/01-07-2024/counts/e52795dec7b626b6276b867d55328d9f___1.h5ad to /tmp/RtmptQnm9T/cellxgene/01-07-2024//counts/e52795dec7b626b6276b867d55328d9f___1.h5ad
+#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/01-07-2024/counts/e52795dec7b626b6276b867d55328d9f___1.h5ad to /tmp/RtmpmUNstQ/cellxgene/01-07-2024//counts/e52795dec7b626b6276b867d55328d9f___1.h5ad
 #> ℹ Reading files.
 #> ! The number of cells in the SingleCellExperiment will be less than the number of cells you have selected from the metadata. Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
 #> Warning: There was 1 warning in `dplyr::summarise()`.
 #> ℹ In argument: `experiments = list(...)`.
 #> ℹ In group 1: `file_id_cellNexus_single_cell =
 #>   "67e196a3c4e145151fc9e06c200e2f7f.h5ad"`, `dir_prefix =
-#>   "/tmp/RtmptQnm9T/cellxgene/03-10-2025/counts"`.
+#>   "/tmp/RtmpmUNstQ/cellxgene/03-10-2025/counts"`.
 #> Caused by warning:
 #> ! `cur_data_all()` was deprecated in dplyr 1.1.0.
 #> ℹ Please use `pick()` instead.
