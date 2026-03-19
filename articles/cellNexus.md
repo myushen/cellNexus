@@ -23,12 +23,13 @@ Data are hosted on the ARDC Nectar Research Cloud, and most `cellNexus`
 functions interact with Nectar via web requests, so a network connection
 is required for most functionality.
 
-`cellNexus` and CuratedAtlasQueryR both rely on pre-computed expression
-layers, but they differ in how these layers were generated. `cellNexus`
-applies a more standardised workflow with explicit empty droplet and
-dead cell removal followed by harmonised QC, normalisation, and
-multi-layer data generation. In doing so, it produces newly iterated
-data that align with the evolving CELLxGENE releases.
+`cellNexus` builds on top of package CuratedAtlasQueryR. While both rely
+on pre-computed expression layers, they differ in how these layers are
+generated. cellNexus implements a more standardised workflow, including
+explicit removal of empty droplets and dead cells, followed by
+harmonised quality control, normalisation, and multi-layer data
+generation. Through this process, it produces updated datasets that
+remain aligned with the evolving CELLxGENE releases.
 
 ## Query interface
 

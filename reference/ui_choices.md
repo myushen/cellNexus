@@ -7,7 +7,7 @@ queries when the app starts.
 ## Usage
 
 ``` r
-ui_choices
+data(ui_choices)
 ```
 
 ## Format
