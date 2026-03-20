@@ -7,12 +7,13 @@
 #' @importFrom curl multi_run new_pool curl_fetch_memory parse_headers_list
 #' @importFrom purrr map_dbl
 #' @keywords internal
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @noRd
 url_file_size <- function(urls) {
     if (length(urls) == 0) return(numeric(0))
     
     # Use curl for parallel HEAD requests
-    sizes <- rep(NA_real_, length(urls))
+    env <- new.env(parent = emptyenv())
+    env$sizes <- rep(NA_real_, length(urls))
     pool <- new_pool()
     
     for (i in seq_along(urls)) {
@@ -24,7 +25,7 @@ url_file_size <- function(urls) {
                     headers <- parse_headers_list(res$headers)
                     content_length <- headers[["content-length"]]
                     if (!is.null(content_length)) {
-                        sizes[idx[1]] <<- as.numeric(content_length) / 10^9
+                        env$sizes[idx[1]] <- as.numeric(content_length) / 10^9
                     }
                 }
             },
@@ -35,16 +36,16 @@ url_file_size <- function(urls) {
     }
     
     multi_run(pool = pool)
-    sizes[is.na(sizes)] <- 0
-    sizes
+    env$sizes[is.na(env$sizes)] <- 0
+    env$sizes
 }
 
 #' Prints a message indicating the size of a download
-#' @inheritParams url_file_size
+#' @param urls A character vector containing URLs
 #' @importFrom cli cli_alert_info
 #' @keywords internal
+#' @noRd
 #' @return `NULL`, invisibly
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 report_file_sizes <- function(urls) {
   total_size <- url_file_size(urls) |>
     sum() |>
@@ -80,6 +81,7 @@ get_default_cache_dir <- function() {
 #' Clear the default cache directory
 #' @return A length one character vector.
 #' @keywords internal
+#' @noRd
 clear_cache <- function() {
   get_default_cache_dir() |> unlink(TRUE, TRUE)
 }
@@ -88,7 +90,7 @@ clear_cache <- function() {
 #' @param updated_data A character vector of new metadata file name
 #' @return `NULL`, invisibly
 #' @keywords internal
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @noRd
 keep_updated_metadata <- function(updated_data) {
   cache_directory <- get_default_cache_dir()
   files_in_cache <- list.files(cache_directory)
@@ -103,7 +105,7 @@ keep_updated_metadata <- function(updated_data) {
 #' @importFrom cli cli_abort cli_alert_info
 #' @return `NULL`, invisibly
 #' @keywords internal
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @noRd
 sync_remote_file <- function(full_url, output_file, ...) {
   if (!file.exists(output_file)) {
     output_dir <- dirname(output_file)
@@ -137,6 +139,7 @@ sync_remote_file <- function(full_url, output_file, ...) {
 #' @importFrom cli cli_alert_info cli_alert_warning cli_abort
 #' @return The output_files vector, invisibly
 #' @keywords internal
+#' @noRd
 sync_remote_files <- function(urls, output_files, progress = TRUE) {
     if (length(urls) == 0) return(invisible(character(0)))
     if (length(urls) != length(output_files)) {
@@ -202,16 +205,14 @@ sync_remote_files <- function(urls, output_files, progress = TRUE) {
 #' Hence the need for this method
 #' @param conn A DuckDB connection.
 #' @param path Path(s) to parquet file(s).
-#' @param filename_column A column name to the metadata that indicates which row came from which file.
-#'   By default it does not add the column.
 #' @importFrom dplyr tbl
 #' @importFrom dbplyr sql
 #' @importFrom glue glue_sql
 #' @return An SQL data frame
 #' @keywords internal
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-duckdb_read_parquet <- function(conn, path, filename_column = FALSE) {
-  from_clause <- glue_sql("FROM read_parquet([{`path`*}], union_by_name=true, filename={filename_column})", .con = conn) |> sql()
+#' @noRd
+duckdb_read_parquet <- function(conn, path) {
+  from_clause <- glue_sql("FROM read_parquet([{`path`*}], union_by_name=true)", .con = conn) |> sql()
   tbl(conn, from_clause)
 }
 
@@ -220,7 +221,7 @@ duckdb_read_parquet <- function(conn, path, filename_column = FALSE) {
 #' @importFrom dplyr filter distinct pull collect
 #' @return `NULL`, invisibly
 #' @keywords internal
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @noRd
 delete_counts <- function(data, 
                           assay = c("original","cpm"), 
                           cache_directory = get_default_cache_dir()){
@@ -231,7 +232,7 @@ delete_counts <- function(data,
   map(counts_path, ~ .x |> unlink(recursive = TRUE))
   
   # metadata
-  filename <- get_metadata(cache_directory = cache_directory, filename_column = "meta_filename", use_cache = FALSE) |>
+  filename <- get_metadata(cache_directory = cache_directory, use_cache = FALSE) |>
     filter(file_id_db %in% ids) |>
     distinct(meta_filename) |>
     pull(meta_filename)
@@ -250,7 +251,6 @@ delete_counts <- function(data,
 #' @importFrom DBI dbConnect dbExecute
 #' @keywords internal
 #' @noRd
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 duckdb_write_parquet <- function(.tbl_sql, 
                                  path, 
                                  con = dbConnect(duckdb::duckdb(),  dbdir = ":memory:")) {
@@ -268,7 +268,6 @@ duckdb_write_parquet <- function(.tbl_sql,
 #' @return A data frame where all values are not NA
 #' @keywords internal
 #' @noRd
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 clean_and_report_NA_columns <- function(df) {
   na_column_names <- df |>
     dplyr::select(dplyr::where(~ all(is.na(.)))) |>
@@ -297,7 +296,6 @@ clean_and_report_NA_columns <- function(df) {
 #' @inheritDotParams zellkonverter::writeH5AD
 #' @keywords internal
 #' @noRd
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 save_sce_as_h5ad <- function(sce, path, ...) {
   # Remove columns in colData that are all NA and warn the user
   cleaned_coldata <- SummarizedExperiment::colData(sce) |>
@@ -322,11 +320,11 @@ save_sce_as_h5ad <- function(sce, path, ...) {
 #' Corresponding entries in the column metadata (`colData`) are also duplicated.
 #'
 #' @param sce A `SingleCellExperiment` object.
-#' @noRd
 #' @importFrom SummarizedExperiment assay assays colData
 #' @importFrom SingleCellExperiment SingleCellExperiment
 #' @importFrom rlang set_names
 #' @keywords internal
+#' @noRd
 duplicate_single_column_assay <- function(sce) {
 
   assay_name <- (sce |> assays() |> names())[[1L]]
@@ -367,8 +365,8 @@ duplicate_single_column_assay <- function(sce) {
 #' @importFrom purrr pmap
 #' @importFrom httr parse_url
 #' @importFrom rlang .data
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 #' @keywords internal
+#' @noRd
 sync_metadata_assay_files <- function(data,
                                       assays = "counts",
                                       repository = COUNTS_URL,

@@ -315,55 +315,6 @@ test_that("get_single_cell_experiment() expect to combine local and cloud counts
   expect_contains(colData(sce)[,"sample_id"] |> unique(), "pbmc3k")
 })
 
-
-
-test_that("get_metacell() syncs appropriate files", {
-  cache = tempfile()
-  id = "4414dffc701125c467adad7977adcf21___1.h5ad"
-  sce = get_metadata(cache_directory = cache, cloud_metadata = SAMPLE_DATABASE_URL) |> filter(!is.na(metacell_8)) |> 
-    filter(file_id_cellNexus_single_cell == id) |> 
-    get_metacell(cache_directory = cache,
-                 cell_aggregation = "metacell_8")
-  
-  sce |> colnames() |> length() |> expect_gt(1)
-  
-})
-
-test_that("get_metadata handles use_split_files correctly", {
-  cache = tempfile()
-  meta_single <- get_metadata(use_split_files = FALSE, cloud_metadata = SAMPLE_DATABASE_URL)
-  expect_s3_class(meta_single, "tbl_dbi") 
-  expect_gt(ncol(meta_single), 0)
-  
-  meta_split <- get_metadata(use_cache = FALSE, 
-                             use_split_files = TRUE)
-  expect_s3_class(meta_split, "tbl_dbi")
-  expect_gt(ncol(meta_split), 0)
-  
-  expect_gt(ncol(meta_single), ncol(meta_split))
-})
-
-test_that("join_census_table() returns an unique column",{
-  cache = tempfile()
-  col <- "cell_type"
-  meta <- get_metadata(use_split_files = T, cloud_metadata = SAMPLE_DATABASE_URL) |> head() |> 
-    join_census_table()
-  expect_true(col %in% colnames(meta))
-})
-
-test_that("join_metacell_table() returns an unique column",{
-  cache = tempfile()
-  meta <- get_metadata(use_split_files = T, cloud_metadata = SAMPLE_DATABASE_URL) |> head() |> 
-    join_metacell_table()
-  cols <- colnames(meta)
-  
-  # Detect metacell-related columns
-  metacell_cols <- cols[grepl("metacell", cols, ignore.case = TRUE)] 
-  
-  # Expect that metacell columns exist
-  expect_true(length(metacell_cols) > 0)
-})
-
 test_that("keep_quality_cells() return high quality cells", {
   cache = tempfile()
   
@@ -371,8 +322,8 @@ test_that("keep_quality_cells() return high quality cells", {
   alive_col = "alive"
   doublet_col = "scDblFinder.class"
   
-  meta_unfiltered <- get_metadata(use_split_files = T)
-  meta_filtered <- get_metadata(use_split_files = T) |> keep_quality_cells()
+  meta_unfiltered <- get_metadata()
+  meta_filtered <- get_metadata() |> keep_quality_cells()
   
   # Filtered should have fewer rows
   n_unfiltered <- meta_unfiltered |> dplyr::count() |> collect() |> pull(n)

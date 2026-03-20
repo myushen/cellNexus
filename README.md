@@ -36,10 +36,6 @@ harmonised quality control, normalisation, and multi-layer data
 generation. Through this process, it produces updated datasets that
 remain aligned with the evolving CELLxGENE releases.
 
-<img src="man/figures/logo.png" width="120x" height="139px" />
-
-<img src="man/figures/svcf_logo.jpeg" width="155x" height="58px" /><img src="man/figures/czi_logo.png" width="129px" height="58px" /><img src="man/figures/bioconductor_logo.jpg" width="202px" height="58px" /><img src="man/figures/vca_logo.png" width="219px" height="58px" /><img src="man/figures/nectar_logo.png" width="180px" height="58px" />
-
 # Query interface
 
 ## Installation
@@ -127,8 +123,10 @@ gene counts.
 
 ``` r
 metadata = metadata |> 
-  dplyr::filter(feature_count >= 5000) |> 
   keep_quality_cells()
+
+metadata = metadata |>
+  dplyr::filter(feature_count >= 5000)
 ```
 
 ## Download single-cell RNA sequencing counts
@@ -151,7 +149,7 @@ single_cell_counts
 ```
 
     #> # A SingleCellExperiment-tibble abstraction: 6 × 99
-    #> # [90mFeatures=56239 | Cells=6 | Assays=counts[0m
+    #> # [90mFeatures=56239 | Cells=6 | Assays=counts[0m
     #>   .cell            dataset_id observation_joinid sample_id cell_type cell_type_ontology_t…¹ sample_ assay assay_ontology_term_id cell_count citation collection_id
     #>   <chr>            <chr>      <chr>              <chr>     <chr>     <chr>                  <chr>   <chr> <chr>                       <int> <chr>    <chr>        
     #> 1 LAP92_CATTCTAGT… 9f222629-… )i-{f4(#c3         9c8fa5a8… CD4-posi… CL:0000624             9c8fa5… 10x … EFO:0009922               2282447 Publica… 6f6d381a-770…
@@ -186,7 +184,7 @@ single_cell_cpm
 ```
 
     #> # A SingleCellExperiment-tibble abstraction: 6 × 99
-    #> # [90mFeatures=1 | Cells=6 | Assays=cpm[0m
+    #> # [90mFeatures=1 | Cells=6 | Assays=cpm[0m
     #>   .cell            dataset_id observation_joinid sample_id cell_type cell_type_ontology_t…¹ sample_ assay assay_ontology_term_id cell_count citation collection_id
     #>   <chr>            <chr>      <chr>              <chr>     <chr>     <chr>                  <chr>   <chr> <chr>                       <int> <chr>    <chr>        
     #> 1 LAP92_CATTCTAGT… 9f222629-… )i-{f4(#c3         9c8fa5a8… CD4-posi… CL:0000624             9c8fa5… 10x … EFO:0009922               2282447 Publica… 6f6d381a-770…
@@ -221,7 +219,7 @@ pseudobulk_counts
 ```
 
     #> # A SingleCellExperiment-tibble abstraction: 3 × 60
-    #> # [90mFeatures=56239 | Cells=3 | Assays=counts[0m
+    #> # [90mFeatures=56239 | Cells=3 | Assays=counts[0m
     #>   .cell         dataset_id sample_id sample_ assay assay_ontology_term_id cell_count citation collection_id dataset_version_id default_embedding development_stage
     #>   <chr>         <chr>      <chr>     <chr>   <chr> <chr>                       <int> <chr>    <chr>         <chr>              <chr>             <chr>            
     #> 1 a2459ad42723… 9f222629-… a2459ad4… a2459a… 10x … EFO:0011025               2282447 Publica… 6f6d381a-770… 8d84ba15-d367-4dc… X_umap            53-year-old huma…
@@ -234,43 +232,6 @@ pseudobulk_counts
     #> #   sex_ontology_term_id <chr>, suspension_type <chr>, tissue <chr>, tissue_ontology_term_id <chr>, tissue_type <chr>, title <chr>, tombstone <lgl>, url <chr>,
     #> #   x_approximate_distribution <chr>, X_umap1 <dbl>, X_umap2 <dbl>, age_days <int>, tissue_groups <chr>, atlas_id <chr>, cell_type_unified_ensemble <chr>,
     #> #   sample_chunk <int>, cell_chunk <int>, sample_pseudobulk_chunk <int>, file_id_cellNexus_pseudobulk <chr>, ethnicity_flagging_score <dbl>, …
-
-### Query metacell
-
-The metadata includes a series of metacell aggregation levels, beginning
-with 2, 4, 8, and so on. For example, the value of metacell_2 represents
-a grouping of cells that can be split into two distinct metacells.
-
-``` r
-metacell_counts <-
-  metadata |>
-  dplyr::filter(!is.na(metacell_2)) |>
-  dplyr::filter(
-    self_reported_ethnicity == "African" &
-    assay |> stringr::str_like("%10x%") &
-    tissue == "lung parenchyma" &
-    cell_type |> stringr::str_like("%CD4%")
-  ) |>
-  head() |>
-  get_metacell(cell_aggregation = "metacell_2")
-
-metacell_counts
-```
-
-    #> # A SingleCellExperiment-tibble abstraction: 4 × 40
-    #> # [90mFeatures=56239 | Cells=4 | Assays=counts[0m
-    #>   .cell              metacell_2 dataset_id sample_id assay assay_ontology_term_id development_stage development_stage_on…¹ disease disease_ontology_ter…² donor_id
-    #>   <chr>                   <int> <chr>      <chr>     <chr> <chr>                  <chr>             <chr>                  <chr>   <chr>                  <chr>   
-    #> 1 9c8fa5a8d2ae37179…          1 9f222629-… 9c8fa5a8… 10x … EFO:0009922            37-year-old huma… HsapDv:0000131         normal  PATO:0000461           homosap…
-    #> 2 9c8fa5a8d2ae37179…          2 9f222629-… 9c8fa5a8… 10x … EFO:0009922            37-year-old huma… HsapDv:0000131         normal  PATO:0000461           homosap…
-    #> 3 e4d7f8162faf68a85…          1 9f222629-… e4d7f816… 10x … EFO:0011025            29-year-old huma… HsapDv:0000123         normal  PATO:0000461           homosap…
-    #> 4 a2459ad4272363e6e…          1 9f222629-… a2459ad4… 10x … EFO:0011025            53-year-old huma… HsapDv:0000147         normal  PATO:0000461           homosap…
-    #> # ℹ abbreviated names: ¹​development_stage_ontology_term_id, ²​disease_ontology_term_id
-    #> # ℹ 29 more variables: experiment___ <chr>, explorer_url <chr>, feature_count <int>, is_primary_data <chr>, organism <chr>, organism_ontology_term_id <chr>,
-    #> #   published_at <chr>, raw_data_location <chr>, revised_at <chr>, sample_heuristic <chr>, schema_version <chr>, self_reported_ethnicity <chr>,
-    #> #   self_reported_ethnicity_ontology_term_id <chr>, sex <chr>, sex_ontology_term_id <chr>, tissue <chr>, tissue_ontology_term_id <chr>, tissue_type <chr>,
-    #> #   title <chr>, tombstone <lgl>, url <chr>, age_days <int>, tissue_groups <chr>, atlas_id <chr>, sample_chunk <int>, file_id_cellNexus_single_cell <chr>,
-    #> #   file_id_cellNexus_metacell <chr>, dir_prefix <chr>, metacell_identifier <chr>
 
 ### Extract only a subset of genes
 
@@ -294,7 +255,7 @@ single_cell_counts
 ```
 
     #> # A SingleCellExperiment-tibble abstraction: 6 × 99
-    #> # [90mFeatures=1 | Cells=6 | Assays=cpm[0m
+    #> # [90mFeatures=1 | Cells=6 | Assays=cpm[0m
     #>   .cell            dataset_id observation_joinid sample_id cell_type cell_type_ontology_t…¹ sample_ assay assay_ontology_term_id cell_count citation collection_id
     #>   <chr>            <chr>      <chr>              <chr>     <chr>     <chr>                  <chr>   <chr> <chr>                       <int> <chr>    <chr>        
     #> 1 LAP92_CATTCTAGT… 9f222629-… )i-{f4(#c3         9c8fa5a8… CD4-posi… CL:0000624             9c8fa5… 10x … EFO:0009922               2282447 Publica… 6f6d381a-770…
@@ -332,11 +293,6 @@ seurat_counts <-
 seurat_counts
 ```
 
-    #> An object of class Seurat 
-    #> 56239 features across 6 samples within 1 assay 
-    #> Active assay: originalexp (56239 features, 0 variable features)
-    #>  2 layers present: counts, data
-
 By default, data is downloaded to `get_default_cache_dir()` output. If
 memory is a concern, users can specify a custom cache directory to
 metadata and counts functions:
@@ -363,8 +319,8 @@ single_cell_counts <-
 single_cell_counts
 ```
 
-Same strategy can be applied for functions `get_pseuodbulk()`,
-`get_metacell()`, `get_seurat()` by passing your custom directory
+Same strategy can be applied for functions `get_pseuodbulk()` and 
+`get_seurat()` by passing your custom directory
 character to “cache_directory” parameter.
 
 ## Save your `SingleCellExperiment`
@@ -476,8 +432,6 @@ counts |>
   ggtitle("FCN1 in CD14 monocytes by disease. Coloured by datasets") 
 ```
 
-![](man/figures/FCN1_disease_plot.png)<!-- -->
-
 ``` r
 # Plot by tissue
 counts |>
@@ -496,8 +450,6 @@ counts |>
   ggtitle("FCN1 in CD14 monocytes by tissue. Colored by datasets") + 
   theme(legend.position = "none", axis.text.x = element_text(size = 6.5))
 ```
-
-![](man/figures/FCN1_tissue_plot.png)<!-- -->
 
 ## Integrate cloud and local metadata
 
@@ -568,7 +520,7 @@ get_metadata(cloud_metadata = METADATA_URL,
 #> ! cellNexus says: Not all genes completely overlap across the provided objects. Counts are generated by genes intersection.
 #> ℹ Compiling Experiment.
 #> # A SingleCellExperiment-tibble abstraction: 500 × 8
-#> # [90mFeatures=12795 | Cells=500 | Assays=counts[0m
+#> # [90mFeatures=12795 | Cells=500 | Assays=counts[0m
 #>    .cell            sample_id dataset_id cell_type_unified_ensemble atlas_id             file_id_cellNexus_single_cell         dir_prefix           original_cell_
 #>    <chr>            <chr>     <chr>      <chr>                      <chr>                <chr>                                 <chr>                <chr>         
 #>  1 AAACATACAACCAC_1 pbmc3k    pbmc3k     Memory CD4 T               cellxgene/03-10-2025 67e196a3c4e145151fc9e06c200e2f7f.h5ad /tmp/RtmpJCZSCa/cel… AAACATACAACCAC
