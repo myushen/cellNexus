@@ -7,8 +7,7 @@
 join_census_table(
   tbl,
   cache_directory = get_default_cache_dir(),
-  join_keys = c("sample_id", "dataset_id", "observation_joinid"),
-  ...
+  join_keys = c("sample_id", "dataset_id", "observation_joinid")
 )
 }
 \arguments{
@@ -19,9 +18,7 @@ directory where remote parquet files will be stored. Defaults to
 \code{\link[=get_default_cache_dir]{get_default_cache_dir()}}.}
 
 \item{join_keys}{A character vector of column names used for the join.
-Defaults to \code{c("sample_id", "dataset_id", "observation_joinid")}.}
-
-\item{...}{Additional arguments passed to \code{\link[arrow:read_parquet]{arrow::read_parquet()}}.
+Defaults to \code{c("sample_id", "dataset_id", "observation_joinid")}.
 library(dplyr)
 get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |>
 join_census_table(cache_directory = tempdir())}

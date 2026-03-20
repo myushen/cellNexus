@@ -7,25 +7,11 @@
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
 }
 \usage{
-get_metadata_url(
-  databases = "metadata.2.0.0.parquet",
-  use_split_files = FALSE,
-  use_census = FALSE,
-  use_metacell = FALSE
-)
+get_metadata_url(databases = "cellnexus_metadata.2.0.0.parquet")
 }
 \arguments{
 \item{databases}{A character vector specifying the names of the metadata files.
 Download the specific metadata by defining the metadata version.}
-
-\item{use_split_files}{Logical, default \code{FALSE}. If \code{TRUE}, returns
-URLs for the split metadata files.}
-
-\item{use_census}{Logical, default \code{FALSE}. If \code{TRUE}, returns the URL
-for the census metadata file.}
-
-\item{use_metacell}{Logical, default \code{FALSE}. If \code{TRUE}, returns the URL
-for the metacell metadata file.}
 }
 \value{
 A character vector of URLs to parquet files to download
@@ -34,7 +20,7 @@ A character vector of URLs to parquet files to download
 Returns the URLs for all metadata files
 }
 \examples{
-get_metadata_url("metadata.2.0.0.parquet")
+get_metadata_url("cellnexus_metadata.2.0.0.parquet")
 }
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
