@@ -19,7 +19,7 @@ navbar:
     - text: "home"
       href: index.html
     - text: "Query builder"
-      href: https://j-andrews7-cellnexus.share.connect.posit.cloud/
+      href: https://mangiolalaboratory-cellnexus.share.connect.posit.cloud/
     - text: "gene expression explore"
       href: articles/gene-expression-explore.html
 
