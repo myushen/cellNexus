@@ -1,7 +1,7 @@
 Type: Package
 Package: cellNexus
 Title: Queries the Human Cell Atlas
-Version: 0.99.9
+Version: 0.99.13
 Authors@R: c(
     person(
         "Stefano",
@@ -93,6 +93,7 @@ Imports:
     DBI,
     tools,
     httr,
+    curl,
     cli,
     SeuratObject,
     Seurat,
@@ -109,7 +110,8 @@ Imports:
     zellkonverter,
     anndataR,
     stringr,
-    scuttle
+    scuttle,
+    rclipboard
 Suggests:
     BiocStyle,
     knitr,
