@@ -225,32 +225,6 @@ data(pseudobulk_counts)
 pseudobulk_counts
 ```
 
-### Query metacell 
-
-The metadata includes a series of metacell aggregation levels, beginning with 2, 4, 8, and so on. For example, the value of metacell_2 represents a grouping of cells that can be split into two distinct metacells. 
-
-```{r, eval=FALSE}
-metacell_counts <-
-  metadata |>
-  dplyr::filter(!is.na(metacell_2)) |>
-  dplyr::filter(
-    self_reported_ethnicity == "African" &
-    assay |> stringr::str_like("%10x%") &
-    tissue == "lung parenchyma" &
-    cell_type |> stringr::str_like("%CD4%")
-  ) |>
-  head() |>
-  get_metacell(cell_aggregation = "metacell_2")
-
-metacell_counts
-```
-
-```{r, echo=FALSE}
-# Pre-made example for demonstration (avoids download during build)
-data(metacell_counts)
-metacell_counts
-```
-
 ### Extract only a subset of genes
 
 This is helpful if just few genes are of interest (e.g ENSG00000134644 (PUM1)), as they can be compared across samples. cellNexus uses ENSEMBL gene ID(s).

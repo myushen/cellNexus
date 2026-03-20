@@ -225,11 +225,8 @@ get_pseudobulk <- function(data,
 #' @importFrom cli cli_alert_success cli_alert_info cli_alert_warning
 #' @importFrom rlang .data
 #' @importFrom S4Vectors DataFrame
-#' @examples
-#' # Use the lightweight sample database URL (for fast checks during development only)
-#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
-#' metacell <- meta |> get_metacell(cell_aggregation = "metacell_2")
-#' @export
+#' @keywords internal
+#' @noRd
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
@@ -270,17 +267,17 @@ get_metacell <- function(data,
 #' Sync, read, filter and compile experiments from cache
 #'
 #' Shared internal implementation used by [get_single_cell_experiment()],
-#' [get_pseudobulk()] and [get_metacell()].  Handles file synchronisation,
+#' [get_pseudobulk()].  Handles file synchronisation,
 #' per-assay reading, feature filtering and experiment assembly.
 #'
 #' @param raw_data A collected (in-memory) tibble of metadata.
 #' @param assays Character vector of assay names.
-#' @param cell_aggregation Aggregation level string (e.g. \code{""}, \code{"pseudobulk"}, \code{"metacell_2"}).
+#' @param cell_aggregation Aggregation level string (e.g. \code{""}, \code{"pseudobulk"}.
 #' @param cache_directory Local cache root path.
 #' @param repository Base HTTP URL for remote files, or \code{NULL}.
 #' @param grouping_column Name of the file-ID column used to group cells.
 #' @param features Optional character vector of requested gene features.
-#' @param metacell_column For metacell data, the metacell column name; \code{NULL} otherwise.
+#' @param metacell_column Optional character of hierarchy.
 #' @return A \code{SingleCellExperiment} or \code{SummarizedExperiment} object.
 #' @importFrom httr parse_url
 #' @importFrom dplyr transmute distinct mutate

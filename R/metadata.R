@@ -1,8 +1,5 @@
 # Functions that relate to the harmonised metadata database
 
-#' @include utils.R
-NULL
-
 #' Environment that we use to cache the DuckDB connections
 #' @keywords internal
 #' @noRd
@@ -158,8 +155,6 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #' get_metadata(cache_directory = path.expand('~'))
 #' ```
 #' 
-#' @inheritDotParams duckdb_read_parquet
-#' 
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
@@ -169,8 +164,7 @@ get_metadata <- function(
     cloud_metadata = get_metadata_url(),
     local_metadata = NULL,
     cache_directory = get_default_cache_dir(),
-    use_cache = TRUE,
-    ...
+    use_cache = TRUE
 ) {
   # Synchronize remote files
   walk(cloud_metadata, function(url) {

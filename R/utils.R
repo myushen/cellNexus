@@ -7,21 +7,45 @@
 #' @importFrom purrr map_dbl
 #' @importFrom httr HEAD
 #' @keywords internal
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-url_file_size <- function(urls){
-    map_dbl(urls, function(url){
-        as.numeric(
-            HEAD(url)$headers$`content-length` 
-        ) / 10^9
-    })
+#' @noRd
+url_file_size <- function(urls) {
+    if (length(urls) == 0) return(numeric(0))
+    
+    # Use curl for parallel HEAD requests
+    env <- new.env(parent = emptyenv())
+    env$sizes <- rep(NA_real_, length(urls))
+    pool <- new_pool()
+    
+    for (i in seq_along(urls)) {
+        curl::curl_fetch_multi(
+            urls[i],
+            done = function(res) {
+                idx <- which(urls == res$url)
+                if (length(idx) > 0) {
+                    headers <- parse_headers_list(res$headers)
+                    content_length <- headers[["content-length"]]
+                    if (!is.null(content_length)) {
+                        env$sizes[idx[1]] <- as.numeric(content_length) / 10^9
+                    }
+                }
+            },
+            fail = function(msg) { },
+            pool = pool,
+            handle = curl::new_handle(nobody = TRUE)
+        )
+    }
+    
+    multi_run(pool = pool)
+    env$sizes[is.na(env$sizes)] <- 0
+    env$sizes
 }
 
 #' Prints a message indicating the size of a download
-#' @inheritParams url_file_size
+#' @param urls A character vector containing URLs
 #' @importFrom cli cli_alert_info
 #' @keywords internal
+#' @noRd
 #' @return `NULL`, invisibly
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 report_file_sizes <- function(urls) {
   total_size <- url_file_size(urls) |>
     sum() |>
@@ -57,6 +81,7 @@ get_default_cache_dir <- function() {
 #' Clear the default cache directory
 #' @return A length one character vector.
 #' @keywords internal
+#' @noRd
 clear_cache <- function() {
   get_default_cache_dir() |> unlink(TRUE, TRUE)
 }
@@ -65,8 +90,8 @@ clear_cache <- function() {
 #' @param updated_data A character vector of outdated metadata name
 #' @return `NULL`, invisibly
 #' @keywords internal
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-clear_old_metadata <- function(updated_data) {
+#' @noRd
+keep_updated_metadata <- function(updated_data) {
   cache_directory <- get_default_cache_dir()
   files_in_cache <- list.files(cache_directory)
   pattern <- "\\.parquet$"
@@ -80,7 +105,7 @@ clear_old_metadata <- function(updated_data) {
 #' @importFrom cli cli_abort cli_alert_info
 #' @return `NULL`, invisibly
 #' @keywords internal
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @noRd
 sync_remote_file <- function(full_url, output_file, ...) {
   if (!file.exists(output_file)) {
     output_dir <- dirname(output_file)
@@ -102,7 +127,79 @@ sync_remote_file <- function(full_url, output_file, ...) {
   invisible(NULL)
 }
 
-#' Returns a tibble from a parquet file path via DuckDB
+#' Synchronises multiple remote files with local paths in parallel
+#' 
+#' Uses curl::multi_download for concurrent async I/O downloads.
+#' Falls back to sequential downloads if parallel downloads are disabled.
+#' 
+#' @param urls A character vector of URLs to download
+#' @param output_files A character vector of local file paths (same length as urls)
+#' @param progress Whether to show a progress bar (default TRUE)
+#' @importFrom curl multi_download
+#' @importFrom cli cli_alert_info cli_alert_warning cli_abort
+#' @return The output_files vector, invisibly
+#' @keywords internal
+#' @noRd
+sync_remote_files <- function(urls, output_files, progress = TRUE) {
+    if (length(urls) == 0) return(invisible(character(0)))
+    if (length(urls) != length(output_files)) {
+        cli_abort("urls and output_files must have the same length")
+    }
+    
+    # Filter to only files that don't exist
+    to_download <- !file.exists(output_files)
+    urls_to_download <- urls[to_download]
+    files_to_download <- output_files[to_download]
+    
+    if (length(urls_to_download) == 0) {
+        return(invisible(output_files))
+    }
+    
+    # Create directories for all output files
+    unique_dirs <- unique(dirname(files_to_download))
+    for (dir in unique_dirs) {
+        dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+    }
+    
+    use_parallel <- getOption("cellNexus.parallel_downloads", TRUE)
+    
+    if (use_parallel && length(urls_to_download) > 1) {
+        cli_alert_info("Downloading {length(urls_to_download)} file{?s} in parallel...")
+        
+        # Use curl::multi_download for parallel async I/O
+        # Note: multiplex=TRUE enables HTTP/2 multiplexing for concurrent streams
+        results <- multi_download(
+            urls = urls_to_download,
+            destfiles = files_to_download,
+            progress = progress,
+            multiplex = TRUE
+        )
+        
+        # Check for failures
+        failed <- results$success == FALSE | results$status_code >= 400
+        if (any(failed, na.rm = TRUE)) {
+            failed_urls <- urls_to_download[failed]
+            failed_files <- files_to_download[failed]
+            # Clean up failed downloads
+            for (f in failed_files) {
+                if (file.exists(f)) file.remove(f)
+            }
+            cli_alert_warning("{sum(failed)} file{?s} failed to download")
+            if (sum(failed) == length(urls_to_download)) {
+                cli_abort("All downloads failed. Check your network connection.")
+            }
+        }
+    } else {
+        # Sequential fallback
+        for (i in seq_along(urls_to_download)) {
+            sync_remote_file(urls_to_download[i], files_to_download[i])
+        }
+    }
+    
+    invisible(output_files)
+}
+
+#' Returns a tibble from a parquet file path
 #' Since dbplyr 2.4.0, raw file paths aren't handled very well
 #' See: <https://github.com/duckdb/duckdb-r/issues/38>
 #' Hence the need for this method
@@ -115,7 +212,7 @@ sync_remote_file <- function(full_url, output_file, ...) {
 #' @importFrom glue glue_sql
 #' @return An SQL data frame
 #' @keywords internal
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @noRd
 duckdb_read_parquet <- function(conn, path, filename_column = FALSE) {
   from_clause <- glue_sql("FROM read_parquet([{`path`*}], union_by_name=true, filename={filename_column})", .con = conn) |> sql()
   tbl(conn, from_clause)
@@ -126,7 +223,7 @@ duckdb_read_parquet <- function(conn, path, filename_column = FALSE) {
 #' @importFrom dplyr filter distinct pull collect
 #' @return `NULL`, invisibly
 #' @keywords internal
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @noRd
 delete_counts <- function(data, 
                           assay = c("original","cpm"), 
                           cache_directory = get_default_cache_dir()){
@@ -156,7 +253,6 @@ delete_counts <- function(data,
 #' @importFrom DBI dbConnect dbExecute
 #' @keywords internal
 #' @noRd
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 duckdb_write_parquet <- function(.tbl_sql, 
                                  path, 
                                  con = dbConnect(duckdb::duckdb(),  dbdir = ":memory:")) {
@@ -174,7 +270,6 @@ duckdb_write_parquet <- function(.tbl_sql,
 #' @return A data frame where all values are not NA
 #' @keywords internal
 #' @noRd
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 clean_and_report_NA_columns <- function(df) {
   na_column_names <- df |>
     dplyr::select(dplyr::where(~ all(is.na(.)))) |>
@@ -203,7 +298,6 @@ clean_and_report_NA_columns <- function(df) {
 #' @inheritDotParams zellkonverter::writeH5AD
 #' @keywords internal
 #' @noRd
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 save_sce_as_h5ad <- function(sce, path, ...) {
   # Remove columns in colData that are all NA and warn the user
   cleaned_coldata <- SummarizedExperiment::colData(sce) |>
@@ -228,11 +322,11 @@ save_sce_as_h5ad <- function(sce, path, ...) {
 #' Corresponding entries in the column metadata (`colData`) are also duplicated.
 #'
 #' @param sce A `SingleCellExperiment` object.
-#' @noRd
 #' @importFrom SummarizedExperiment assay assays colData
 #' @importFrom SingleCellExperiment SingleCellExperiment
 #' @importFrom rlang set_names
 #' @keywords internal
+#' @noRd
 duplicate_single_column_assay <- function(sce) {
 
   assay_name <- (sce |> assays() |> names())[[1L]]
@@ -273,8 +367,8 @@ duplicate_single_column_assay <- function(sce) {
 #' @importFrom purrr pmap
 #' @importFrom httr parse_url
 #' @importFrom rlang .data
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 #' @keywords internal
+#' @noRd
 sync_metadata_assay_files <- function(data,
                                       assays = "counts",
                                       repository = COUNTS_URL,

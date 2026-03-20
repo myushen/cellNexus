@@ -64,9 +64,20 @@
 #' @aliases cellNexus-package cellNexus
 NULL
 
-#' @importFrom purrr walk
-#' @importFrom dbplyr remote_con
-#' @importFrom DBI dbDisconnect
+#' @keywords internal
+#' @noRd
+.onLoad <- function(libname, pkgname) {
+    # Set default package options for parallel downloads
+    op <- options()
+    op.cellNexus <- list(
+        cellNexus.parallel_downloads = TRUE,
+        cellNexus.download_connections = 6L
+    )
+    toset <- !(names(op.cellNexus) %in% names(op))
+    if (any(toset)) options(op.cellNexus[toset])
+    invisible()
+}
+
 #' @keywords internal
 #' @noRd
 .onUnload <- function(libname, pkgname) {
@@ -86,9 +97,6 @@ NULL
 #' This hook attaches `dplyr` when `cellNexus` is attached (e.g.
 #' `library(cellNexus)`), so users can use common `dplyr` verbs without the
 #' `dplyr::` prefix in interactive workflows. Startup messages are suppressed.
-#'
-#' @param libname The library path where the package is installed.
-#' @param pkgname The name of the package being attached.
 #' @keywords internal
 #' @noRd
 .onAttach <- function(libname, pkgname) {

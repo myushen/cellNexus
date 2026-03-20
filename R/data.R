@@ -116,9 +116,7 @@
 #' @source Created from cellNexus datasets
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
+#' @noRd
 #' @docType data
 #' @usage NULL
-#' @examples
-#' data(metacell_counts)
-#' metacell_counts
 "metacell_counts"
