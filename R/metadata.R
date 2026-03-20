@@ -19,7 +19,9 @@ cache <- rlang::env(
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata_url <- function(databases  = "cellnexus_metadata.2.0.0.parquet") {
+get_metadata_url <- function(databases  = c("cellnexus_metadata.2.0.0.parquet", 
+                                            "census_cell_metadata.2.0.0.parquet")
+                             ) {
   keep_updated_metadata(databases)
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}")
@@ -57,9 +59,6 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #'   function has been called before with the same parameters, then a cached
 #'   reference to the table will be returned. If `FALSE`, a new connection will
 #'   be created no matter what.
-#' @param use_split_files Optional logical scalar. If `TRUE`, uses split metadata files
-#'   instead of the single combined metadata file.
-#' @param ... Additional arguments passed to [read_parquet()].
 #' @return A lazy data.frame subclass containing the metadata. You can interact
 #'   with this object using most standard dplyr functions. For string matching,
 #'   it is recommended that you use `stringr::str_like` to filter character
@@ -165,12 +164,7 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 get_metadata <- function(cloud_metadata = get_metadata_url(),
                          local_metadata = NULL,
                          cache_directory = get_default_cache_dir(), 
-                         use_cache = TRUE, 
-                         use_split_files = FALSE) {
-  # Handle split files
-  if (use_split_files) {
-    cloud_metadata <- get_metadata_url(use_split_files = TRUE)
-  }
+                         use_cache = TRUE) {
   
   # Synchronize remote files using parallel downloads
   if (!is.null(cloud_metadata) && length(cloud_metadata) > 0) {
@@ -273,7 +267,8 @@ join_metacell_table <- function(tbl,
                                 cache_directory = get_default_cache_dir(),
                                 join_keys = c("sample_id", "dataset_id", "cell_id")
                                 ) {
-  cloud_metadata <- get_metadata_url(use_metacell = TRUE)
+  # Temporary only because internal
+  cloud_metadata <- SAMPLE_DATABASE_URL
   # Synchronize remote files
   walk(cloud_metadata, function(url) {
     # Calculate the file path from the URL
@@ -300,21 +295,25 @@ join_metacell_table <- function(tbl,
 #' This function creates indexed tables for efficient joining and returns a data frame.
 #'
 #' @param tbl A `tbl_sql` object (from get_metadata) or a database connection.
+#' @param cloud_metadata  HTTP URL/URLs pointing to the census parquet database name and location.
 #' @param cache_directory A character string specifying the local cache
 #'   directory where remote parquet files will be stored. Defaults to
 #'   [get_default_cache_dir()].
 #' @param join_keys A character vector of column names used for the join.
 #'   Defaults to `c("sample_id", "dataset_id", "observation_joinid")`.
+#' @examples
 #' library(dplyr)
-#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |> 
-#'   join_census_table(cache_directory = tempdir())
+#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |>
+#'   # You do not need to specify anything in cloud_metadata
+#'   join_census_table(cloud_metadata = SAMPLE_DATABASE_URL, 
+#'                     cache_directory = tempdir())
 #' @return A lazy SQL table with Census metadata joined to the cellNexus metadata.
 #' @export
 join_census_table <- function(tbl, 
+                              cloud_metadata = get_metadata_url("census_cell_metadata.2.0.0.parquet"),
                               cache_directory = get_default_cache_dir(), 
                               join_keys = c("sample_id", "dataset_id", "observation_joinid")
                               ) {
-  cloud_metadata <- get_metadata_url(use_census = TRUE)
   # Synchronize remote files
   walk(cloud_metadata, function(url) {
     # Calculate the file path from the URL

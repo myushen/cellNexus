@@ -319,8 +319,8 @@ single_cell_counts <-
 single_cell_counts
 ```
 
-Same strategy can be applied for functions `get_pseuodbulk()`,
-`get_metacell()`, `get_seurat()` by passing your custom directory
+Same strategy can be applied for functions `get_pseuodbulk()` and 
+`get_seurat()` by passing your custom directory
 character to “cache_directory” parameter.
 
 ## Save your `SingleCellExperiment`

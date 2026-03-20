@@ -7,7 +7,9 @@
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
 }
 \usage{
-get_metadata_url(databases = "cellnexus_metadata.2.0.0.parquet")
+get_metadata_url(
+  databases = c("cellnexus_metadata.2.0.0.parquet", "census_cell_metadata.2.0.0.parquet")
+)
 }
 \arguments{
 \item{databases}{A character vector specifying the names of the metadata files.

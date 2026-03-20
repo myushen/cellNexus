@@ -284,7 +284,7 @@ get_metacell <- function(data,
 #' @importFrom purrr pmap imap map map_lgl map2 reduce
 #' @importFrom cli cli_alert_info cli_alert_warning cli_progress_bar cli_progress_update cli_progress_done
 #' @importFrom checkmate assert check_true
-#' @importFrom SummarizedExperiment assays<-
+#' @importFrom SummarizedExperiment assays<- assayNames
 #' @importFrom BiocGenerics cbind
 #' @keywords internal
 #' @noRd

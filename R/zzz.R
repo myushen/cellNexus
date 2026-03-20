@@ -33,7 +33,6 @@
 #'   \item{\code{\link{get_single_cell_experiment}}}{Download data as SingleCellExperiment objects}
 #'   \item{\code{\link{get_seurat}}}{Download data as Seurat objects}
 #'   \item{\code{\link{get_pseudobulk}}}{Download aggregated pseudobulk data}
-#'   \item{\code{\link{get_metacell}}}{Download metacell aggregated data}
 #' }
 #'
 #' @section Data Licensing:

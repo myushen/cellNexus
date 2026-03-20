@@ -102,25 +102,6 @@
 #' pseudobulk_counts
 "pseudobulk_counts"
 
-#' Sample Metacell SingleCellExperiment Object
-#'
-#' A pre-made SingleCellExperiment object with metacell aggregated data for vignette demonstration.
-#' This object is used in the vignette to avoid downloading data during package build.
-#' 
-#' @format An object of class \code{SingleCellExperiment} with:
-#' \describe{
-#'   \item{assays}{Gene expression matrix with counts assay aggregated into metacells}
-#'   \item{colData}{Metacell metadata including metacell_2, etc.}
-#' }
-#' 
-#' @source Created from cellNexus datasets
-#' @details See \code{dev/create_vignette_data.R} for the creation script.
-#' @keywords datasets
-#' @noRd
-#' @docType data
-#' @usage NULL
-"metacell_counts"
-
 #' Pre-computed UI Choices for Interface App
 #'
 #' A list of unique values for each filterable column used in the cellNexus

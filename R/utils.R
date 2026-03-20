@@ -205,16 +205,14 @@ sync_remote_files <- function(urls, output_files, progress = TRUE) {
 #' Hence the need for this method
 #' @param conn A DuckDB connection.
 #' @param path Path(s) to parquet file(s).
-#' @param filename_column A column name to the metadata that indicates which row came from which file.
-#'   By default it does not add the column.
 #' @importFrom dplyr tbl
 #' @importFrom dbplyr sql
 #' @importFrom glue glue_sql
 #' @return An SQL data frame
 #' @keywords internal
 #' @noRd
-duckdb_read_parquet <- function(conn, path, filename_column = FALSE) {
-  from_clause <- glue_sql("FROM read_parquet([{`path`*}], union_by_name=true, filename={filename_column})", .con = conn) |> sql()
+duckdb_read_parquet <- function(conn, path) {
+  from_clause <- glue_sql("FROM read_parquet([{`path`*}], union_by_name=true)", .con = conn) |> sql()
   tbl(conn, from_clause)
 }
 
@@ -234,7 +232,7 @@ delete_counts <- function(data,
   map(counts_path, ~ .x |> unlink(recursive = TRUE))
   
   # metadata
-  filename <- get_metadata(cache_directory = cache_directory, filename_column = "meta_filename", use_cache = FALSE) |>
+  filename <- get_metadata(cache_directory = cache_directory, use_cache = FALSE) |>
     filter(file_id_db %in% ids) |>
     distinct(meta_filename) |>
     pull(meta_filename)
