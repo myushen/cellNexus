@@ -126,7 +126,7 @@ suppressPackageStartupMessages({
 ### Load the metadata
 
 ```{r, eval=FALSE}
-metadata <- get_metadata(cloud_metadata = METADATA_URL)
+metadata <- get_metadata()
 metadata
 ```
 

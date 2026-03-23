@@ -347,8 +347,8 @@ test_that("keep_quality_cells() return high quality cells", {
   alive_col <- "alive"
   doublet_col <- "scDblFinder.class"
 
-  meta_unfiltered <- get_metadata()
-  meta_filtered <- get_metadata() |>
+  meta_unfiltered <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
+  meta_filtered <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
     keep_quality_cells()
 
   # Filtered should have fewer rows
