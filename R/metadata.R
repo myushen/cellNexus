@@ -163,7 +163,7 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata <- function(cloud_metadata = get_metadata_url(),
+get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2.0.0.parquet"),
                          local_metadata = NULL,
                          cache_directory = get_default_cache_dir(),
                          use_cache = TRUE) {

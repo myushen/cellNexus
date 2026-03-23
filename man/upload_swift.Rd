@@ -35,10 +35,10 @@ Upload a file to the Nectar object store
 \examples{
 \dontrun{
 upload_swift(
-    "/vast/projects/cellxgene_curated/metadata_parquet_0.2", 
-    "cellNexus-metadata",
-    credential_id = "ABCDEFGHIJK", 
-    credential_secret = "ABCD1234EFGH-5678IJK"
+  "/vast/projects/cellxgene_curated/metadata_parquet_0.2",
+  "cellNexus-metadata",
+  credential_id = "ABCDEFGHIJK",
+  credential_secret = "ABCD1234EFGH-5678IJK"
 )
 }
 }

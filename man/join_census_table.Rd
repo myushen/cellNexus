@@ -34,6 +34,8 @@ This function creates indexed tables for efficient joining and returns a data fr
 library(dplyr)
 get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |>
   # You do not need to specify anything in cloud_metadata
-  join_census_table(cloud_metadata = SAMPLE_DATABASE_URL, 
-                    cache_directory = tempdir())
+  join_census_table(
+    cloud_metadata = SAMPLE_DATABASE_URL,
+    cache_directory = tempdir()
+  )
 }
