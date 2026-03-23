@@ -3,7 +3,7 @@
 #' A sample SingleCellExperiment object created from the pbmc3k dataset for testing and demonstration purposes.
 #' The dataset contains 500 cells with gene expression data mapped to Ensembl gene IDs and formatted
 #' with cellNexus-compatible metadata structure.
-#' 
+#'
 #' @format An object of class \code{SingleCellExperiment} with:
 #' \describe{
 #'   \item{assays}{Gene expression matrix with Ensembl gene IDs as rownames}
@@ -21,11 +21,11 @@
 #'     }
 #'   }
 #' }
-#' 
+#'
 #' @source Created from pbmc3k dataset (SeuratData package)
 #' @details See \code{dev/create_pbmc3k_sce.R} for the complete creation script.
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
+#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
+#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @keywords datasets
@@ -43,13 +43,13 @@
 #'
 #' A pre-made SingleCellExperiment object with counts assay for vignette demonstration.
 #' This object is used in the vignette to avoid downloading data during package build.
-#' 
+#'
 #' @format An object of class \code{SingleCellExperiment} with:
 #' \describe{
 #'   \item{assays}{Gene expression matrix with counts assay}
 #'   \item{colData}{Cell metadata including sample_id, cell_type_unified_ensemble, etc.}
 #' }
-#' 
+#'
 #' @source Created from cellNexus datasets
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
@@ -64,13 +64,13 @@
 #'
 #' A pre-made SingleCellExperiment object with counts-per-million (CPM) assay for vignette demonstration.
 #' This object is used in the vignette to avoid downloading data during package build.
-#' 
+#'
 #' @format An object of class \code{SingleCellExperiment} with:
 #' \describe{
 #'   \item{assays}{Gene expression matrix with cpm assay}
 #'   \item{colData}{Cell metadata including sample_id, cell_type_unified_ensemble, etc.}
 #' }
-#' 
+#'
 #' @source Created from cellNexus datasets
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
@@ -85,13 +85,13 @@
 #'
 #' A pre-made SingleCellExperiment object with pseudobulk aggregated data for vignette demonstration.
 #' This object is used in the vignette to avoid downloading data during package build.
-#' 
+#'
 #' @format An object of class \code{SingleCellExperiment} with:
 #' \describe{
 #'   \item{assays}{Gene expression matrix with counts assay aggregated by sample and cell type}
 #'   \item{colData}{Sample metadata including sample_id, cell_type_unified_ensemble, etc.}
 #' }
-#' 
+#'
 #' @source Created from cellNexus datasets
 #' @details See \code{dev/create_vignette_data.R} for the creation script.
 #' @keywords datasets
@@ -107,7 +107,7 @@
 #' A list of unique values for each filterable column used in the cellNexus
 #' Shiny interface app. Pre-computing these choices avoids slow metadata
 #' queries when the app starts.
-#' 
+#'
 #' @format A named list where each element contains unique values for a column:
 #' \describe{
 #'   \item{cell_type_unified_ensemble}{Character vector of unified cell type labels}
@@ -123,7 +123,7 @@
 #'   \item{tissue}{Character vector of tissue types}
 #'   \item{tissue_groups}{Character vector of tissue group labels}
 #' }
-#' 
+#'
 #' @source Generated from cellNexus metadata
 #' @details See \code{dev/generate_ui_choices.R} for the creation script.
 #'   Run this script to regenerate the choices when metadata columns change.

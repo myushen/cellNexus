@@ -23,7 +23,7 @@
 #'         tissue == "lung parenchyma" &
 #'         cell_type \%LIKE\% "\%CD4\%"
 #'     )
-#' 
+#'
 #' sce <- get_single_cell_experiment(filtered_metadata)
 #' }
 #'
@@ -66,29 +66,29 @@ NULL
 #' @keywords internal
 #' @noRd
 .onLoad <- function(libname, pkgname) {
-    # Set default package options for parallel downloads
-    op <- options()
-    op.cellNexus <- list(
-        cellNexus.parallel_downloads = TRUE,
-        cellNexus.download_connections = 6L
-    )
-    toset <- !(names(op.cellNexus) %in% names(op))
-    if (any(toset)) options(op.cellNexus[toset])
-    invisible()
+  # Set default package options for parallel downloads
+  op <- options()
+  op.cellNexus <- list(
+    cellNexus.parallel_downloads = TRUE,
+    cellNexus.download_connections = 6L
+  )
+  toset <- !(names(op.cellNexus) %in% names(op))
+  if (any(toset)) options(op.cellNexus[toset])
+  invisible()
 }
 
 #' @keywords internal
 #' @noRd
 .onUnload <- function(libname, pkgname) {
-    # Close connections to all cached tables. This should avoid most of the
-    # "Connection is garbage-collected" messages
-    cache$metadata_table |>
-        as.list() |>
-        walk(function(table) {
-            table |>
-                remote_con() |>
-                dbDisconnect()
-        })
+  # Close connections to all cached tables. This should avoid most of the
+  # "Connection is garbage-collected" messages
+  cache$metadata_table |>
+    as.list() |>
+    walk(function(table) {
+      table |>
+        remote_con() |>
+        DBI::dbDisconnect()
+    })
 }
 
 #' Attach `dplyr` on package attach
@@ -105,4 +105,3 @@ NULL
     }
   }
 }
-

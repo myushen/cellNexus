@@ -18,65 +18,64 @@
 #' @examples
 #' \dontrun{
 #' upload_swift(
-#'     "/vast/projects/cellxgene_curated/metadata_parquet_0.2", 
-#'     "cellNexus-metadata",
-#'     credential_id = "ABCDEFGHIJK", 
-#'     credential_secret = "ABCD1234EFGH-5678IJK"
+#'   "/vast/projects/cellxgene_curated/metadata_parquet_0.2",
+#'   "cellNexus-metadata",
+#'   credential_id = "ABCDEFGHIJK",
+#'   credential_secret = "ABCD1234EFGH-5678IJK"
 #' )
 #' }
 upload_swift <- function(
-    source,
-    container,
-    name = basename(source),
-    credential_id = NULL,
-    credential_secret = NULL
+  source,
+  container,
+  name = basename(source),
+  credential_id = NULL,
+  credential_secret = NULL
 ) {
-    # Create the basilisk environment
-    swift_env <- basilisk::BasiliskEnvironment(
-        envname="swift-nectar-upload",
-        pkgname=packageName(),
-        packages=c(
-          "python-swiftclient==4.2.0",
-          "python-keystoneclient==5.1.0",
-          "python==3.10.9"
-        )
+  # Create the basilisk environment
+  swift_env <- basilisk::BasiliskEnvironment(
+    envname = "swift-nectar-upload",
+    pkgname = packageName(),
+    packages = c(
+      "python-swiftclient==4.2.0",
+      "python-keystoneclient==5.1.0",
+      "python==3.10.9"
     )
-    proc <- basilisk::basiliskStart(swift_env)
-    
-    # Build the CLI args
-    if (!is.null(credential_id) && !is.null(credential_secret)){
-        auth <- c(
-            "--os-auth-type",
-            "v3applicationcredential",
-            "--os-application-credential-id",
-            credential_id,
-            "--os-application-credential-secret",
-            credential_secret
-        )
-    }
-    else {
-        auth <- character()
-    }
-    args <- c(
-        "-m", 
-        "swiftclient.shell",
-        "--os-auth-url",
-        "https://keystone.rc.nectar.org.au:5000/v3/",
-        "--os-project-id",
-        "06d6e008e3e642da99d806ba3ea629c5",
-        auth,
-        "upload",
-        container,
-        source,
-        "--object-name",
-        name
+  )
+  proc <- basilisk::basiliskStart(swift_env)
+
+  # Build the CLI args
+  if (!is.null(credential_id) && !is.null(credential_secret)) {
+    auth <- c(
+      "--os-auth-type",
+      "v3applicationcredential",
+      "--os-application-credential-id",
+      credential_id,
+      "--os-application-credential-secret",
+      credential_secret
     )
-    
-    # Perform the upload
-    system2(reticulate::py_exe(), args=args)
-    basilisk::basiliskStop(proc)
-    
-    invisible(NULL)
+  } else {
+    auth <- character()
+  }
+  args <- c(
+    "-m",
+    "swiftclient.shell",
+    "--os-auth-url",
+    "https://keystone.rc.nectar.org.au:5000/v3/",
+    "--os-project-id",
+    "06d6e008e3e642da99d806ba3ea629c5",
+    auth,
+    "upload",
+    container,
+    source,
+    "--object-name",
+    name
+  )
+
+  # Perform the upload
+  system2(reticulate::py_exe(), args = args)
+  basilisk::basiliskStop(proc)
+
+  invisible(NULL)
 }
 
 #' Update the metadata database in nectar using a newly created data frame
@@ -86,30 +85,30 @@ upload_swift <- function(
 #' @inheritDotParams upload_swift
 #' @examples
 #' \dontrun{
-#'  metadata <- cellNexus::get_metadata() |>
-#'      head(10) |>
-#'      dplyr::collect()
-#'  update_database(
-#'      metadata, 
-#'      "0.2.3", 
-#'      credential_id = "ABCDEFGHIJK", 
-#'      credential_secret = "ABCD1234EFGH-5678IJK"
-#'  )
-#'  # Prints "metadata.0.2.3.parquet" if successful
+#' metadata <- cellNexus::get_metadata() |>
+#'   head(10) |>
+#'   dplyr::collect()
+#' update_database(
+#'   metadata,
+#'   "0.2.3",
+#'   credential_id = "ABCDEFGHIJK",
+#'   credential_secret = "ABCD1234EFGH-5678IJK"
+#' )
+#' # Prints "metadata.0.2.3.parquet" if successful
 #' }
 #' @keywords internal
 #' @noRd
 #' @inherit upload_swift return
-update_database <- function(metadata, version, ...){
-    # These are optional dev packages
-    rlang::check_installed(c("arrow", "glue", "basilisk"))
-    
-    dir <- tempdir()
-    parquet_name <- glue::glue("metadata.{version}.parquet")
-    parquet_path <- file.path(dir, parquet_name)
-    arrow::write_parquet(metadata, sink=parquet_path)
-    
-    upload_swift(parquet_path, container="metadata", name=parquet_name, ...)
+update_database <- function(metadata, version, ...) {
+  # These are optional dev packages
+  rlang::check_installed(c("arrow", "glue", "basilisk"))
+
+  dir <- tempdir()
+  parquet_name <- glue::glue("metadata.{version}.parquet")
+  parquet_path <- file.path(dir, parquet_name)
+  arrow::write_parquet(metadata, sink = parquet_path)
+
+  upload_swift(parquet_path, container = "metadata", name = parquet_name, ...)
 }
 
 #' Update the unharmonised parquet files
@@ -123,19 +122,19 @@ update_database <- function(metadata, version, ...){
 #' @examples
 #' \dontrun{
 #' update_unharmonised(
-#'     "/vast/projects/cellxgene_curated/metadata_non_harmonised_parquet_0.2", 
-#'     credential_id = "ABCDEFGHIJK", 
-#'     credential_secret = "ABCD1234EFGH-5678IJK"
+#'   "/vast/projects/cellxgene_curated/metadata_non_harmonised_parquet_0.2",
+#'   credential_id = "ABCDEFGHIJK",
+#'   credential_secret = "ABCD1234EFGH-5678IJK"
 #' )
 #' }
-update_unharmonised <- function(unharmonised_parquet_dir, ...){
-    # name="/" forces it have no prefix, ie be at the top level in the bucket
-    upload_swift(
-        unharmonised_parquet_dir, 
-        container="unharmonised_metadata",
-        name="/", 
-        ...
-    )
+update_unharmonised <- function(unharmonised_parquet_dir, ...) {
+  # name="/" forces it have no prefix, ie be at the top level in the bucket
+  upload_swift(
+    unharmonised_parquet_dir,
+    container = "unharmonised_metadata",
+    name = "/",
+    ...
+  )
 }
 
 #' Converts a series of HDF5Array-serialized SingleCellExperiments to AnnData
@@ -149,52 +148,51 @@ update_unharmonised <- function(unharmonised_parquet_dir, ...){
 #' @examples
 #' \dontrun{
 #' hdf5_to_anndata(
-#'     "/vast/projects/cellxgene_curated/splitted_DB2_data_0.2.1",
-#'     "/vast/projects/cellxgene_curated/splitted_DB2_anndata_0.2.1"
+#'   "/vast/projects/cellxgene_curated/splitted_DB2_data_0.2.1",
+#'   "/vast/projects/cellxgene_curated/splitted_DB2_anndata_0.2.1"
 #' )
 #' hdf5_to_anndata(
-#'     "/vast/projects/cellxgene_curated/splitted_DB2_data_scaled_0.2.1",
-#'     "/vast/projects/cellxgene_curated/splitted_DB2_anndata_scaled_0.2.1"
+#'   "/vast/projects/cellxgene_curated/splitted_DB2_data_scaled_0.2.1",
+#'   "/vast/projects/cellxgene_curated/splitted_DB2_anndata_scaled_0.2.1"
 #' )
 #' }
-hdf5_to_anndata <- function(input_directory, output_directory){
-    dir.create(output_directory, showWarnings = FALSE)
-    # This is a quick utility script to convert the SCE files into AnnData format for use in Pythonlist.files("/vast/projects/RCP/human_cell_atlas/splitted_DB2_data", full.names = FALSE) |>  purrr::walk(function(dir){
-    basilisk::basiliskRun(fun = function(sce) {
-        list.dirs(input_directory)[-1] |>
-            purrr::map_chr(function(sce_dir){
-                cli::cli_alert_info("Processing {sce_dir}.")
-                prefix <- basename(sce_dir)
-                out_path <- glue::glue("{prefix}.h5ad") |>
-                    file.path(output_directory, name=_)
-                
-                if (file.exists(out_path)) {
-                    cli::cli_alert_info("{out_path} already exists. Skipping")
-                }
-                else {
-                    sce <- HDF5Array::loadHDF5SummarizedExperiment(sce_dir)
-                    single_column <- length(colnames(sce)) == 1
-                    if (single_column){
-                        # Hack, so that single-column SCEs will convert 
-                        # correctly
-                        cli::cli_alert_info(
-                            "{sce_dir} has only 1 column. Duplicating column."
-                        )
-                        sce <- cbind(sce, sce)
-                        single_column <- TRUE
-                    }
-                    ad <- zellkonverter::SCE2AnnData(sce)
-                    if (single_column){
-                        # Remove the duplicate column
-                        sce$X <- sce$X[1]
-                    }
-                    # TODO: customize chunking here, when anndata supports it
-                    # (see https://github.com/scverse/anndata/issues/961)
-                    ad$write_h5ad(out_path)
-                }
-                out_path
-            }, .progress = "Converting files")
-    }, env = zellkonverter::zellkonverterAnnDataEnv())
+hdf5_to_anndata <- function(input_directory, output_directory) {
+  dir.create(output_directory, showWarnings = FALSE)
+  # This is a quick utility script to convert the SCE files into AnnData format for use in Pythonlist.files("/vast/projects/RCP/human_cell_atlas/splitted_DB2_data", full.names = FALSE) |>  purrr::walk(function(dir){
+  basilisk::basiliskRun(fun = function(sce) {
+    list.dirs(input_directory)[-1] |>
+      purrr::map_chr(function(sce_dir) {
+        cli::cli_alert_info("Processing {sce_dir}.")
+        prefix <- basename(sce_dir)
+        out_path <- glue::glue("{prefix}.h5ad") |>
+          file.path(output_directory, name = _)
+
+        if (file.exists(out_path)) {
+          cli::cli_alert_info("{out_path} already exists. Skipping")
+        } else {
+          sce <- HDF5Array::loadHDF5SummarizedExperiment(sce_dir)
+          single_column <- length(colnames(sce)) == 1
+          if (single_column) {
+            # Hack, so that single-column SCEs will convert
+            # correctly
+            cli::cli_alert_info(
+              "{sce_dir} has only 1 column. Duplicating column."
+            )
+            sce <- cbind(sce, sce)
+            single_column <- TRUE
+          }
+          ad <- zellkonverter::SCE2AnnData(sce)
+          if (single_column) {
+            # Remove the duplicate column
+            sce$X <- sce$X[1]
+          }
+          # TODO: customize chunking here, when anndata supports it
+          # (see https://github.com/scverse/anndata/issues/961)
+          ad$write_h5ad(out_path)
+        }
+        out_path
+      }, .progress = "Converting files")
+  }, env = zellkonverter::zellkonverterAnnDataEnv())
 }
 
 #' Makes a "downsampled" metadata file that only contains the minimal data
@@ -203,59 +201,59 @@ hdf5_to_anndata <- function(input_directory, output_directory){
 #' @noRd
 #' @param output Character scalar. Path to the output file.
 #' @return NULL
-downsample_metadata <- function(output = "sample_metadata.2.0.0.parquet"){
-    metadata <- get_metadata()
-    
-    # Make a table of rows per dataset
-    dataset_sizes <- metadata |>
+downsample_metadata <- function(output = "sample_metadata.2.0.0.parquet") {
+  metadata <- get_metadata()
+
+  # Make a table of rows per dataset
+  dataset_sizes <- metadata |>
+    dplyr::group_by(.data$file_id_cellNexus_single_cell) |>
+    summarise(n = dplyr::n()) |>
+    dplyr::collect()
+
+  # Find a minimal set of file_id_dbs we need
+  minimal_file_ids <- rlang::exprs(
+    # Used by the vignette
+    .data$self_reported_ethnicity == "African" &
+      stringr::str_like(.data$assay, "%10x%") &
+      .data$tissue == "lung parenchyma" &
+      stringr::str_like(.data$cell_type, "%CD4%"),
+    .data$cell_type_unified_ensemble == "nk",
+    .data$cell_type_unified_ensemble == "cd14 mono",
+    .data$tissue == "kidney blood vessel",
+    .data$file_id_cellNexus_single_cell == "e52795dec7b626b6276b867d55328d9f___1.h5ad",
+    # Used by tests
+    .data$file_id_cellNexus_single_cell == "4164d0eb972ad5e12719b6858c9559ea___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "7ddd6775d704d6826539abaee8d22f65___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "6f0d7a93cff864a1cf029a28e92057e6___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "51250a91a93bfe3c6ba22c9f7d8e04ee___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "490bfce7a70edde5d4fc6352374ead0c___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "25807d1aa8bb7fc63d587a64361fd2db___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "0ad7715d6d9052559d660aaa61bd69d2___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "d2ab9251c9670f0de3657130aa79d7e6___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "88a378f0cd39ed31bd4b83ee4d2fba5a___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "5257022969fc37563e82b608d3908565___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "1d90787ac66a5ed18222e2a9851eabbc___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "4414dffc701125c467adad7977adcf21___1.h5ad",
+  ) |>
+    purrr::map(function(filter) {
+      all_ids <- metadata |>
+        dplyr::filter(!!filter) |>
         dplyr::group_by(.data$file_id_cellNexus_single_cell) |>
-        summarise(n = dplyr::n()) |> 
-        dplyr::collect()
-    
-    # Find a minimal set of file_id_dbs we need
-    minimal_file_ids <- rlang::exprs(
-        # Used by the vignette
-        .data$self_reported_ethnicity == "African" &
-            stringr::str_like(.data$assay, "%10x%") &
-            .data$tissue == "lung parenchyma" &
-            stringr::str_like(.data$cell_type, "%CD4%"),
-        .data$cell_type_unified_ensemble == "nk",
-        .data$cell_type_unified_ensemble == "cd14 mono",
-        .data$tissue == "kidney blood vessel",
-        .data$file_id_cellNexus_single_cell == "e52795dec7b626b6276b867d55328d9f___1.h5ad",
-        # Used by tests
-        .data$file_id_cellNexus_single_cell == "4164d0eb972ad5e12719b6858c9559ea___1.h5ad",
-        .data$file_id_cellNexus_single_cell == "7ddd6775d704d6826539abaee8d22f65___1.h5ad",
-        .data$file_id_cellNexus_single_cell == "6f0d7a93cff864a1cf029a28e92057e6___1.h5ad",
-        .data$file_id_cellNexus_single_cell == "51250a91a93bfe3c6ba22c9f7d8e04ee___1.h5ad",
-        .data$file_id_cellNexus_single_cell == "490bfce7a70edde5d4fc6352374ead0c___1.h5ad",
-        .data$file_id_cellNexus_single_cell == "25807d1aa8bb7fc63d587a64361fd2db___1.h5ad",
-        .data$file_id_cellNexus_single_cell == "0ad7715d6d9052559d660aaa61bd69d2___1.h5ad",
-        .data$file_id_cellNexus_single_cell == "d2ab9251c9670f0de3657130aa79d7e6___1.h5ad",
-        .data$file_id_cellNexus_single_cell == "88a378f0cd39ed31bd4b83ee4d2fba5a___1.h5ad",
-        .data$file_id_cellNexus_single_cell == "5257022969fc37563e82b608d3908565___1.h5ad",
-        .data$file_id_cellNexus_single_cell == "1d90787ac66a5ed18222e2a9851eabbc___1.h5ad",
-        .data$file_id_cellNexus_single_cell == "4414dffc701125c467adad7977adcf21___1.h5ad",
-    ) |>
-        purrr::map(function(filter){
-            all_ids <- metadata |> 
-                dplyr::filter(!!filter) |>
-                dplyr::group_by(.data$file_id_cellNexus_single_cell) |>
-                dplyr::pull(.data$file_id_cellNexus_single_cell) |> unique()
+        dplyr::pull(.data$file_id_cellNexus_single_cell) |>
+        unique()
 
-            dataset_sizes |>
-                dplyr::filter(.data$file_id_cellNexus_single_cell %in% all_ids) |> 
-                dplyr::slice_min(n=50, order_by = .data$n) |>
-                dplyr::pull(.data$file_id_cellNexus_single_cell)
-        }) |>
-        purrr::reduce(union)
-    
-    metadata |>    
-        dplyr::filter(.data$file_id_cellNexus_single_cell %in% minimal_file_ids) |>
-        dplyr::arrange(.data$file_id_cellNexus_single_cell, .data$sample_id) |>
-        dplyr::collect() |>
-        arrow::write_parquet(output)
-    
-    NULL
+      dataset_sizes |>
+        dplyr::filter(.data$file_id_cellNexus_single_cell %in% all_ids) |>
+        dplyr::slice_min(n = 50, order_by = .data$n) |>
+        dplyr::pull(.data$file_id_cellNexus_single_cell)
+    }) |>
+    purrr::reduce(union)
+
+  metadata |>
+    dplyr::filter(.data$file_id_cellNexus_single_cell %in% minimal_file_ids) |>
+    dplyr::arrange(.data$file_id_cellNexus_single_cell, .data$sample_id) |>
+    dplyr::collect() |>
+    arrow::write_parquet(output)
+
+  NULL
 }
-

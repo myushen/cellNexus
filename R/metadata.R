@@ -7,24 +7,26 @@ cache <- rlang::env(
   metadata_table = rlang::env()
 )
 
-#' Returns the URLs for all metadata files 
-#' @param databases A character vector specifying the names of the metadata files. 
-#'   Download the specific metadata by defining the metadata version. 
+#' Returns the URLs for all metadata files
+#' @param databases A character vector specifying the names of the metadata files.
+#'   Download the specific metadata by defining the metadata version.
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
 #' get_metadata_url("cellnexus_metadata.2.0.0.parquet")
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
+#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
+#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata_url <- function(databases  = c("cellnexus_metadata.2.0.0.parquet", 
-                                            "census_cell_metadata.2.0.0.parquet")
-                             ) {
+get_metadata_url <- function(databases = c(
+                               "cellnexus_metadata.2.0.0.parquet",
+                               "census_cell_metadata.2.0.0.parquet"
+                             )) {
   keep_updated_metadata(databases)
   glue::glue(
-    "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}")
+    "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}"
+  )
 }
 
 #' URL pointing to the sample metadata file, which is smaller and for test,
@@ -33,8 +35,8 @@ get_metadata_url <- function(databases  = c("cellnexus_metadata.2.0.0.parquet",
 #' @return A character scalar consisting of the URL
 #' @examples
 #' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir())
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
+#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
+#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
@@ -48,9 +50,9 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #' [`SingleCellExperiment::SingleCellExperiment-class`]
 #'
 #' @param cloud_metadata Optional character vector of any length. HTTP URL/URLs pointing
-#'   to the name and location of parquet database/databases. By default, it points to 
-#'   cellNexus ARDC Nectar Research Cloud. Assign `NULL` to query local_metadata only 
-#'   if exists. 
+#'   to the name and location of parquet database/databases. By default, it points to
+#'   cellNexus ARDC Nectar Research Cloud. Assign `NULL` to query local_metadata only
+#'   if exists.
 #' @param local_metadata Optional character vector of any length representing the local
 #'   path of parquet database(s).
 #' @param cache_directory Optional character vector of length 1. A file path on
@@ -67,13 +69,13 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #' @examples
 #' library(dplyr)
 #' # For fast build purpose only, you do not need to specify anything in cloud_metadata.
-#' filtered_metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> 
-#'     filter(
-#'         self_reported_ethnicity == "African" &
-#'             assay %LIKE% "%10x%" &
-#'             tissue == "lung parenchyma" &
-#'             cell_type %LIKE% "%CD4%"
-#'     )
+#' filtered_metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
+#'   filter(
+#'     self_reported_ethnicity == "African" &
+#'       assay %LIKE% "%10x%" &
+#'       tissue == "lung parenchyma" &
+#'       cell_type %LIKE% "%CD4%"
+#'   )
 #'
 #' @importFrom DBI dbConnect
 #' @importFrom duckdb duckdb
@@ -125,15 +127,15 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #' - `tissue_harmonised`: a coarser tissue name for better filtering
 #' - `age_days`: the number of days corresponding to the age
 #' - `cell_type_harmonised`: the consensus call identity (for immune cells)
-#'   using the original and three novel annotations using Seurat Azimuth and 
+#'   using the original and three novel annotations using Seurat Azimuth and
 #'   SingleR
 #' - `confidence_class`: an ordinal class of how confident
 #'   `cell_type_harmonised` is. 1 is complete consensus, 2 is 3 out of four and
 #'   so on.
 #' - `cell_annotation_azimuth_l2`: Azimuth cell annotation
-#' - `cell_annotation_blueprint_singler`: SingleR cell annotation using 
+#' - `cell_annotation_blueprint_singler`: SingleR cell annotation using
 #'   Blueprint reference
-#' - `cell_annotation_blueprint_monaco`: SingleR cell annotation using Monaco 
+#' - `cell_annotation_blueprint_monaco`: SingleR cell annotation using Monaco
 #'   reference
 #' - `sample_id_db`: Sample subdivision for internal use
 #' - `file_id_db`: File subdivision for internal use
@@ -155,17 +157,16 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #' ```R
 #' get_metadata(cache_directory = path.expand('~'))
 #' ```
-#' 
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
+#'
+#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
+#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_metadata <- function(cloud_metadata = get_metadata_url(),
                          local_metadata = NULL,
-                         cache_directory = get_default_cache_dir(), 
+                         cache_directory = get_default_cache_dir(),
                          use_cache = TRUE) {
-  
   # Synchronize remote files using parallel downloads
   if (!is.null(cloud_metadata) && length(cloud_metadata) > 0) {
     output_paths <- file.path(cache_directory, basename(cloud_metadata))
@@ -173,28 +174,36 @@ get_metadata <- function(cloud_metadata = get_metadata_url(),
     to_download <- !file.exists(output_paths)
     if (any(to_download)) {
       report_file_sizes(cloud_metadata[to_download])
-      sync_remote_files(cloud_metadata[to_download], 
-                        output_paths[to_download], 
-                        progress = TRUE)
+      sync_remote_files(cloud_metadata[to_download],
+        output_paths[to_download],
+        progress = TRUE
+      )
     }
   }
-  
+
   if (is.null(cloud_metadata)) all_parquet <- c(local_metadata)
-  if (!is.null(cloud_metadata)) all_parquet <- c(file.path(cache_directory, 
-                                                           cloud_metadata |> basename()), 
-                                                 local_metadata)
-  
-  # We try to avoid re-reading a set of parquet files 
+  if (!is.null(cloud_metadata)) {
+    all_parquet <- c(
+      file.path(
+        cache_directory,
+        cloud_metadata |>
+          basename()
+      ),
+      local_metadata
+    )
+  }
+
+  # We try to avoid re-reading a set of parquet files
   # that is identical to a previous set by hashing the file list
-  hash <- all_parquet |> paste0(collapse="") |>
+  hash <- all_parquet |>
+    paste0(collapse = "") |>
     hash_sha256()
   cached_connection <- cache$metadata_table[[hash]]
-  
+
   if (!is.null(cached_connection) && isTRUE(use_cache)) {
     # If the file list is identical, just re-use the database table
     cached_connection
-  }
-  else {
+  } else {
     table <- duckdb() |>
       dbConnect(drv = _, read_only = TRUE) |>
       duckdb_read_parquet(path = all_parquet)
@@ -204,14 +213,14 @@ get_metadata <- function(cloud_metadata = get_metadata_url(),
 }
 
 #' Retrieve cellNexus cell communication ligand–receptor strength as a data frame.
-#' 
+#'
 #' Downloads a parquet database of the cell communication strength to a local
 #' cache, and then opens it as a data frame. It can then be filtered.
 #'
 #' @param cloud_metadata Character vector of any length. HTTP URL/URLs pointing
-#'   to the name and location of parquet database/databases. By default, it points to 
-#'   cell communication metadata in cellNexus ARDC Nectar Research Cloud. 
-#'   Assign `NULL` to query local_metadata only if exists. 
+#'   to the name and location of parquet database/databases. By default, it points to
+#'   cell communication metadata in cellNexus ARDC Nectar Research Cloud.
+#'   Assign `NULL` to query local_metadata only if exists.
 #' @param local_metadata Optional character vector of any length representing the local
 #'   path of parquet database(s).
 #' @param cache_directory Optional character vector of length 1. A file path on
@@ -226,12 +235,12 @@ get_metadata <- function(cloud_metadata = get_metadata_url(),
 #'   it is recommended that you use `stringr::str_like` to filter character
 #'   columns, as `stringr::str_match` will not work.
 #' @details
-#' The returned table integrates three levels of cell communication 
+#' The returned table integrates three levels of cell communication
 #'   inference from `CellChat`, for each sample:
 #'   (i) ligand–receptor–level communication (\code{lr_prob}, \code{lr_pval}),
 #'   (ii) pathway-level aggregated signaling (\code{pathway_prob}, \code{pathway_pval}),
 #'   (iii) cell-pair–level summaries of communication breadth
-#'   (\code{interaction_count} - number of significant LR interactions) and 
+#'   (\code{interaction_count} - number of significant LR interactions) and
 #'   intensity (\code{interaction_weight} - overall communication strength).
 #'
 #'   Together, these metrics allow simultaneous assessment of signaling specificity,
@@ -241,10 +250,10 @@ get_metadata <- function(cloud_metadata = get_metadata_url(),
 #' communication_meta <- get_cell_communication_strength(cloud_metadata = SAMPLE_DATABASE_URL)
 #' @export
 get_cell_communication_strength <- function(
-    cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength.parquet"),
-    local_metadata = NULL,
-    cache_directory = get_default_cache_dir(),
-    use_cache = TRUE
+  cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength.parquet"),
+  local_metadata = NULL,
+  cache_directory = get_default_cache_dir(),
+  use_cache = TRUE
 ) {
   get_metadata(cloud_metadata, local_metadata, cache_directory, use_cache)
 }
@@ -263,30 +272,34 @@ get_cell_communication_strength <- function(
 #' @return A lazy SQL table with metacell metadata joined to the cellNexus metadata.
 #' @keywords internal
 #' @noRd
-join_metacell_table <- function(tbl, 
+join_metacell_table <- function(tbl,
                                 cache_directory = get_default_cache_dir(),
-                                join_keys = c("sample_id", "dataset_id", "cell_id")
-                                ) {
+                                join_keys = c("sample_id", "dataset_id", "cell_id")) {
   # Temporary only because internal
   cloud_metadata <- SAMPLE_DATABASE_URL
   # Synchronize remote files
   walk(cloud_metadata, function(url) {
     # Calculate the file path from the URL
-    path <- file.path(cache_directory, url |> basename())
+    path <- file.path(cache_directory, url |>
+                        basename())
     if (!file.exists(path)) {
       report_file_sizes(url)
-      sync_remote_file(url,
-                       path,
-                       progress(type = "down", con = stderr()))
+      sync_remote_file(
+        url,
+        path,
+        progress(type = "down", con = stderr())
+      )
     }
   })
-  parquet_path <- file.path(cache_directory, cloud_metadata |> basename())
+  parquet_path <- file.path(cache_directory, cloud_metadata |>
+                              basename())
   # Fetch current connection
   conn <- dbplyr::remote_con(tbl)
   # Register the metacell parquet as a lazy table
   metacell_tbl <- duckdb_read_parquet(conn, parquet_path)
   # Join to the incoming tbl_lazy
-  tbl |> left_join(metacell_tbl, by = join_keys )
+  tbl |>
+    left_join(metacell_tbl, by = join_keys)
 }
 
 #' Join Census metadata to an existing data frame
@@ -305,31 +318,37 @@ join_metacell_table <- function(tbl,
 #' library(dplyr)
 #' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |>
 #'   # You do not need to specify anything in cloud_metadata
-#'   join_census_table(cloud_metadata = SAMPLE_DATABASE_URL, 
-#'                     cache_directory = tempdir())
+#'   join_census_table(
+#'     cloud_metadata = SAMPLE_DATABASE_URL,
+#'     cache_directory = tempdir()
+#'   )
 #' @return A lazy SQL table with Census metadata joined to the cellNexus metadata.
 #' @export
-join_census_table <- function(tbl, 
+join_census_table <- function(tbl,
                               cloud_metadata = get_metadata_url("census_cell_metadata.2.0.0.parquet"),
-                              cache_directory = get_default_cache_dir(), 
-                              join_keys = c("sample_id", "dataset_id", "observation_joinid")
-                              ) {
+                              cache_directory = get_default_cache_dir(),
+                              join_keys = c("sample_id", "dataset_id", "observation_joinid")) {
   # Synchronize remote files
   walk(cloud_metadata, function(url) {
     # Calculate the file path from the URL
-    path <- file.path(cache_directory, url |> basename())
+    path <- file.path(cache_directory, url |>
+                        basename())
     if (!file.exists(path)) {
       report_file_sizes(url)
-      sync_remote_file(url,
-                       path,
-                       progress(type = "down", con = stderr()))
+      sync_remote_file(
+        url,
+        path,
+        progress(type = "down", con = stderr())
+      )
     }
   })
-  parquet_path <- file.path(cache_directory, cloud_metadata |> basename())
+  parquet_path <- file.path(cache_directory, cloud_metadata |>
+                              basename())
   # Fetch current connection
   conn <- dbplyr::remote_con(tbl)
   # Register the census parquet as a lazy table
   census_tbl <- duckdb_read_parquet(conn, parquet_path)
   # Join to the incoming tbl_lazy
-  tbl |> left_join(census_tbl, by = join_keys )
+  tbl |>
+    left_join(census_tbl, by = join_keys)
 }
