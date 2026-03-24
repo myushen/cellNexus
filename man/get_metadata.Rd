@@ -8,7 +8,7 @@
 }
 \usage{
 get_metadata(
-  cloud_metadata = get_metadata_url(),
+  cloud_metadata = get_metadata_url("cellnexus_metadata.2.0.0.parquet"),
   local_metadata = NULL,
   cache_directory = get_default_cache_dir(),
   use_cache = TRUE
@@ -117,13 +117,13 @@ The solution is to choose a different cache, for example
 \examples{
 library(dplyr)
 # For fast build purpose only, you do not need to specify anything in cloud_metadata.
-filtered_metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> 
-    filter(
-        self_reported_ethnicity == "African" &
-            assay \%LIKE\% "\%10x\%" &
-            tissue == "lung parenchyma" &
-            cell_type \%LIKE\% "\%CD4\%"
-    )
+filtered_metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
+  filter(
+    self_reported_ethnicity == "African" &
+      assay \%LIKE\% "\%10x\%" &
+      tissue == "lung parenchyma" &
+      cell_type \%LIKE\% "\%CD4\%"
+  )
 
 }
 \references{

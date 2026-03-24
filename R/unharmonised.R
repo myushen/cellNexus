@@ -35,39 +35,42 @@ UNHARMONISED_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e64
 #' @examples
 #' \dontrun{
 #' dataset <- "838ea006-2369-4e2c-b426-b2a744a2b02b"
-#' harmonised_meta <- get_metadata() |> 
-#'     dplyr::filter(file_id_cellNexus_single_cell == dataset) |> dplyr::collect()
+#' harmonised_meta <- get_metadata() |>
+#'   dplyr::filter(file_id_cellNexus_single_cell == dataset) |>
+#'   dplyr::collect()
 #' unharmonised_meta <- get_unharmonised_dataset(dataset)
 #' unharmonised_tbl <- dplyr::collect(unharmonised_meta[[dataset]])
-#' dplyr::left_join(harmonised_meta, unharmonised_tbl, 
-#'     by=c("file_id_cellNexus_single_cell", "cell_id"))
+#' dplyr::left_join(harmonised_meta, unharmonised_tbl,
+#'   by = c("file_id_cellNexus_single_cell", "cell_id")
+#' )
 #' }
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
+#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
+#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_unharmonised_dataset <- function(
-    dataset_id,
-    cells = NULL,
-    conn = duckdb() |> dbConnect(drv = _, read_only = TRUE),
-    remote_url = UNHARMONISED_URL,
-    cache_directory = get_default_cache_dir()
-){
-    unharmonised_root <- file.path(
-      cache_directory,
-      "unharmonised"
+  dataset_id,
+  cells = NULL,
+  conn = duckdb() |>
+    dbConnect(drv = _, read_only = TRUE),
+  remote_url = UNHARMONISED_URL,
+  cache_directory = get_default_cache_dir()
+) {
+  unharmonised_root <- file.path(
+    cache_directory,
+    "unharmonised"
+  )
+  file_name <- glue::glue("{dataset_id}.parquet")
+  local_path <- file.path(unharmonised_root, file_name)
+  glue("{remote_url}/{file_name}") |>
+    sync_remote_file(
+      local_path,
+      progress(type = "down", con = stderr())
     )
-    file_name <- glue::glue("{dataset_id}.parquet")
-    local_path <- file.path(unharmonised_root, file_name)
-    glue("{remote_url}/{file_name}") |>
-        sync_remote_file(
-            local_path,
-            progress(type = "down", con = stderr())
-        )
-    
-    duckdb_read_parquet(conn, local_path) |>
-        filter(.data$cell_id %in% cells)
+
+  duckdb_read_parquet(conn, local_path) |>
+    filter(.data$cell_id %in% cells)
 }
 
 #' Returns unharmonised metadata for a metadata query
@@ -85,23 +88,23 @@ get_unharmonised_dataset <- function(
 #' @importFrom dbplyr remote_con
 #' @keywords internal
 #' @noRd
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen, 
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human 
+#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
+#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
-get_unharmonised_metadata <- function(metadata, ...){
-    args <- list(...)
-    metadata |>
-        collect() |>
-        group_by(.data$file_id_cellNexus_single_cell) |>
-        summarise(
-            unharmonised = list(
-              dataset_id = .data$file_id_cellNexus_single_cell[[1L]],
-              cells = .data$cell_id,
-              conn = remote_con(metadata)
-            ) |>
-                c(args) |>
-                do.call(get_unharmonised_dataset, args = _) |>
-                list()
-        )
+get_unharmonised_metadata <- function(metadata, ...) {
+  args <- list(...)
+  metadata |>
+    collect() |>
+    group_by(.data$file_id_cellNexus_single_cell) |>
+    summarise(
+      unharmonised = list(
+        dataset_id = .data$file_id_cellNexus_single_cell[[1L]],
+        cells = .data$cell_id,
+        conn = remote_con(metadata)
+      ) |>
+        c(args) |>
+        do.call(get_unharmonised_dataset, args = _) |>
+        list()
+    )
 }
