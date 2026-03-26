@@ -281,7 +281,7 @@ join_metacell_table <- function(tbl,
   walk(cloud_metadata, function(url) {
     # Calculate the file path from the URL
     path <- file.path(cache_directory, url |>
-                        basename())
+      basename())
     if (!file.exists(path)) {
       report_file_sizes(url)
       sync_remote_file(
@@ -292,7 +292,7 @@ join_metacell_table <- function(tbl,
     }
   })
   parquet_path <- file.path(cache_directory, cloud_metadata |>
-                              basename())
+    basename())
   # Fetch current connection
   conn <- dbplyr::remote_con(tbl)
   # Register the metacell parquet as a lazy table
@@ -332,7 +332,7 @@ join_census_table <- function(tbl,
   walk(cloud_metadata, function(url) {
     # Calculate the file path from the URL
     path <- file.path(cache_directory, url |>
-                        basename())
+      basename())
     if (!file.exists(path)) {
       report_file_sizes(url)
       sync_remote_file(
@@ -343,7 +343,7 @@ join_census_table <- function(tbl,
     }
   })
   parquet_path <- file.path(cache_directory, cloud_metadata |>
-                              basename())
+    basename())
   # Fetch current connection
   conn <- dbplyr::remote_con(tbl)
   # Register the census parquet as a lazy table
@@ -351,4 +351,53 @@ join_census_table <- function(tbl,
   # Join to the incoming tbl_lazy
   tbl |>
     left_join(census_tbl, by = join_keys)
+}
+
+#' Returns the atlas version changelog as a tibble
+#'
+#' Downloads the `atlas_versions.parquet` registry from the cellNexus metadata
+#' store, caches it locally, and returns it as an in-memory tibble. Each row
+#' describes one atlas data release and its relationship to a CellxGene Census
+#' snapshot.
+#'
+#' The `atlas_id` column in this table corresponds directly to the `atlas_id`
+#' column returned by [get_metadata()], so you can join them to find which
+#' Census snapshot any cell in your query came from.
+#'
+#' @param cache Optional character scalar. A local directory used to
+#'   cache the downloaded parquet file. Defaults to a temporary directory to 
+#'   separate from the main cache directory.
+#' @return A tibble with columns:
+#'   \describe{
+#'     \item{atlas_id}{Atlas version identifier, e.g. `"cellxgene_2024/0.1.0"`.
+#'       Matches the `atlas_id` column in [get_metadata()].}
+#'     \item{census_version}{The CellxGene Census snapshot this atlas was built
+#'       from, e.g. `"01-07-2024"`.}
+#'     \item{change_type}{One of `"initial"`, `"patch"`, `"minor"`, or
+#'       `"major"`. See `ATLAS_VERSIONS.md` for the conventions standards.}
+#'     \item{description}{Summary text of what changed in this release.}
+#'     \item{modified_at}{Modification date as a character scalar (`"YYYY-MM-DD"`).
+#'       By default use `Sys.Date()`}
+#'   }
+#' @seealso
+#' \itemize{
+#'   \item CellxGene Census data releases (LTS):
+#'   \url{https://chanzuckerberg.github.io/cellxgene-census/cellxgene_census_docsite_data_release_info.html}
+#' }
+#' @export
+#' @examples
+#' get_atlas_versions()
+#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
+#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
+#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
+#'   doi:10.1101/2023.06.08.542671.
+#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+get_atlas_versions <- function(cache = tempdir()) {
+  registry_url <- get_metadata_url("atlas_versions.parquet")
+  local_path <- file.path(cache, "atlas_versions.parquet")
+  sync_remote_file(registry_url,
+    local_path,
+    overwrite = TRUE
+  )
+  arrow::read_parquet(local_path)
 }

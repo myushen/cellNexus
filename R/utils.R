@@ -109,7 +109,11 @@ keep_updated_metadata <- function(updated_data) {
 #' @return `NULL`, invisibly
 #' @keywords internal
 #' @noRd
-sync_remote_file <- function(full_url, output_file, ...) {
+sync_remote_file <- function(full_url, output_file, overwrite = FALSE, ...) {
+  if (isTRUE(overwrite) && file.exists(output_file)) {
+    file.remove(output_file)
+  }
+  
   if (!file.exists(output_file)) {
     output_dir <- dirname(output_file)
     dir.create(output_dir,

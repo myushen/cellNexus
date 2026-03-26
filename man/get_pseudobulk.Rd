@@ -21,8 +21,9 @@ get_pseudobulk(
 \item{data}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus_pseudobulk},
 \code{sample_id}, \code{cell_type_unified_ensemble}, \code{atlas_id} columns, which correspond to a single cell ID,
 file subdivision for internal use, a singlel cell sample ID, harmonised cell type,
-and atlas name in format (e.g cellxgene/06-02-2025) for internal use.
-They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.}
+and atlas name in format (e.g cellxgene_2024/0.1.0) for internal use.
+They can be obtained from the \code{\link[=get_metadata]{get_metadata()}} function.
+Use \code{get_atlas_versions()} to download atlas versions data frame.}
 
 \item{assays}{A character vector specifying the desired assay(s) to be requested.
 The default setting retrieves only the counts assay.}
