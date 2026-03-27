@@ -46,8 +46,9 @@ get_SingleCellExperiment <- function(...) {
 #' corresponding to the samples in that data frame
 #' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_single_cell`
 #'   and `atlas_id` columns, which correspond to a single cell ID, file subdivision for internal use,
-#'   and atlas name in format (e.g cellxgene/06-02-2025) for internal use.
+#'   and atlas name in format (e.g cellxgene_2024/0.1.0) for internal use.
 #'   They can be obtained from the [get_metadata()] function.
+#'   Use `get_atlas_versions()` to download atlas versions data frame.
 #' @param assays A character vector specifying the desired assay(s) to be requested.
 #'   Valid elements include "counts", "cpm", "rank", and "sct" for single-cell analyses
 #'   The default setting retrieves only the counts assay.
@@ -117,8 +118,9 @@ get_single_cell_experiment <- function(data,
 #' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_pseudobulk`,
 #'   `sample_id`, `cell_type_unified_ensemble`, `atlas_id` columns, which correspond to a single cell ID,
 #'   file subdivision for internal use, a singlel cell sample ID, harmonised cell type,
-#'   and atlas name in format (e.g cellxgene/06-02-2025) for internal use.
+#'   and atlas name in format (e.g cellxgene_2024/0.1.0) for internal use.
 #'   They can be obtained from the [get_metadata()] function.
+#'   Use `get_atlas_versions()` to download atlas versions data frame.
 #' @param assays A character vector specifying the desired assay(s) to be requested.
 #'   The default setting retrieves only the counts assay.
 #' @param cell_aggregation A character vector that specifies which cell aggregation
@@ -205,9 +207,10 @@ get_pseudobulk <- function(data,
 #'
 #' @param data A data frame containing, at minimum, `sample_id`, `file_id_cellNexus_single_cell`,
 #'   `atlas_id` and a metacell column (e.g `metacell_2`) columns, which correspond to sample ID
-#'   file subdivision for internal use, atlas name in format (e.g cellxgene/06-02-2025)
+#'   file subdivision for internal use, atlas name in format (e.g cellxgene_2024/0.1.0)
 #'   for internal use, and metacell column to be queried.
 #'   They can be obtained from the [get_metadata()] function.
+#'   Use `get_atlas_versions()` to download atlas versions data frame.
 #' @param assays A character vector of metacell counts. Default to "counts".
 #' @param cell_aggregation A character vector representing the level of metacell aggregation.
 #'   It indicates a group of cells that can be divided into the number of metacells.
@@ -415,8 +418,9 @@ get_metacell <- function(data,
 #' @param data A data frame containing, at minimum, `cell_id`, `file_id_cellNexus_single_cell`
 #'   and/or `file_id_cellNexus_pseudobulk`, and `atlas_id` column, which correspond to a single cell ID,
 #'   file subdivision for internal use for single_cell and/or pseudobulk level, and
-#'   atlas name in format (e.g cellxgene/06-02-2025) for internal use.
+#'   atlas name in format (e.g cellxgene_2024/0.1.0) for internal use.
 #'   They can be obtained from the [get_metadata()] function.
+#'   Use `get_atlas_versions()` to download atlas versions data frame.
 #' @param assays A character vector specifying the desired assay(s) to be requested.
 #'   Valid elements include "counts", "cpm", "rank", and "sct" for single-cell analyses, or
 #'   "counts" for pseudobulk analyses.
@@ -479,12 +483,12 @@ validate_data <- function(
 
   versioned_cache_directory |>
     map(function(directory_path) {
-    dir.create(
-      directory_path,
-      showWarnings = FALSE,
-      recursive = TRUE
-    )
-  })
+      dir.create(
+        directory_path,
+        showWarnings = FALSE,
+        recursive = TRUE
+      )
+    })
 
   list(
     data = data,
@@ -667,7 +671,8 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
 #' @param url A parsed URL object (from [httr::parse_url()]). Defaults to the
 #'   package-level `COUNTS_URL`.
 #' @param atlas_name A character vector. Atlas identifier(s) used as path
-#'   components (e.g. `"cellxgene/01-07-2024"`).
+#'   components (e.g. `"cellxgene_2024/0.1.0"`). Use `get_atlas_versions()` to
+#'   download atlas versions data frame.
 #' @param cell_aggregation A character vector. Cell aggregation level(s). Pass
 #'   `""` for unaggregated (single-cell) data.
 #' @param cache_dir A character vector of length one. Root local directory
@@ -711,7 +716,7 @@ sync_assay_files <- function(
 #' @param url A parsed URL object (from [httr::parse_url()]). The base HTTP
 #'   URL of the remote file store.
 #' @param atlas_name A character vector. One or more atlas identifiers (e.g.
-#'   `"cellxgene/21-08-2025"`), used as path components in both the remote URL
+#'   `"cellxgene_2024/0.1.0"`), used as path components in both the remote URL
 #'   and the local cache path.
 #' @param cell_aggregation A character vector. Cell aggregation level(s) used
 #'   as a path component. Pass `""` for unaggregated (single-cell) data.

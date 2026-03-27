@@ -16,7 +16,7 @@ test_that("sync_assay_files() syncs appropriate files", {
   temp <- tempfile()
 
   test_file <- "03319e4f54220f534de2c4e42e607126___1.h5ad"
-  atlas_name <- "cellxgene/21-08-2025"
+  atlas_name <- "cellxgene_2024/0.1.0"
 
   sync_assay_files(
     atlas_name = atlas_name,
@@ -381,4 +381,12 @@ test_that("keep_quality_cells() return high quality cells", {
                                  distinct(.data[[doublet_col]]) |>
                                  collect() |>
                                  pull()))
+})
+
+test_that("get_atlas_versions() returns a registry-like data frame", {
+  tbl <- get_atlas_versions()
+  expect_s3_class(tbl, "data.frame")
+  expect_true(ncol(tbl) >= 1L)
+  expect_true("atlas_id" %in% colnames(tbl))
+  expect_true("census_version" %in% colnames(tbl))
 })

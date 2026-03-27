@@ -31,84 +31,120 @@ upload_swift <- function(
   credential_id = NULL,
   credential_secret = NULL
 ) {
-  # Create the basilisk environment
-  swift_env <- basilisk::BasiliskEnvironment(
-    envname = "swift-nectar-upload",
-    pkgname = packageName(),
-    packages = c(
-      "python-swiftclient==4.2.0",
-      "python-keystoneclient==5.1.0",
-      "python==3.10.9"
-    )
-  )
-  proc <- basilisk::basiliskStart(swift_env)
+  swift_exe <- Sys.which("swift")
+  if (nchar(swift_exe) == 0) {
+    stop("'swift' executable not found on PATH. Did you source your openrc.sh?")
+  }
 
-  # Build the CLI args
   if (!is.null(credential_id) && !is.null(credential_secret)) {
     auth <- c(
-      "--os-auth-type",
-      "v3applicationcredential",
-      "--os-application-credential-id",
-      credential_id,
-      "--os-application-credential-secret",
-      credential_secret
+      "--os-auth-type",                     "v3applicationcredential",
+      "--os-application-credential-id",     credential_id,
+      "--os-application-credential-secret", credential_secret
     )
   } else {
     auth <- character()
   }
+
   args <- c(
-    "-m",
-    "swiftclient.shell",
-    "--os-auth-url",
-    "https://keystone.rc.nectar.org.au:5000/v3/",
-    "--os-project-id",
-    "06d6e008e3e642da99d806ba3ea629c5",
+    "--os-auth-url", "https://keystone.rc.nectar.org.au:5000/v3/",
+    "--os-project-id", "06d6e008e3e642da99d806ba3ea629c5",
     auth,
     "upload",
     container,
     source,
-    "--object-name",
-    name
+    "--object-name", name
   )
 
-  # Perform the upload
-  system2(reticulate::py_exe(), args = args)
-  basilisk::basiliskStop(proc)
+  ret <- system2(swift_exe, args = args)
+  if (ret != 0L) stop("swift upload failed with exit code: ", ret)
 
   invisible(NULL)
 }
 
-#' Update the metadata database in nectar using a newly created data frame
-#' @param metadata The data frame to upload
-#' @param version The version for the new metadata as a character scalar, e.g.
-#'   "0.2.3"
-#' @inheritDotParams upload_swift
-#' @examples
-#' \dontrun{
-#' metadata <- cellNexus::get_metadata() |>
-#'   head(10) |>
-#'   dplyr::collect()
-#' update_database(
-#'   metadata,
-#'   "0.2.3",
-#'   credential_id = "ABCDEFGHIJK",
-#'   credential_secret = "ABCD1234EFGH-5678IJK"
-#' )
-#' # Prints "metadata.0.2.3.parquet" if successful
-#' }
+#' Register a new atlas data version in the remote changelog
+#'
+#' Downloads the current `atlas_versions.parquet` registry from Nectar, appends
+#' a new entry, and re-uploads it. Call this once per data release, after the
+#' new metadata parquets and counts files have been uploaded.
+#'
+#' @param atlas_id A character scalar. The new atlas identifier, e.g.
+#'   `"cellxgene_2024/0.1.0"`. The directory portion (before the slash)
+#'   encodes the source collection and year; the version portion follows
+#'   semantic versioning: major i.e. counts class change, minor = file IDs or
+#'   schema change, patch = bug fix.
+#' @param census_version A character scalar. The CellxGene Census snapshot this
+#'   atlas was built from, e.g. `"01-07-2024"`.
+#' @param container A character scalar indicating the name of the container to
+#'   upload to
+#' @param change_type A character scalar. One of `"initial"`, `"patch"`,
+#'   `"minor"`, or `"major"`.
+#' @param description A character scalar. Free-text summary of what changed in
+#'   this release.
+#' @inheritDotParams upload_swift credential_id credential_secret
+#' @return `NULL`, invisibly
 #' @keywords internal
 #' @noRd
-#' @inherit upload_swift return
-update_database <- function(metadata, version, ...) {
-  # These are optional dev packages
-  rlang::check_installed(c("arrow", "glue", "basilisk"))
+#' @examples
+#' \dontrun{
+#' register_atlas_version(
+#   atlas_id = "cellxgene_2024/0.1.0",
+#   census_version = "01-07-2024",
+#   change_type = "initial",
+#   description = "Initial release linked to CellxGene Census 01-07-2024.",
+#   credential_id = "ABCDEFGHIJK",
+#   credential_secret = "ABCD1234EFGH-5678IJK"
+# )
+#' }
+register_atlas_version <- function(
+  atlas_id,
+  census_version,
+  container,
+  change_type,
+  description,
+  credential_id = NULL,
+  credential_secret = NULL
+) {
+  registry_name <- "atlas_versions.parquet"
+  local_path <- file.path(tempdir(), registry_name)
 
-  dir <- tempdir()
-  parquet_name <- glue::glue("metadata.{version}.parquet")
-  parquet_path <- file.path(dir, parquet_name)
-  arrow::write_parquet(metadata, sink = parquet_path)
+  registry_url <- paste0(
+    "https://object-store.rc.nectar.org.au/v1/",
+    "AUTH_06d6e008e3e642da99d806ba3ea629c5/",
+    container, "/", registry_name
+  )
 
-  upload_swift(parquet_path, container = "metadata", name = parquet_name, ...)
+  # Download the existing registry; silently skip if it does not exist yet
+  tryCatch(
+    sync_remote_file(registry_url, local_path, overwrite = TRUE),
+    error = function(e) NULL
+  )
+
+  new_row <- tibble::tibble(
+    atlas_id = atlas_id,
+    census_version = census_version,
+    change_type = change_type,
+    description = description,
+    modified_at = as.character(Sys.Date())
+  )
+  existing <- if (file.exists(local_path)) {
+    arrow::read_parquet(local_path)
+  } else {
+    new_row[0L, ]
+  }
+  
+  updated <- dplyr::bind_rows(existing, new_row)
+  arrow::write_parquet(updated, local_path)
+
+  upload_swift(
+    local_path,
+    container         = "cellNexus-metadata",
+    name              = registry_name,
+    credential_id     = credential_id,
+    credential_secret = credential_secret
+  )
+  
+  invisible(NULL)
 }
 
 #' Update the unharmonised parquet files
@@ -201,8 +237,9 @@ hdf5_to_anndata <- function(input_directory, output_directory) {
 #' @noRd
 #' @param output Character scalar. Path to the output file.
 #' @return NULL
-downsample_metadata <- function(output = "sample_metadata.2.0.0.parquet") {
-  metadata <- get_metadata()
+downsample_metadata <- function(output = "sample_metadata.2.1.0.parquet") {
+  metadata <- get_metadata() |>
+    join_census_table()
 
   # Make a table of rows per dataset
   dataset_sizes <- metadata |>
