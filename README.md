@@ -71,27 +71,27 @@ metadata <- get_metadata()
 metadata
 ```
 
-    #> # Source:   SQL [?? x 89]
+    #> # Source:   SQL [?? x 73]
     #> # Database: DuckDB 1.4.3 [unknown@Linux 5.14.0-362.24.1.el9_3.x86_64:R 4.5.2/:memory:]
-    #>    cell_id dataset_id       observation_joinid sample_id cell_type cell_type_ontology_t…¹ sample_ assay assay_ontology_term_id cell_count
-    #>      <dbl> <chr>            <chr>              <chr>     <chr>     <chr>                  <chr>   <chr> <chr>                       <int>
-    #>  1      81 cda2c8cd-be1c-4… *NUPW@J{c2         034f0fb1… monocyte  CL:0000576             034f0f… 10x … EFO:0011025                255901
-    #>  2      82 cda2c8cd-be1c-4… KIV>qGFIS?         034f0fb1… monocyte  CL:0000576             034f0f… 10x … EFO:0011025                255901
-    #>  3      83 cda2c8cd-be1c-4… p5e=WoIq0d         034f0fb1… monocyte  CL:0000576             034f0f… 10x … EFO:0011025                255901
-    #>  4      84 cda2c8cd-be1c-4… I6>u{Gb-J_         034f0fb1… monocyte  CL:0000576             034f0f… 10x … EFO:0011025                255901
-    #>  5      85 cda2c8cd-be1c-4… lx`7Bo-&7n         034f0fb1… monocyte  CL:0000576             034f0f… 10x … EFO:0011025                255901
-    #>  6      86 cda2c8cd-be1c-4… 6mRCZW}rOM         034f0fb1… monocyte  CL:0000576             034f0f… 10x … EFO:0011025                255901
-    #>  7      87 cda2c8cd-be1c-4… -NL-OH3!IA         034f0fb1… monocyte  CL:0000576             034f0f… 10x … EFO:0011025                255901
-    #>  8      88 cda2c8cd-be1c-4… zHCZWNmUHu         034f0fb1… monocyte  CL:0000576             034f0f… 10x … EFO:0011025                255901
-    #>  9      89 cda2c8cd-be1c-4… *_#lQ<oUnT         034f0fb1… monocyte  CL:0000576             034f0f… 10x … EFO:0011025                255901
-    #> 10      99 cda2c8cd-be1c-4… IdHwp1GBZm         03ddfd57… monocyte  CL:0000576             03ddfd… 10x … EFO:0009899                255901
+    #>    cell_id dataset_id         observation_joinid sample_id sample_ cell_count citation collection_id dataset_version_id default_embedding experiment___
+    #>      <dbl> <chr>              <chr>              <chr>     <chr>        <int> <chr>    <chr>         <chr>              <chr>             <chr>        
+    #>  1      81 cda2c8cd-be1c-42e… *NUPW@J{c2         034f0fb1… 034f0f…     255901 Publica… de13e3e2-23b… c6e08ab6-ab3b-41d… <NA>              ""           
+    #>  2      82 cda2c8cd-be1c-42e… KIV>qGFIS?         034f0fb1… 034f0f…     255901 Publica… de13e3e2-23b… c6e08ab6-ab3b-41d… <NA>              ""           
+    #>  3      83 cda2c8cd-be1c-42e… p5e=WoIq0d         034f0fb1… 034f0f…     255901 Publica… de13e3e2-23b… c6e08ab6-ab3b-41d… <NA>              ""           
+    #>  4      84 cda2c8cd-be1c-42e… I6>u{Gb-J_         034f0fb1… 034f0f…     255901 Publica… de13e3e2-23b… c6e08ab6-ab3b-41d… <NA>              ""           
+    #>  5      85 cda2c8cd-be1c-42e… lx`7Bo-&7n         034f0fb1… 034f0f…     255901 Publica… de13e3e2-23b… c6e08ab6-ab3b-41d… <NA>              ""           
+    #>  6      87 cda2c8cd-be1c-42e… -NL-OH3!IA         034f0fb1… 034f0f…     255901 Publica… de13e3e2-23b… c6e08ab6-ab3b-41d… <NA>              ""           
+    #>  7      88 cda2c8cd-be1c-42e… zHCZWNmUHu         034f0fb1… 034f0f…     255901 Publica… de13e3e2-23b… c6e08ab6-ab3b-41d… <NA>              ""           
+    #>  8      89 cda2c8cd-be1c-42e… *_#lQ<oUnT         034f0fb1… 034f0f…     255901 Publica… de13e3e2-23b… c6e08ab6-ab3b-41d… <NA>              ""           
+    #>  9      86 cda2c8cd-be1c-42e… 6mRCZW}rOM         034f0fb1… 034f0f…     255901 Publica… de13e3e2-23b… c6e08ab6-ab3b-41d… <NA>              ""           
+    #> 10      99 cda2c8cd-be1c-42e… IdHwp1GBZm         03ddfd57… 03ddfd…     255901 Publica… de13e3e2-23b… c6e08ab6-ab3b-41d… <NA>              ""           
     #> # ℹ more rows
-    #> # ℹ abbreviated name: ¹​cell_type_ontology_term_id
-    #> # ℹ 79 more variables: citation <chr>, collection_id <chr>, dataset_version_id <chr>, default_embedding <chr>, development_stage <chr>,
-    #> #   development_stage_ontology_term_id <chr>, disease <chr>, disease_ontology_term_id <chr>, donor_id <chr>, experiment___ <chr>,
-    #> #   explorer_url <chr>, feature_count <int>, filesize <dbl>, filetype <chr>, is_primary_data <chr>, mean_genes_per_cell <dbl>,
-    #> #   organism <chr>, organism_ontology_term_id <chr>, primary_cell_count <chr>, published_at <chr>, raw_data_location <chr>,
-    #> #   revised_at <chr>, run_from_cell_id <chr>, sample_heuristic <chr>, schema_version <chr>, self_reported_ethnicity <chr>, …
+    #> # ℹ 62 more variables: explorer_url <chr>, feature_count <int>, filesize <dbl>, filetype <chr>, mean_genes_per_cell <dbl>, primary_cell_count <chr>,
+    #> #   published_at <chr>, raw_data_location <chr>, revised_at <chr>, run_from_cell_id <chr>, sample_heuristic <chr>, schema_version <chr>,
+    #> #   suspension_type <chr>, tissue_type <chr>, title <chr>, tombstone <lgl>, url <chr>, x_approximate_distribution <chr>, age_days <int>,
+    #> #   tissue_groups <chr>, nFeature_expressed_in_sample <int>, nCount_RNA <dbl>, empty_droplet <lgl>, cell_type_unified_ensemble <chr>, is_immune <lgl>,
+    #> #   subsets_Mito_percent <int>, subsets_Ribo_percent <int>, high_mitochondrion <lgl>, high_ribosome <lgl>, scDblFinder.class <chr>,
+    #> #   sample_chunk <int>, cell_chunk <int>, sample_pseudobulk_chunk <int>, file_id_cellNexus_single_cell <chr>, file_id_cellNexus_pseudobulk <chr>, …
 
 Metadata is saved to `get_default_cache_dir()` unless a custom path is
 provided via the cache_directory argument. The `metadata` variable can
@@ -127,8 +127,10 @@ gene counts.
 
 ``` r
 metadata <- metadata |>
-  dplyr::filter(feature_count >= 5000) |>
   keep_quality_cells()
+
+metadata <- metadata |>
+  dplyr::filter(feature_count >= 5000)
 ```
 
 ## Download single-cell RNA sequencing counts
@@ -140,32 +142,30 @@ single_cell_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
   ) |>
-  head() |>
   get_single_cell_experiment()
+#> ℹ Realising metadata.
+#> ℹ Synchronising files
+#> ℹ Reading files.
+#> Reading counts ■■■■■■■■                          22% | ETA:  5sReading counts ■■■■■■■■■■■                       33% | ETA:  4sReading counts ■■■■■■■■■■■■■■                    44% | ETA:  3sReading counts ■■■■■■■■■■■■■■■■■■                56% | ETA:  3sReading counts ■■■■■■■■■■■■■■■■■■■■■             67% | ETA:  2sReading counts ■■■■■■■■■■■■■■■■■■■■■■■■          78% | ETA:  1sReading counts ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      89% | ETA:  1s                                                                ℹ Compiling Experiment.
 
 single_cell_counts
+#> class: SingleCellExperiment 
+#> dim: 56239 35 
+#> metadata(0):
+#> assays(1): counts
+#> rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605 ENSG00000109501
+#> rowData names(0):
+#> colnames(35): 99_1 101_1 ... 319_9 256_9
+#> colData names(73): dataset_id observation_joinid ... tissue_ontology_term_id original_cell_
+#> reducedDimNames(0):
+#> mainExpName: NULL
+#> altExpNames(0):
 ```
-
-    #> class: SingleCellExperiment 
-    #> dim: 56239 6 
-    #> metadata(0):
-    #> assays(1): counts
-    #> rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605 ENSG00000109501
-    #> rowData names(0):
-    #> colnames(6): LAP92_CATTCTAGTGCGGATA-1_duong___9f222629-9e39-47d0-b83f-e08d610c7479_1
-    #>   LAP92_CTCATGCCACCTGATA-1_duong___9f222629-9e39-47d0-b83f-e08d610c7479_1 ...
-    #>   GCTCCTAAGGGTATCG_F02607___9f222629-9e39-47d0-b83f-e08d610c7479_1
-    #>   AACACGTCACGCATCG_F01853___9f222629-9e39-47d0-b83f-e08d610c7479_2
-    #> colData names(98): dataset_id observation_joinid ... dir_prefix original_cell_
-    #> reducedDimNames(0):
-    #> mainExpName: NULL
-    #> altExpNames(0):
 
 ### Query counts scaled per million
 
@@ -174,32 +174,62 @@ single_cell_cpm <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
   ) |>
-  head() |>
   get_single_cell_experiment(assays = "cpm")
+#> ℹ Realising metadata.
+#> ℹ Synchronising files
+#> ℹ Reading files.
+#> Reading cpm ■■■■■■■■                          22% | ETA:  5sReading cpm ■■■■■■■■■■■                       33% | ETA:  4sReading cpm ■■■■■■■■■■■■■■                    44% | ETA:  3sReading cpm ■■■■■■■■■■■■■■■■■■                56% | ETA:  3sReading cpm ■■■■■■■■■■■■■■■■■■■■■             67% | ETA:  2sReading cpm ■■■■■■■■■■■■■■■■■■■■■■■■          78% | ETA:  1sReading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      89% | ETA:  1s                                                             ℹ Compiling Experiment.
 
 single_cell_cpm
+#> class: SingleCellExperiment 
+#> dim: 56239 35 
+#> metadata(0):
+#> assays(1): cpm
+#> rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605 ENSG00000109501
+#> rowData names(0):
+#> colnames(35): 99_1 101_1 ... 319_9 256_9
+#> colData names(73): dataset_id observation_joinid ... tissue_ontology_term_id original_cell_
+#> reducedDimNames(0):
+#> mainExpName: NULL
+#> altExpNames(0):
 ```
 
-    #> class: SingleCellExperiment 
-    #> dim: 1 6 
-    #> metadata(0):
-    #> assays(1): cpm
-    #> rownames(1): ENSG00000134644
-    #> rowData names(0):
-    #> colnames(6): LAP92_CATTCTAGTGCGGATA-1_duong___9f222629-9e39-47d0-b83f-e08d610c7479_1
-    #>   LAP92_CTCATGCCACCTGATA-1_duong___9f222629-9e39-47d0-b83f-e08d610c7479_1 ...
-    #>   GCTCCTAAGGGTATCG_F02607___9f222629-9e39-47d0-b83f-e08d610c7479_1
-    #>   AACACGTCACGCATCG_F01853___9f222629-9e39-47d0-b83f-e08d610c7479_2
-    #> colData names(98): dataset_id observation_joinid ... dir_prefix original_cell_
-    #> reducedDimNames(0):
-    #> mainExpName: NULL
-    #> altExpNames(0):
+### Query SCT normalised counts
+
+``` r
+single_cell_sct <-
+  metadata |>
+  dplyr::filter(
+    self_reported_ethnicity == "African" &
+      assay == "10x 3' v2" &
+      tissue == "lung parenchyma" &
+      cell_type |>
+        stringr::str_like("%CD4%")
+  ) |>
+  get_single_cell_experiment(assays = "sct")
+#> ℹ Realising metadata.
+#> ℹ Synchronising files
+#> ℹ Reading files.
+#> Reading sct ■■■■■■■■                          22% | ETA:  5sReading sct ■■■■■■■■■■■                       33% | ETA:  4sReading sct ■■■■■■■■■■■■■■                    44% | ETA:  3sReading sct ■■■■■■■■■■■■■■■■■■                56% | ETA:  3sReading sct ■■■■■■■■■■■■■■■■■■■■■             67% | ETA:  2sReading sct ■■■■■■■■■■■■■■■■■■■■■■■■          78% | ETA:  1sReading sct ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      89% | ETA:  1s                                                             ℹ Compiling Experiment.
+
+single_cell_sct
+#> class: SingleCellExperiment 
+#> dim: 56239 35 
+#> metadata(0):
+#> assays(1): sct
+#> rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605 ENSG00000109501
+#> rowData names(0):
+#> colnames(35): 99_1 101_1 ... 319_9 256_9
+#> colData names(73): dataset_id observation_joinid ... tissue_ontology_term_id original_cell_
+#> reducedDimNames(0):
+#> mainExpName: NULL
+#> altExpNames(0):
+```
 
 ### Query pseudobulk
 
@@ -208,30 +238,31 @@ pseudobulk_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay  == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
   ) |>
-  head() |>
   get_pseudobulk()
+#> ℹ Realising metadata.
+#> ℹ Synchronising files
+#> ℹ Reading files.
+#> ℹ Compiling Experiment.
 
 pseudobulk_counts
+#> class: SingleCellExperiment 
+#> dim: 56239 9 
+#> metadata(0):
+#> assays(1): counts
+#> rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605 ENSG00000109501
+#> rowData names(0):
+#> colnames(9): 270eb221dd0456cc063240404aec74cd___cd4 th2 em 0000c153da22cf963b807c0563aca6a6___cd4 tcm ...
+#>   c03887220681b9250f73f851d6868720___cd4 th17 em 270eb221dd0456cc063240404aec74cd___cd4 th1/th17 em
+#> colData names(56): dataset_id sample_id ... tissue_ontology_term_id sample_identifier
+#> reducedDimNames(0):
+#> mainExpName: NULL
+#> altExpNames(0):
 ```
-
-    #> class: SingleCellExperiment 
-    #> dim: 56239 3 
-    #> metadata(0):
-    #> assays(1): counts
-    #> rownames(56239): ENSG00000000003 ENSG00000000005 ... ENSG00000290292 ENSG00000291237
-    #> rowData names(0):
-    #> colnames(3): a2459ad4272363e6eb775e8e99607c3e___cd4 th1 em 9c8fa5a8d2ae37179b579a0217670512___LAP92_1_duong___cd4 th2 em
-    #>   e4d7f8162faf68a85f61bdbd81dae627___cd4 th2 em
-    #> colData names(59): dataset_id sample_id ... dir_prefix sample_identifier
-    #> reducedDimNames(0):
-    #> mainExpName: NULL
-    #> altExpNames(0):
 
 ### Extract only a subset of genes
 
@@ -244,32 +275,30 @@ single_cell_cpm <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay  == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
   ) |>
-  head() |>
   get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
+#> ℹ Realising metadata.
+#> ℹ Synchronising files
+#> ℹ Reading files.
+#> Reading cpm ■■■■■■■■                          22% | ETA:  5sReading cpm ■■■■■■■■■■■                       33% | ETA:  4sReading cpm ■■■■■■■■■■■■■■                    44% | ETA:  3sReading cpm ■■■■■■■■■■■■■■■■■■                56% | ETA:  3sReading cpm ■■■■■■■■■■■■■■■■■■■■■             67% | ETA:  2sReading cpm ■■■■■■■■■■■■■■■■■■■■■■■■          78% | ETA:  1sReading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      89% | ETA:  1s                                                             ℹ Compiling Experiment.
 
 single_cell_counts
+#> class: SingleCellExperiment 
+#> dim: 56239 35 
+#> metadata(0):
+#> assays(1): counts
+#> rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605 ENSG00000109501
+#> rowData names(0):
+#> colnames(35): 99_1 101_1 ... 319_9 256_9
+#> colData names(73): dataset_id observation_joinid ... tissue_ontology_term_id original_cell_
+#> reducedDimNames(0):
+#> mainExpName: NULL
+#> altExpNames(0):
 ```
-
-    #> class: SingleCellExperiment 
-    #> dim: 1 6 
-    #> metadata(0):
-    #> assays(1): cpm
-    #> rownames(1): ENSG00000134644
-    #> rowData names(0):
-    #> colnames(6): LAP92_CATTCTAGTGCGGATA-1_duong___9f222629-9e39-47d0-b83f-e08d610c7479_1
-    #>   LAP92_CTCATGCCACCTGATA-1_duong___9f222629-9e39-47d0-b83f-e08d610c7479_1 ...
-    #>   GCTCCTAAGGGTATCG_F02607___9f222629-9e39-47d0-b83f-e08d610c7479_1
-    #>   AACACGTCACGCATCG_F01853___9f222629-9e39-47d0-b83f-e08d610c7479_2
-    #> colData names(98): dataset_id observation_joinid ... dir_prefix original_cell_
-    #> reducedDimNames(0):
-    #> mainExpName: NULL
-    #> altExpNames(0):
 
 ### Extract the counts as a Seurat object
 
@@ -282,22 +311,24 @@ seurat_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay  == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
   ) |>
   head() |>
   get_seurat()
+#> ℹ Realising metadata.
+#> ℹ Synchronising files
+#> ℹ Reading files.
+#> ℹ Compiling Experiment.
 
 seurat_counts
+#> An object of class Seurat 
+#> 56239 features across 6 samples within 1 assay 
+#> Active assay: originalexp (56239 features, 0 variable features)
+#>  2 layers present: counts, data
 ```
-
-    #> An object of class Seurat 
-    #> 56239 features across 6 samples within 1 assay 
-    #> Active assay: originalexp (56239 features, 0 variable features)
-    #>  2 layers present: counts, data
 
 By default, data is downloaded to `get_default_cache_dir()` output. If
 memory is a concern, users can specify a custom cache directory to
@@ -316,8 +347,7 @@ single_cell_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay  == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
@@ -629,9 +659,9 @@ sessionInfo()
 #> LAPACK: /stornext/System/data/software/rhel/9/base/tools/R/4.5.2/lib64/R/lib/libRlapack.so;  LAPACK version 3.12.1
 #> 
 #> locale:
-#>  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
-#>  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8    LC_PAPER=en_US.UTF-8       LC_NAME=C                 
-#>  [9] LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+#>  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8   
+#>  [6] LC_MESSAGES=en_US.UTF-8    LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C            
+#> [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 #> 
 #> time zone: Australia/Melbourne
 #> tzcode source: system (glibc)
@@ -640,56 +670,45 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] ggplot2_4.0.1     BiocStyle_2.38.0  anndataR_1.0.0    shiny_1.12.1      testthat_3.3.1    cellNexus_0.99.14 lintr_3.3.0-1    
-#> [8] dplyr_1.1.4      
+#> [1] cellNexus_0.99.15 ggplot2_4.0.1     BiocStyle_2.38.0  testthat_3.3.1    dplyr_1.1.4      
 #> 
 #> loaded via a namespace (and not attached):
-#>   [1] fs_1.6.6                    matrixStats_1.5.0           spatstat.sparse_3.1-0       xopen_1.0.1                
-#>   [5] fontawesome_0.5.3           devtools_2.4.6              httr_1.4.7                  RColorBrewer_1.1-3         
-#>   [9] tools_4.5.2                 sctransform_0.4.3           backports_1.5.0             utf8_1.2.6                 
-#>  [13] R6_2.6.1                    HDF5Array_1.38.0            lazyeval_0.2.2              uwot_0.2.4                 
-#>  [17] rhdf5filters_1.22.0         withr_3.0.2                 sp_2.2-0                    prettyunits_1.2.0          
-#>  [21] gridExtra_2.3               progressr_0.18.0            cli_3.6.5                   Biobase_2.70.0             
-#>  [25] spatstat.explore_3.6-0      fastDummies_1.7.5           sass_0.4.10                 Seurat_5.4.0               
-#>  [29] arrow_22.0.0                S7_0.2.1                    spatstat.data_3.1-9         ggridges_0.5.7             
-#>  [33] pbapply_1.7-4               commonmark_2.0.0            R.utils_2.13.0              parallelly_1.46.0          
-#>  [37] sessioninfo_1.2.3           styler_1.11.0               rstudioapi_0.17.1           generics_0.1.4             
-#>  [41] ica_1.0-3                   spatstat.random_3.4-3       Matrix_1.7-4                waldo_0.6.2                
-#>  [45] S4Vectors_0.48.0            rclipboard_0.2.1            abind_1.4-8                 R.methodsS3_1.8.2          
-#>  [49] lifecycle_1.0.4             yaml_2.3.12                 SummarizedExperiment_1.40.0 rhdf5_2.54.1               
-#>  [53] SparseArray_1.10.6          Rtsne_0.17                  grid_4.5.2                  blob_1.2.4                 
-#>  [57] promises_1.5.0              crayon_1.5.3                dir.expiry_1.18.0           miniUI_0.1.2               
-#>  [61] lattice_0.22-7              beachmat_2.26.0             cowplot_1.2.0               pillar_1.11.1              
-#>  [65] knitr_1.50                  GenomicRanges_1.62.1        future.apply_1.20.1         codetools_0.2-20           
-#>  [69] glue_1.8.0                  spatstat.univar_3.1-5       rex_1.2.1                   data.table_1.17.8          
-#>  [73] remotes_2.5.0               vctrs_0.6.5                 png_0.1-8                   spam_2.11-1                
-#>  [77] gtable_0.3.6                rcmdcheck_1.4.0             assertthat_0.2.1            cachem_1.1.0               
-#>  [81] xfun_0.55                   S4Arrays_1.10.1             mime_0.13                   Seqinfo_1.0.0              
-#>  [85] rsconnect_1.7.0             survival_3.8-3              SingleCellExperiment_1.32.0 ellipsis_0.3.2             
-#>  [89] fitdistrplus_1.2-4          ROCR_1.0-11                 nlme_3.1-168                usethis_3.2.1              
-#>  [93] bit64_4.6.0-1               filelock_1.0.3              RcppAnnoy_0.0.22            GenomeInfoDb_1.46.2        
-#>  [97] rprojroot_2.1.1             R.cache_0.17.0              bslib_0.9.0                 irlba_2.3.5.1              
-#> [101] KernSmooth_2.23-26          otel_0.2.0                  BiocGenerics_0.56.0         DBI_1.2.3                  
-#> [105] zellkonverter_1.20.1        duckdb_1.4.3                tidyselect_1.2.1            processx_3.8.6             
-#> [109] bit_4.6.0                   compiler_4.5.2              curl_7.0.0                  h5mread_1.2.1              
-#> [113] xml2_1.5.1                  desc_1.4.3                  DelayedArray_0.36.0         plotly_4.11.0              
-#> [117] bookdown_0.46               checkmate_2.3.3             scales_1.4.0                lmtest_0.9-40              
-#> [121] callr_3.7.6                 stringr_1.6.0               digest_0.6.39               goftest_1.2-3              
-#> [125] spatstat.utils_3.2-0        rmarkdown_2.30              basilisk_1.22.0             XVector_0.50.0             
-#> [129] htmltools_0.5.9             pkgconfig_2.0.3             MatrixGenerics_1.22.0       dbplyr_2.5.1               
-#> [133] fastmap_1.2.0               rlang_1.1.6                 htmlwidgets_1.6.4           UCSC.utils_1.6.0           
-#> [137] farver_2.1.2                jquerylib_0.1.4             zoo_1.8-14                  jsonlite_2.0.0             
-#> [141] BiocParallel_1.44.0         R.oo_1.27.1                 magrittr_2.0.4              scuttle_1.20.0             
-#> [145] dotCall64_1.2               patchwork_1.3.2             Rhdf5lib_1.32.0             Rcpp_1.1.0                 
-#> [149] reticulate_1.44.1           stringi_1.8.7               brio_1.1.5                  MASS_7.3-65                
-#> [153] plyr_1.8.9                  pkgbuild_1.4.8              parallel_4.5.2              listenv_0.10.0             
-#> [157] ggrepel_0.9.6               deldir_2.0-4                splines_4.5.2               tensor_1.5.1               
-#> [161] ps_1.9.1                    igraph_2.2.1                spatstat.geom_3.6-1         RcppHNSW_0.6.0             
-#> [165] reshape2_1.4.5              stats4_4.5.2                pkgload_1.4.1               evaluate_1.0.5             
-#> [169] SeuratObject_5.2.0          BiocManager_1.30.27         httpuv_1.6.16               RANN_2.6.2                 
-#> [173] tidyr_1.3.1                 purrr_1.2.0                 polyclip_1.10-7             future_1.68.0              
-#> [177] scattermore_1.2             xtable_1.8-4                RSpectra_0.16-2             roxygen2_7.3.3             
-#> [181] later_1.4.4                 viridisLite_0.4.2           tibble_3.3.0                memoise_2.0.1              
-#> [185] IRanges_2.44.0              cluster_2.1.8.1             shinyWidgets_0.9.0          globals_0.18.0             
-#> [189] xmlparsedata_1.0.5
+#>   [1] IRanges_2.44.0              R.methodsS3_1.8.2           goftest_1.2-3               HDF5Array_1.38.0            vctrs_0.6.5                
+#>   [6] spatstat.random_3.4-3       digest_0.6.39               png_0.1-8                   ggrepel_0.9.6               styler_1.11.0              
+#>  [11] deldir_2.0-4                parallelly_1.46.0           MASS_7.3-65                 reshape2_1.4.5              httpuv_1.6.16              
+#>  [16] BiocGenerics_0.56.0         withr_3.0.2                 xfun_0.55                   ellipsis_0.3.2              survival_3.8-3             
+#>  [21] memoise_2.0.1               commonmark_2.0.0            rcmdcheck_1.4.0             Seqinfo_1.0.0               zoo_1.8-14                 
+#>  [26] pbapply_1.7-4               R.oo_1.27.1                 prettyunits_1.2.0           promises_1.5.0              otel_0.2.0                 
+#>  [31] httr_1.4.7                  globals_0.18.0              fitdistrplus_1.2-4          rhdf5filters_1.22.0         ps_1.9.1                   
+#>  [36] rhdf5_2.54.1                rstudioapi_0.17.1           UCSC.utils_1.6.0            miniUI_0.1.2                generics_0.1.4             
+#>  [41] processx_3.8.6              dir.expiry_1.18.0           curl_7.0.0                  S4Vectors_0.48.0            h5mread_1.2.1              
+#>  [46] polyclip_1.10-7             SparseArray_1.10.6          xopen_1.0.1                 xtable_1.8-4                stringr_1.6.0              
+#>  [51] desc_1.4.3                  evaluate_1.0.5              S4Arrays_1.10.1             GenomicRanges_1.62.1        bookdown_0.46              
+#>  [56] irlba_2.3.5.1               filelock_1.0.3              ROCR_1.0-11                 reticulate_1.44.1           spatstat.data_3.1-9        
+#>  [61] shinyWidgets_0.9.0          magrittr_2.0.4              lmtest_0.9-40               later_1.4.4                 lattice_0.22-7             
+#>  [66] spatstat.geom_3.6-1         future.apply_1.20.1         scattermore_1.2             scuttle_1.20.0              cowplot_1.2.0              
+#>  [71] matrixStats_1.5.0           RcppAnnoy_0.0.22            pillar_1.11.1               nlme_3.1-168                compiler_4.5.2             
+#>  [76] beachmat_2.26.0             RSpectra_0.16-2             stringi_1.8.7               tensor_1.5.1                SummarizedExperiment_1.40.0
+#>  [81] devtools_2.4.6              plyr_1.8.9                  crayon_1.5.3                abind_1.4-8                 sp_2.2-0                   
+#>  [86] bit_4.6.0                   waldo_0.6.2                 codetools_0.2-20            bslib_0.9.0                 plotly_4.11.0              
+#>  [91] mime_0.13                   splines_4.5.2               Rcpp_1.1.0                  fastDummies_1.7.5           basilisk_1.22.0            
+#>  [96] duckdb_1.4.3                dbplyr_2.5.1                knitr_1.50                  blob_1.2.4                  utf8_1.2.6                 
+#> [101] fs_1.6.6                    listenv_0.10.0              checkmate_2.3.3             pkgbuild_1.4.8              tibble_3.3.0               
+#> [106] Matrix_1.7-4                callr_3.7.6                 pkgconfig_2.0.3             tools_4.5.2                 cachem_1.1.0               
+#> [111] R.cache_0.17.0              viridisLite_0.4.2           DBI_1.2.3                   fastmap_1.2.0               rmarkdown_2.30             
+#> [116] scales_1.4.0                grid_4.5.2                  usethis_3.2.1               ica_1.0-3                   Seurat_5.4.0               
+#> [121] sass_0.4.10                 patchwork_1.3.2             BiocManager_1.30.27         dotCall64_1.2               RANN_2.6.2                 
+#> [126] farver_2.1.2                yaml_2.3.12                 roxygen2_7.3.3              MatrixGenerics_1.22.0       cli_3.6.5                  
+#> [131] purrr_1.2.0                 stats4_4.5.2                lifecycle_1.0.4             rsconnect_1.7.0             uwot_0.2.4                 
+#> [136] Biobase_2.70.0              arrow_22.0.0                sessioninfo_1.2.3           backports_1.5.0             BiocParallel_1.44.0        
+#> [141] gtable_0.3.6                ggridges_0.5.7              progressr_0.18.0            parallel_4.5.2              jsonlite_2.0.0             
+#> [146] RcppHNSW_0.6.0              bit64_4.6.0-1               assertthat_0.2.1            brio_1.1.5                  Rtsne_0.17                 
+#> [151] spatstat.utils_3.2-0        SeuratObject_5.2.0          jquerylib_0.1.4             spatstat.univar_3.1-5       R.utils_2.13.0             
+#> [156] rclipboard_0.2.1            lazyeval_0.2.2              shiny_1.12.1                htmltools_0.5.9             sctransform_0.4.3          
+#> [161] rappdirs_0.3.3              glue_1.8.0                  spam_2.11-1                 XVector_0.50.0              rprojroot_2.1.1            
+#> [166] gridExtra_2.3               igraph_2.2.1                R6_2.6.1                    tidyr_1.3.1                 SingleCellExperiment_1.32.0
+#> [171] zellkonverter_1.20.1        cluster_2.1.8.1             pkgload_1.4.1               Rhdf5lib_1.32.0             anndataR_1.0.0             
+#> [176] GenomeInfoDb_1.46.2         DelayedArray_0.36.0         tidyselect_1.2.1            xml2_1.5.1                  future_1.68.0              
+#> [181] KernSmooth_2.23-26          S7_0.2.1                    data.table_1.17.8           htmlwidgets_1.6.4           RColorBrewer_1.1-3         
+#> [186] rlang_1.1.6                 spatstat.sparse_3.1-0       spatstat.explore_3.6-0      remotes_2.5.0
 ```

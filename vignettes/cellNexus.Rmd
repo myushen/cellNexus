@@ -150,8 +150,10 @@ cellNexus metadata applies standardised quality control to filter out empty drop
 
 ```{r}
 metadata <- metadata |>
-  dplyr::filter(feature_count >= 5000) |>
   keep_quality_cells()
+
+metadata <- metadata |>
+  dplyr::filter(feature_count >= 5000)
 ```
 
 
@@ -159,76 +161,68 @@ metadata <- metadata |>
 
 ### Query raw counts
 
-```{r, eval=FALSE}
+```{r}
 single_cell_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
   ) |>
-  head() |>
   get_single_cell_experiment()
 
 single_cell_counts
 ```
 
-```{r, echo=FALSE}
-# Pre-made example for demonstration (avoids download during build)
-data(single_cell_counts)
-single_cell_counts
-```
-
 ### Query counts scaled per million
 
-```{r, eval=FALSE}
+```{r}
 single_cell_cpm <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
   ) |>
-  head() |>
   get_single_cell_experiment(assays = "cpm")
 
 single_cell_cpm
 ```
 
-```{r, echo=FALSE}
-# Pre-made example for demonstration (avoids download during build)
-data(single_cell_cpm)
-single_cell_cpm
-```
-
-### Query pseudobulk
-
-```{r, eval=FALSE}
-pseudobulk_counts <-
+### Query SCT normalised counts
+```{r}
+single_cell_sct <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
   ) |>
-  head() |>
-  get_pseudobulk()
+  get_single_cell_experiment(assays = "sct")
 
-pseudobulk_counts
+single_cell_sct
 ```
 
-```{r, echo=FALSE}
-# Pre-made example for demonstration (avoids download during build)
-data(pseudobulk_counts)
+### Query pseudobulk
+
+```{r}
+pseudobulk_counts <-
+  metadata |>
+  dplyr::filter(
+    self_reported_ethnicity == "African" &
+      assay  == "10x 3' v2" &
+      tissue == "lung parenchyma" &
+      cell_type |>
+        stringr::str_like("%CD4%")
+  ) |>
+  get_pseudobulk()
+
 pseudobulk_counts
 ```
 
@@ -236,39 +230,31 @@ pseudobulk_counts
 
 This is helpful if just few genes are of interest (e.g ENSG00000134644 (PUM1)), as they can be compared across samples. cellNexus uses ENSEMBL gene ID(s).
 
-```{r, eval=FALSE}
+```{r}
 single_cell_cpm <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay  == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
   ) |>
-  head() |>
   get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
 
 single_cell_counts
-```
-
-```{r, echo=FALSE}
-single_cell_cpm <- single_cell_cpm["ENSG00000134644", ]
-single_cell_cpm
 ```
 
 ### Extract the counts as a Seurat object
 
 This convert the H5 SingleCellExperiment to Seurat so it might take long time and occupy a lot of memory depending on how many cells you are requesting.
 
-```{r, eval=FALSE}
+```{r}
 seurat_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay  == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
@@ -278,13 +264,6 @@ seurat_counts <-
 
 seurat_counts
 ```
-
-```{r, echo=FALSE}
-SingleCellExperiment::counts(single_cell_counts) <- as(SingleCellExperiment::counts(single_cell_counts), "dgCMatrix")
-single_cell_counts |>
-  Seurat::as.Seurat(data = NULL)
-```
-
 
 By default, data is downloaded to `get_default_cache_dir()` output. If memory is a concern, users can specify a custom cache directory to metadata and counts functions:
 
@@ -302,8 +281,7 @@ single_cell_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay |>
-        stringr::str_like("%10x%") &
+      assay  == "10x 3' v2" &
       tissue == "lung parenchyma" &
       cell_type |>
         stringr::str_like("%CD4%")
