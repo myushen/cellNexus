@@ -70,7 +70,7 @@ METADATA_URL <- if (params$demo_metadata) {
 
 `cellNexus` builds upon and extends the functionality of the previously released `CuratedAtlasQueryR`, providing a unified query and access interface to the harmonised, curated, and reannotated CELLxGENE human cell atlas. It enables reproducible and programmatic exploration of large-scale single-cell data resources, supporting retrieval at the cell, sample, and dataset levels through flexible filtering by tissue, cell type, experimental condition, or other metadata features. The retrieved data are returned for downstream analysis.
 
-`cellNexus` integrates over 40 million human cells processed with standardised quality control, consistent normalisation, and unified abundance representations—including single-cell, counts-per-million, pseudobulk, and metacell layers. This harmonised design facilitates efficient cross-dataset analyses and downstream integration.
+`cellNexus` integrates over 40 million human cells processed with standardised quality control, consistent normalisation, and unified abundance representations—including single-cell, counts-per-million, normalised expression, and pseudobulk layers. This harmonised design facilitates efficient cross-dataset analyses and downstream integration.
 
 Data are hosted on the ARDC Nectar Research Cloud, and most `cellNexus` functions interact with Nectar via web requests, so a 
 network connection is required for most functionality.  
@@ -242,7 +242,7 @@ single_cell_cpm <-
   ) |>
   get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
 
-single_cell_counts
+single_cell_cpm
 ```
 
 ### Extract the counts as a Seurat object
@@ -291,7 +291,7 @@ single_cell_counts <-
 single_cell_counts
 ```
 
-Same strategy can be applied for functions `get_pseuodbulk()`, `get_metacell()`, `get_seurat()` by passing your custom directory character to "cache_directory" parameter.
+Same strategy can be applied for functions `get_pseuodbulk()` and `get_seurat()` by passing your custom directory character to "cache_directory" parameter.
 
 ## Save your `SingleCellExperiment`
 
@@ -521,13 +521,13 @@ The `counts` assay includes RNA abundance in the positive real scale (not transf
 
 The `cpm` assay includes counts per million.
 
+The `sct` assay includes normalised counts by `sctranform`.
+
 # Other representations
 
 The `rank` assay is the representation of each cell’s gene expression profile where genes are ranked by expression intensity.
 
 The `pseudobulk` assay includes aggregated RNA abundance for sample and cell type combination.
-
-The metacell (e.g `metacell_2`, `metacell_4` etc) assays represent hierarchical partitions of cells into metacell groups. 
 
 
 # Session Info
