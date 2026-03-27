@@ -89,20 +89,6 @@ clear_cache <- function() {
     unlink(TRUE, TRUE)
 }
 
-#' Clear the outdated metadata in the default cache directory.
-#' @param updated_data A character vector of new metadata file name
-#' @return `NULL`, invisibly
-#' @keywords internal
-#' @noRd
-keep_updated_metadata <- function(updated_data) {
-  cache_directory <- get_default_cache_dir()
-  files_in_cache <- list.files(cache_directory)
-  pattern <- "\\.parquet$"
-  parquet_files <- grep(pattern, files_in_cache, value = TRUE)
-  files_to_delete <- setdiff(parquet_files, updated_data)
-  unlink(file.path(cache_directory, files_to_delete))
-}
-
 #' Synchronises a single remote file with a local path
 #' @importFrom httr write_disk GET stop_for_status
 #' @importFrom cli cli_abort cli_alert_info

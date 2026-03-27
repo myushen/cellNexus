@@ -237,8 +237,9 @@ hdf5_to_anndata <- function(input_directory, output_directory) {
 #' @noRd
 #' @param output Character scalar. Path to the output file.
 #' @return NULL
-downsample_metadata <- function(output = "sample_metadata.2.0.0.parquet") {
-  metadata <- get_metadata()
+downsample_metadata <- function(output = "sample_metadata.2.1.0.parquet") {
+  metadata <- get_metadata() |>
+    join_census_table()
 
   # Make a table of rows per dataset
   dataset_sizes <- metadata |>
