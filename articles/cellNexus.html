@@ -39,7 +39,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">cellNexus</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.16</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.17</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -146,7 +146,7 @@ remain aligned with the evolving CELLxGENE releases.</p>
 <code class="sourceCode R"><span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_metadata.html">get_metadata</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">metadata</span></span></code></pre></div>
 <pre><code><span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 1 file, totalling 0 GB</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.2.1.0.parquet to /tmp/RtmptVxCFs/sample_metadata.2.1.0.parquet</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.2.1.0.parquet to /tmp/RtmpnG2hlA/sample_metadata.2.1.0.parquet</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Source:   SQL [?? x 73]</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Database: DuckDB 1.5.1 [unknown@Linux 6.17.0-1008-azure:R 4.5.3/:memory:]</span></span></span>
 <span><span class="co">#&gt;    cell_id dataset_id   observation_joinid sample_id sample_ cell_count citation</span></span>
@@ -220,30 +220,27 @@ gene counts.</p>
 <span>  <span class="va">metadata</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">self_reported_ethnicity</span> <span class="op">==</span> <span class="st">"African"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">assay</span> <span class="op">==</span> <span class="st">"10x 3' v2"</span> <span class="op">&amp;</span></span>
+<span>      <span class="va">assay</span> <span class="op">==</span> <span class="st">"10x 3' v3"</span> <span class="op">&amp;</span></span>
 <span>      <span class="va">tissue</span> <span class="op">==</span> <span class="st">"lung parenchyma"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">cell_type</span> <span class="op">|&gt;</span></span>
-<span>        <span class="fu">stringr</span><span class="fu">::</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_like.html" class="external-link">str_like</a></span><span class="op">(</span><span class="st">"%CD4%"</span><span class="op">)</span></span>
+<span>      <span class="va">cell_type</span> <span class="op">==</span> <span class="st">"T cell"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_single_cell_experiment.html">get_single_cell_experiment</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Realising metadata.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Synchronising files</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 9 files, totalling 0.02 GB</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 9 files in parallel...</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 2 files, totalling 0.01 GB</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 2 files in parallel...</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Reading files.</span></span>
-<span><span class="co">#&gt; Reading counts <span style="color: #00BB00;">■■■■■■■■                        </span>  22% | ETA:  4s</span></span>
-<span><span class="co">#&gt; Reading counts <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ </span> 100% | ETA:  0s</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Compiling Experiment.</span></span>
 <span></span>
 <span><span class="va">single_cell_counts</span></span>
 <span><span class="co">#&gt; class: SingleCellExperiment </span></span>
-<span><span class="co">#&gt; dim: 56239 35 </span></span>
+<span><span class="co">#&gt; dim: 56239 9 </span></span>
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(1): counts</span></span>
 <span><span class="co">#&gt; rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605</span></span>
 <span><span class="co">#&gt;   ENSG00000109501</span></span>
 <span><span class="co">#&gt; rowData names(0):</span></span>
-<span><span class="co">#&gt; colnames(35): 99_1 101_1 ... 319_9 256_9</span></span>
+<span><span class="co">#&gt; colnames(9): 76_1 52_1 ... 279_2 43_2</span></span>
 <span><span class="co">#&gt; colData names(73): dataset_id observation_joinid ...</span></span>
 <span><span class="co">#&gt;   tissue_ontology_term_id original_cell_</span></span>
 <span><span class="co">#&gt; reducedDimNames(0):</span></span>
@@ -258,30 +255,27 @@ gene counts.</p>
 <span>  <span class="va">metadata</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">self_reported_ethnicity</span> <span class="op">==</span> <span class="st">"African"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">assay</span> <span class="op">==</span> <span class="st">"10x 3' v2"</span> <span class="op">&amp;</span></span>
+<span>      <span class="va">assay</span> <span class="op">==</span> <span class="st">"10x 3' v3"</span> <span class="op">&amp;</span></span>
 <span>      <span class="va">tissue</span> <span class="op">==</span> <span class="st">"lung parenchyma"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">cell_type</span> <span class="op">|&gt;</span></span>
-<span>        <span class="fu">stringr</span><span class="fu">::</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_like.html" class="external-link">str_like</a></span><span class="op">(</span><span class="st">"%CD4%"</span><span class="op">)</span></span>
+<span>      <span class="va">cell_type</span> <span class="op">==</span> <span class="st">"T cell"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_single_cell_experiment.html">get_single_cell_experiment</a></span><span class="op">(</span>assays <span class="op">=</span> <span class="st">"cpm"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Realising metadata.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Synchronising files</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 9 files, totalling 0.02 GB</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 9 files in parallel...</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 2 files, totalling 0.01 GB</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 2 files in parallel...</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Reading files.</span></span>
-<span><span class="co">#&gt; Reading cpm <span style="color: #00BB00;">■■■■■■■■■■■■■■                  </span>  44% | ETA:  1s</span></span>
-<span><span class="co">#&gt; Reading cpm <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ </span> 100% | ETA:  0s</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Compiling Experiment.</span></span>
 <span></span>
 <span><span class="va">single_cell_cpm</span></span>
 <span><span class="co">#&gt; class: SingleCellExperiment </span></span>
-<span><span class="co">#&gt; dim: 56239 35 </span></span>
+<span><span class="co">#&gt; dim: 56239 9 </span></span>
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(1): cpm</span></span>
 <span><span class="co">#&gt; rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605</span></span>
 <span><span class="co">#&gt;   ENSG00000109501</span></span>
 <span><span class="co">#&gt; rowData names(0):</span></span>
-<span><span class="co">#&gt; colnames(35): 99_1 101_1 ... 319_9 256_9</span></span>
+<span><span class="co">#&gt; colnames(9): 76_1 52_1 ... 279_2 43_2</span></span>
 <span><span class="co">#&gt; colData names(73): dataset_id observation_joinid ...</span></span>
 <span><span class="co">#&gt;   tissue_ontology_term_id original_cell_</span></span>
 <span><span class="co">#&gt; reducedDimNames(0):</span></span>
@@ -296,30 +290,27 @@ gene counts.</p>
 <span>  <span class="va">metadata</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">self_reported_ethnicity</span> <span class="op">==</span> <span class="st">"African"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">assay</span> <span class="op">==</span> <span class="st">"10x 3' v2"</span> <span class="op">&amp;</span></span>
+<span>      <span class="va">assay</span> <span class="op">==</span> <span class="st">"10x 3' v3"</span> <span class="op">&amp;</span></span>
 <span>      <span class="va">tissue</span> <span class="op">==</span> <span class="st">"lung parenchyma"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">cell_type</span> <span class="op">|&gt;</span></span>
-<span>        <span class="fu">stringr</span><span class="fu">::</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_like.html" class="external-link">str_like</a></span><span class="op">(</span><span class="st">"%CD4%"</span><span class="op">)</span></span>
+<span>      <span class="va">cell_type</span> <span class="op">==</span> <span class="st">"T cell"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_single_cell_experiment.html">get_single_cell_experiment</a></span><span class="op">(</span>assays <span class="op">=</span> <span class="st">"sct"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Realising metadata.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Synchronising files</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 9 files, totalling 0.12 GB</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 9 files in parallel...</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 2 files, totalling 0.04 GB</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 2 files in parallel...</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Reading files.</span></span>
-<span><span class="co">#&gt; Reading sct <span style="color: #00BB00;">■■■■■■■■■■■■■■                  </span>  44% | ETA:  1s</span></span>
-<span><span class="co">#&gt; Reading sct <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ </span> 100% | ETA:  0s</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Compiling Experiment.</span></span>
 <span></span>
 <span><span class="va">single_cell_sct</span></span>
 <span><span class="co">#&gt; class: SingleCellExperiment </span></span>
-<span><span class="co">#&gt; dim: 56239 35 </span></span>
+<span><span class="co">#&gt; dim: 56239 9 </span></span>
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(1): sct</span></span>
 <span><span class="co">#&gt; rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605</span></span>
 <span><span class="co">#&gt;   ENSG00000109501</span></span>
 <span><span class="co">#&gt; rowData names(0):</span></span>
-<span><span class="co">#&gt; colnames(35): 99_1 101_1 ... 319_9 256_9</span></span>
+<span><span class="co">#&gt; colnames(9): 76_1 52_1 ... 279_2 43_2</span></span>
 <span><span class="co">#&gt; colData names(73): dataset_id observation_joinid ...</span></span>
 <span><span class="co">#&gt;   tissue_ontology_term_id original_cell_</span></span>
 <span><span class="co">#&gt; reducedDimNames(0):</span></span>
@@ -334,10 +325,9 @@ gene counts.</p>
 <span>  <span class="va">metadata</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">self_reported_ethnicity</span> <span class="op">==</span> <span class="st">"African"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">assay</span>  <span class="op">==</span> <span class="st">"10x 3' v2"</span> <span class="op">&amp;</span></span>
+<span>      <span class="va">assay</span>  <span class="op">==</span> <span class="st">"10x 3' v3"</span> <span class="op">&amp;</span></span>
 <span>      <span class="va">tissue</span> <span class="op">==</span> <span class="st">"lung parenchyma"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">cell_type</span> <span class="op">|&gt;</span></span>
-<span>        <span class="fu">stringr</span><span class="fu">::</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_like.html" class="external-link">str_like</a></span><span class="op">(</span><span class="st">"%CD4%"</span><span class="op">)</span></span>
+<span>      <span class="va">cell_type</span> <span class="op">==</span> <span class="st">"T cell"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_pseudobulk.html">get_pseudobulk</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Realising metadata.</span></span>
@@ -349,16 +339,14 @@ gene counts.</p>
 <span></span>
 <span><span class="va">pseudobulk_counts</span></span>
 <span><span class="co">#&gt; class: SingleCellExperiment </span></span>
-<span><span class="co">#&gt; dim: 56239 9 </span></span>
+<span><span class="co">#&gt; dim: 56239 2 </span></span>
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(1): counts</span></span>
 <span><span class="co">#&gt; rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605</span></span>
 <span><span class="co">#&gt;   ENSG00000109501</span></span>
 <span><span class="co">#&gt; rowData names(0):</span></span>
-<span><span class="co">#&gt; colnames(9): 270eb221dd0456cc063240404aec74cd___cd4 th2 em</span></span>
-<span><span class="co">#&gt;   0000c153da22cf963b807c0563aca6a6___cd4 tcm ...</span></span>
-<span><span class="co">#&gt;   c03887220681b9250f73f851d6868720___cd4 th17 em</span></span>
-<span><span class="co">#&gt;   270eb221dd0456cc063240404aec74cd___cd4 th1/th17 em</span></span>
+<span><span class="co">#&gt; colnames(2): 4f067f7e5f960bc72b0710684a521e84____SC84___t</span></span>
+<span><span class="co">#&gt;   4f067f7e5f960bc72b0710684a521e84____SC84___treg</span></span>
 <span><span class="co">#&gt; colData names(56): dataset_id sample_id ... tissue_ontology_term_id</span></span>
 <span><span class="co">#&gt;   sample_identifier</span></span>
 <span><span class="co">#&gt; reducedDimNames(0):</span></span>
@@ -376,27 +364,24 @@ cellNexus uses ENSEMBL gene ID(s).</p>
 <span>  <span class="va">metadata</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">self_reported_ethnicity</span> <span class="op">==</span> <span class="st">"African"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">assay</span>  <span class="op">==</span> <span class="st">"10x 3' v2"</span> <span class="op">&amp;</span></span>
+<span>      <span class="va">assay</span>  <span class="op">==</span> <span class="st">"10x 3' v3"</span> <span class="op">&amp;</span></span>
 <span>      <span class="va">tissue</span> <span class="op">==</span> <span class="st">"lung parenchyma"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">cell_type</span> <span class="op">|&gt;</span></span>
-<span>        <span class="fu">stringr</span><span class="fu">::</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_like.html" class="external-link">str_like</a></span><span class="op">(</span><span class="st">"%CD4%"</span><span class="op">)</span></span>
+<span>      <span class="va">cell_type</span> <span class="op">==</span> <span class="st">"T cell"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_single_cell_experiment.html">get_single_cell_experiment</a></span><span class="op">(</span>assays <span class="op">=</span> <span class="st">"cpm"</span>, features <span class="op">=</span> <span class="st">"ENSG00000134644"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Realising metadata.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Synchronising files</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Reading files.</span></span>
-<span><span class="co">#&gt; Reading cpm <span style="color: #00BB00;">■■■■■■■■■■■■■■                  </span>  44% | ETA:  2s</span></span>
-<span><span class="co">#&gt; Reading cpm <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ </span> 100% | ETA:  0s</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Compiling Experiment.</span></span>
 <span></span>
 <span><span class="va">single_cell_cpm</span></span>
 <span><span class="co">#&gt; class: SingleCellExperiment </span></span>
-<span><span class="co">#&gt; dim: 1 35 </span></span>
+<span><span class="co">#&gt; dim: 1 9 </span></span>
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(1): cpm</span></span>
 <span><span class="co">#&gt; rownames(1): ENSG00000134644</span></span>
 <span><span class="co">#&gt; rowData names(0):</span></span>
-<span><span class="co">#&gt; colnames(35): 99_1 101_1 ... 319_9 256_9</span></span>
+<span><span class="co">#&gt; colnames(9): 76_1 52_1 ... 279_2 43_2</span></span>
 <span><span class="co">#&gt; colData names(73): dataset_id observation_joinid ...</span></span>
 <span><span class="co">#&gt;   tissue_ontology_term_id original_cell_</span></span>
 <span><span class="co">#&gt; reducedDimNames(0):</span></span>
@@ -414,10 +399,9 @@ requesting.</p>
 <span>  <span class="va">metadata</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">self_reported_ethnicity</span> <span class="op">==</span> <span class="st">"African"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">assay</span>  <span class="op">==</span> <span class="st">"10x 3' v2"</span> <span class="op">&amp;</span></span>
+<span>      <span class="va">assay</span>  <span class="op">==</span> <span class="st">"10x 3' v3"</span> <span class="op">&amp;</span></span>
 <span>      <span class="va">tissue</span> <span class="op">==</span> <span class="st">"lung parenchyma"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">cell_type</span> <span class="op">|&gt;</span></span>
-<span>        <span class="fu">stringr</span><span class="fu">::</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_like.html" class="external-link">str_like</a></span><span class="op">(</span><span class="st">"%CD4%"</span><span class="op">)</span></span>
+<span>      <span class="va">cell_type</span> <span class="op">==</span> <span class="st">"T cell"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_seurat.html">get_seurat</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -451,10 +435,9 @@ functions:</p>
 <span>  <span class="va">metadata</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">self_reported_ethnicity</span> <span class="op">==</span> <span class="st">"African"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">assay</span>  <span class="op">==</span> <span class="st">"10x 3' v2"</span> <span class="op">&amp;</span></span>
+<span>      <span class="va">assay</span>  <span class="op">==</span> <span class="st">"10x 3' v3"</span> <span class="op">&amp;</span></span>
 <span>      <span class="va">tissue</span> <span class="op">==</span> <span class="st">"lung parenchyma"</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">cell_type</span> <span class="op">|&gt;</span></span>
-<span>        <span class="fu">stringr</span><span class="fu">::</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_like.html" class="external-link">str_like</a></span><span class="op">(</span><span class="st">"%CD4%"</span><span class="op">)</span></span>
+<span>      <span class="va">cell_type</span> <span class="op">==</span> <span class="st">"T cell"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_single_cell_experiment.html">get_single_cell_experiment</a></span><span class="op">(</span>cache_directory <span class="op">=</span> <span class="st">"/MY/CUSTOM/PATH"</span><span class="op">)</span></span>
 <span></span>
@@ -658,7 +641,7 @@ in cellNexus::pbmc3k_sce</p>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Realising metadata.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Synchronising files</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading 1 file, totalling 0.01 GB</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/01-07-2024/counts/e52795dec7b626b6276b867d55328d9f___1.h5ad to /tmp/RtmptVxCFs/cellxgene/01-07-2024//counts/e52795dec7b626b6276b867d55328d9f___1.h5ad</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/01-07-2024/counts/e52795dec7b626b6276b867d55328d9f___1.h5ad to /tmp/RtmpnG2hlA/cellxgene/01-07-2024//counts/e52795dec7b626b6276b867d55328d9f___1.h5ad</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Reading files.</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> The number of cells in the SingleCellExperiment will be less than the number of cells you have selected from the metadata. Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> cellNexus says: Not all genes completely overlap across the provided objects. Counts are generated by genes intersection.</span></span>
@@ -797,7 +780,7 @@ for sample and cell type combination.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] ggplot2_4.0.2     dplyr_1.2.1       cellNexus_0.99.16 BiocStyle_2.38.0 </span></span>
+<span><span class="co">#&gt; [1] ggplot2_4.0.2     dplyr_1.2.1       cellNexus_0.99.17 BiocStyle_2.38.0 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;   [1] RcppAnnoy_0.0.23            splines_4.5.3              </span></span>
