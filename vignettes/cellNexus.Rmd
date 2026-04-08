@@ -166,10 +166,9 @@ single_cell_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay == "10x 3' v2" &
+      assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment()
 
@@ -183,10 +182,9 @@ single_cell_cpm <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay == "10x 3' v2" &
+      assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "cpm")
 
@@ -199,10 +197,9 @@ single_cell_sct <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay == "10x 3' v2" &
+      assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "sct")
 
@@ -216,10 +213,9 @@ pseudobulk_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay  == "10x 3' v2" &
+      assay  == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_pseudobulk()
 
@@ -235,10 +231,9 @@ single_cell_cpm <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay  == "10x 3' v2" &
+      assay  == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
 
@@ -254,10 +249,9 @@ seurat_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay  == "10x 3' v2" &
+      assay  == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   head() |>
   get_seurat()
@@ -281,10 +275,9 @@ single_cell_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay  == "10x 3' v2" &
+      assay  == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(cache_directory = "/MY/CUSTOM/PATH")
 
