@@ -77,7 +77,7 @@ doi:10.1101/2023.06.08.542671.
 
 ``` r
 get_atlas_versions()
-#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/atlas_versions.parquet to /tmp/RtmpWwLkt7/atlas_versions.parquet
+#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/atlas_versions.parquet to /tmp/Rtmpu4Gy1Q/atlas_versions.parquet
 #> Registered S3 method overwritten by 'bit64':
 #>   method          from 
 #>   print.bitstring tools

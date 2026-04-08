@@ -71,7 +71,7 @@ metadata
 ```
 
     #> ℹ Downloading 1 file, totalling 0 GB
-    #> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.2.1.0.parquet to /tmp/RtmpzaODv8/sample_metadata.2.1.0.parquet
+    #> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.2.1.0.parquet to /tmp/RtmpucXvN6/sample_metadata.2.1.0.parquet
     #> # Source:   SQL [?? x 73]
     #> # Database: DuckDB 1.5.1 [unknown@Linux 6.17.0-1010-azure:R 4.7.0/:memory:]
     #>    cell_id dataset_id   observation_joinid sample_id sample_ cell_count citation
@@ -147,28 +147,25 @@ single_cell_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay == "10x 3' v2" &
+      assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment()
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Reading files.
-#> Reading counts ■■■■■■■■                          22% | ETA:  4s
-#> Reading counts ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
 #> ℹ Compiling Experiment.
 
 single_cell_counts
 #> class: SingleCellExperiment 
-#> dim: 56239 35 
+#> dim: 56239 9 
 #> metadata(0):
 #> assays(1): counts
 #> rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605
 #>   ENSG00000109501
 #> rowData names(0):
-#> colnames(35): 99_1 101_1 ... 319_9 256_9
+#> colnames(9): 76_1 52_1 ... 279_2 43_2
 #> colData names(73): dataset_id observation_joinid ...
 #>   tissue_ontology_term_id original_cell_
 #> reducedDimNames(0):
@@ -184,28 +181,25 @@ single_cell_cpm <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay == "10x 3' v2" &
+      assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "cpm")
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Reading files.
-#> Reading cpm ■■■■■■■■■■■■■■■■■■■■■■■■          78% | ETA:  1s
-#> Reading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
 #> ℹ Compiling Experiment.
 
 single_cell_cpm
 #> class: SingleCellExperiment 
-#> dim: 56239 35 
+#> dim: 56239 9 
 #> metadata(0):
 #> assays(1): cpm
 #> rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605
 #>   ENSG00000109501
 #> rowData names(0):
-#> colnames(35): 99_1 101_1 ... 319_9 256_9
+#> colnames(9): 76_1 52_1 ... 279_2 43_2
 #> colData names(73): dataset_id observation_joinid ...
 #>   tissue_ontology_term_id original_cell_
 #> reducedDimNames(0):
@@ -221,28 +215,25 @@ single_cell_sct <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay == "10x 3' v2" &
+      assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "sct")
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Reading files.
-#> Reading sct ■■■■■■■■■■■■■■                    44% | ETA:  1s
-#> Reading sct ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
 #> ℹ Compiling Experiment.
 
 single_cell_sct
 #> class: SingleCellExperiment 
-#> dim: 56239 35 
+#> dim: 56239 9 
 #> metadata(0):
 #> assays(1): sct
 #> rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605
 #>   ENSG00000109501
 #> rowData names(0):
-#> colnames(35): 99_1 101_1 ... 319_9 256_9
+#> colnames(9): 76_1 52_1 ... 279_2 43_2
 #> colData names(73): dataset_id observation_joinid ...
 #>   tissue_ontology_term_id original_cell_
 #> reducedDimNames(0):
@@ -258,10 +249,9 @@ pseudobulk_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay  == "10x 3' v2" &
+      assay  == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_pseudobulk()
 #> ℹ Realising metadata.
@@ -271,16 +261,14 @@ pseudobulk_counts <-
 
 pseudobulk_counts
 #> class: SingleCellExperiment 
-#> dim: 56239 9 
+#> dim: 56239 2 
 #> metadata(0):
 #> assays(1): counts
 #> rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605
 #>   ENSG00000109501
 #> rowData names(0):
-#> colnames(9): 270eb221dd0456cc063240404aec74cd___cd4 th2 em
-#>   0000c153da22cf963b807c0563aca6a6___cd4 tcm ...
-#>   c03887220681b9250f73f851d6868720___cd4 th17 em
-#>   270eb221dd0456cc063240404aec74cd___cd4 th1/th17 em
+#> colnames(2): 4f067f7e5f960bc72b0710684a521e84____SC84___t
+#>   4f067f7e5f960bc72b0710684a521e84____SC84___treg
 #> colData names(56): dataset_id sample_id ... tissue_ontology_term_id
 #>   sample_identifier
 #> reducedDimNames(0):
@@ -300,28 +288,24 @@ single_cell_cpm <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay  == "10x 3' v2" &
+      assay  == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Reading files.
-#> Reading cpm ■■■■■■■■■■■■■■                    44% | ETA:  2s
-#> Reading cpm ■■■■■■■■■■■■■■■■■■■■■■■■          78% | ETA:  1s
-#> Reading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
 #> ℹ Compiling Experiment.
 
 single_cell_cpm
 #> class: SingleCellExperiment 
-#> dim: 1 35 
+#> dim: 1 9 
 #> metadata(0):
 #> assays(1): cpm
 #> rownames(1): ENSG00000134644
 #> rowData names(0):
-#> colnames(35): 99_1 101_1 ... 319_9 256_9
+#> colnames(9): 76_1 52_1 ... 279_2 43_2
 #> colData names(73): dataset_id observation_joinid ...
 #>   tissue_ontology_term_id original_cell_
 #> reducedDimNames(0):
@@ -341,10 +325,9 @@ seurat_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay  == "10x 3' v2" &
+      assay  == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   head() |>
   get_seurat()
@@ -380,10 +363,9 @@ single_cell_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay  == "10x 3' v2" &
+      assay  == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type |>
-        stringr::str_like("%CD4%")
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(cache_directory = "/MY/CUSTOM/PATH")
 
@@ -606,7 +588,7 @@ get_metadata(
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Downloading 1 file, totalling 0.01 GB
-#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/01-07-2024/counts/e52795dec7b626b6276b867d55328d9f___1.h5ad to /tmp/RtmpzaODv8/cellxgene/01-07-2024//counts/e52795dec7b626b6276b867d55328d9f___1.h5ad
+#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/01-07-2024/counts/e52795dec7b626b6276b867d55328d9f___1.h5ad to /tmp/RtmpucXvN6/cellxgene/01-07-2024//counts/e52795dec7b626b6276b867d55328d9f___1.h5ad
 #> ℹ Reading files.
 #> ! The number of cells in the SingleCellExperiment will be less than the number of cells you have selected from the metadata. Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
 #> ! cellNexus says: Not all genes completely overlap across the provided objects. Counts are generated by genes intersection.
@@ -722,7 +704,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] ggplot2_4.0.2     dplyr_1.2.1       cellNexus_0.99.16 BiocStyle_2.39.0 
+#> [1] ggplot2_4.0.2     dplyr_1.2.1       cellNexus_0.99.17 BiocStyle_2.39.0 
 #> 
 #> loaded via a namespace (and not attached):
 #>   [1] RcppAnnoy_0.0.23            splines_4.7.0              
