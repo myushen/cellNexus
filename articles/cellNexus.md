@@ -67,9 +67,9 @@ metadata
 ```
 
     #> ℹ Downloading 1 file, totalling 0 GB
-    #> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.2.1.0.parquet to /tmp/RtmpiHXjAz/sample_metadata.2.1.0.parquet
+    #> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.2.1.0.parquet to /tmp/RtmpwHr5Dk/sample_metadata.2.1.0.parquet
     #> # Source:   SQL [?? x 73]
-    #> # Database: DuckDB 1.5.1 [unknown@Linux 6.17.0-1008-azure:R 4.5.3/:memory:]
+    #> # Database: DuckDB 1.5.1 [unknown@Linux 6.17.0-1010-azure:R 4.5.3/:memory:]
     #>    cell_id dataset_id   observation_joinid sample_id sample_ cell_count citation
     #>      <dbl> <chr>        <chr>              <chr>     <chr>        <int> <chr>   
     #>  1      81 cda2c8cd-be… *NUPW@J{c2         034f0fb1… 034f0f…     255901 Publica…
@@ -101,19 +101,19 @@ unless a custom path is provided via the cache_directory argument. The
 metadata |>
   dplyr::distinct(tissue, cell_type_unified_ensemble)
 #> # Source:   SQL [?? x 2]
-#> # Database: DuckDB 1.5.1 [unknown@Linux 6.17.0-1008-azure:R 4.5.3/:memory:]
-#>    tissue              cell_type_unified_ensemble
-#>    <chr>               <chr>                     
-#>  1 kidney              epithelial                
-#>  2 kidney blood vessel epithelial                
-#>  3 lung parenchyma     cd4 th2 em                
-#>  4 lung                cd4 fh em                 
-#>  5 lung parenchyma     treg                      
-#>  6 forebrain           nk                        
-#>  7 kidney              nk                        
-#>  8 lung                cd4 tcm                   
-#>  9 body of stomach     nk                        
-#> 10 respiratory airway  cd4 th1/th17 em           
+#> # Database: DuckDB 1.5.1 [unknown@Linux 6.17.0-1010-azure:R 4.5.3/:memory:]
+#>    tissue               cell_type_unified_ensemble
+#>    <chr>                <chr>                     
+#>  1 breast               cd14 mono                 
+#>  2 lung                 cd4 th2 em                
+#>  3 respiratory airway   cd4 th1 em                
+#>  4 lung parenchyma      cd4 fh em                 
+#>  5 lung                 treg                      
+#>  6 heart left ventricle cd14 mono                 
+#>  7 blood                nk                        
+#>  8 frontal lobe         nk                        
+#>  9 lung parenchyma      cd4 tcm                   
+#> 10 bone marrow          cd14 mono                 
 #> # ℹ more rows
 ```
 
@@ -244,29 +244,27 @@ single_cell_sct
 pseudobulk_counts <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
-      assay  == "10x 3' v3" &
-      tissue == "lung parenchyma" &
-      cell_type == "T cell"
+      assay  == "10x 5' v1" &
+      tissue == "lung" &
+      cell_type == "classical monocyte"
   ) |>
   get_pseudobulk()
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
-#> ℹ Downloading 1 file, totalling 0.39 GB
-#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/01-07-2024/pseudobulk/counts/c25a6ea6b00d263d6cbb2d06a542a2c7___1.h5ad to /home/runner/.cache/R/cellNexus/cellxgene/01-07-2024/pseudobulk/counts/c25a6ea6b00d263d6cbb2d06a542a2c7___1.h5ad
+#> ℹ Downloading 1 file, totalling 0 GB
+#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/01-07-2024/pseudobulk/counts/11d9b242ad2fc637e43a23a6b7389fde___1.h5ad to /home/runner/.cache/R/cellNexus/cellxgene/01-07-2024/pseudobulk/counts/11d9b242ad2fc637e43a23a6b7389fde___1.h5ad
 #> ℹ Reading files.
 #> ℹ Compiling Experiment.
 
 pseudobulk_counts
 #> class: SingleCellExperiment 
-#> dim: 56239 2 
+#> dim: 19979 1 
 #> metadata(0):
 #> assays(1): counts
-#> rownames(56239): ENSG00000121410 ENSG00000268895 ... ENSG00000135605
-#>   ENSG00000109501
+#> rownames(19979): ENSG00000243485 ENSG00000238009 ... ENSG00000275063
+#>   ENSG00000271254
 #> rowData names(0):
-#> colnames(2): 4f067f7e5f960bc72b0710684a521e84____SC84___t
-#>   4f067f7e5f960bc72b0710684a521e84____SC84___treg
+#> colnames(1): 2e8c9911c9bfbffc07288adef93d3cf2___cd14 mono
 #> colData names(56): dataset_id sample_id ... tissue_ontology_term_id
 #>   sample_identifier
 #> reducedDimNames(0):
@@ -572,7 +570,7 @@ get_metadata(
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Downloading 1 file, totalling 0.01 GB
-#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/01-07-2024/counts/e52795dec7b626b6276b867d55328d9f___1.h5ad to /tmp/RtmpiHXjAz/cellxgene/01-07-2024//counts/e52795dec7b626b6276b867d55328d9f___1.h5ad
+#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene/01-07-2024/counts/e52795dec7b626b6276b867d55328d9f___1.h5ad to /tmp/RtmpwHr5Dk/cellxgene/01-07-2024//counts/e52795dec7b626b6276b867d55328d9f___1.h5ad
 #> ℹ Reading files.
 #> ! The number of cells in the SingleCellExperiment will be less than the number of cells you have selected from the metadata. Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
 #> ! cellNexus says: Not all genes completely overlap across the provided objects. Counts are generated by genes intersection.
@@ -685,7 +683,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] ggplot2_4.0.2     dplyr_1.2.1       cellNexus_0.99.17 BiocStyle_2.38.0 
+#> [1] ggplot2_4.0.2     dplyr_1.2.1       cellNexus_0.99.18 BiocStyle_2.38.0 
 #> 
 #> loaded via a namespace (and not attached):
 #>   [1] RcppAnnoy_0.0.23            splines_4.5.3              
