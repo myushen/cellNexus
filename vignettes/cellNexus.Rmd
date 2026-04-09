@@ -212,10 +212,9 @@ single_cell_sct
 pseudobulk_counts <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
-      assay  == "10x 3' v3" &
-      tissue == "lung parenchyma" &
-      cell_type == "T cell"
+      assay  == "10x 5' v1" &
+      tissue == "lung" &
+      cell_type == "classical monocyte"
   ) |>
   get_pseudobulk()
 
