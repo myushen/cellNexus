@@ -17,11 +17,11 @@ get_counts_per_million <- function(sce, output_file) {
   selected_cols <- which(col_sums > 0 & col_sums < Inf)
   assay_name <- assays(sce) |>
     names()
+  counts_mat <- assay(sce[, selected_cols, drop = FALSE], assay_name)
+  lib_sizes <- Matrix::colSums(counts_mat) / 1e6
+  cpm_mat <- sweep(counts_mat, 2, lib_sizes, "/")
   sce <- SingleCellExperiment(list(
-    cpm = scuttle::calculateCPM(
-      sce[, selected_cols, drop = FALSE],
-      assay.type = assay_name
-    )
+    cpm = cpm_mat
   ))
   rownames(sce) <- rownames(sce[, selected_cols])
   colnames(sce) <- colnames(sce[, selected_cols])
