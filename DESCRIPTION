@@ -133,6 +133,7 @@ Biarch: true
 biocViews: 
     AssayDomain,
     Infrastructure,
+    SingleCell,
     RNASeq,
     DifferentialExpression,
     GeneExpression,

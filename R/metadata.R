@@ -269,6 +269,7 @@ get_cell_communication_strength <- function(
 #' @param join_keys A character vector of column names used for the join.
 #'   Defaults to `c("sample_id", "dataset_id", "cell_id")`.
 #' @return A lazy SQL table with metacell metadata joined to the cellNexus metadata.
+#' @importFrom dplyr left_join
 #' @keywords internal
 #' @noRd
 join_metacell_table <- function(tbl,
@@ -322,6 +323,7 @@ join_metacell_table <- function(tbl,
 #'     cache_directory = tempdir()
 #'   )
 #' @return A lazy SQL table with Census metadata joined to the cellNexus metadata.
+#' @importFrom dplyr left_join
 #' @export
 join_census_table <- function(tbl,
                               cloud_metadata = get_metadata_url("census_cell_metadata.2.1.0.parquet"),

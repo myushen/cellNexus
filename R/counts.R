@@ -222,7 +222,7 @@ get_pseudobulk <- function(data,
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
+#' @importFrom dplyr pull filter mutate as_tibble inner_join collect transmute group_split
 #' @return A `SingleCellExperiment` object.
 #' @importFrom tibble column_to_rownames
 #' @importFrom BiocGenerics cbind
@@ -254,7 +254,7 @@ get_metacell <- function(data,
   # Separate metacell and single_cell in group_to_data_container without
   # producing a repetitive column in the metadata
   raw_data <- raw_data |>
-    mutate(file_id_cellNexus_metacell = file_id_cellNexus_single_cell)
+    mutate(file_id_cellNexus_metacell = .data$file_id_cellNexus_single_cell)
 
   validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
 
@@ -292,6 +292,7 @@ get_metacell <- function(data,
 #' @importFrom checkmate assert check_true
 #' @importFrom SummarizedExperiment assays<- assayNames assay<-
 #' @importFrom BiocGenerics cbind
+#' @importFrom rlang .data
 #' @keywords internal
 #' @noRd
 .fetch_experiments <- function(
@@ -315,7 +316,7 @@ get_metacell <- function(data,
     file_lists <- raw_data |>
       transmute(
         files = .data[[grouping_column]],
-        atlas_name = atlas_id,
+        atlas_name = .data$atlas_id,
         cache_dir = cache_directory
       ) |>
       distinct() |>
@@ -443,6 +444,7 @@ get_metacell <- function(data,
 #' @importFrom purrr map
 #' @importFrom checkmate assert check_true
 #' @importFrom cli cli_alert_info cli_abort
+#' @importFrom rlang .data
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
@@ -477,8 +479,8 @@ validate_data <- function(
   cli_alert_info("Realising metadata.")
   raw_data <- collect(data)
   atlas_name <- raw_data |>
-    distinct(atlas_id) |>
-    pull()
+    distinct(.data$atlas_id) |>
+    pull(.data$atlas_id)
   versioned_cache_directory <- file.path(cache_directory, atlas_name, cell_aggregation)
 
   versioned_cache_directory |>
@@ -516,7 +518,7 @@ validate_data <- function(
 #' @param grouping_column A character vector of metadata column for grouping
 #' @param metacell_column A character vector of metacell column (e.g. "metacell_2", "metacell_4") from metadata.
 #' @return A `SummarizedExperiment` object
-#' @importFrom dplyr mutate filter
+#' @importFrom dplyr mutate filter select left_join distinct any_of all_of contains matches
 #' @importFrom SummarizedExperiment colData<-
 #' @importFrom tibble column_to_rownames
 #' @importFrom utils head
@@ -588,10 +590,14 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     new_coldata <- df |>
       select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
       # Remove metacell and single-cell level annotations in pseudobulk
-      select(-contains("metacell"), -matches("azimuth|monaco|blueprint|subsets_|high_")) |>
+      dplyr::select(-dplyr::contains("metacell"), -dplyr::matches("azimuth|monaco|blueprint|subsets_|high_")) |>
       distinct() |>
       mutate(
-        sample_identifier = glue("{sample_id}___{cell_type_unified_ensemble}"),
+        sample_identifier = paste(
+          .data$sample_id,
+          .data$cell_type_unified_ensemble,
+          sep = "___"
+        ),
         original_sample_id = .data$sample_identifier
       ) |>
       column_to_rownames("original_sample_id")
@@ -627,18 +633,18 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
       )
 
     mapping_tbl <- as.data.frame(SummarizedExperiment::colData(experiment)) |>
-      dplyr::select(sample_id, !!rlang::sym(metacell_column), metacell_id)
+      select(all_of(c("sample_id", metacell_column, "metacell_id")))
 
     new_coldata <- df |>
-      left_join(
+      dplyr::left_join(
         mapping_tbl,
         by = c("sample_id", metacell_column)
       ) |>
-      select(any_of(annotations), metacell_id) |>
+      select(any_of(annotations), all_of("metacell_id")) |>
       distinct() |>
       mutate(
         original_metacell_id = .data$metacell_id,
-        metacell_identifier = glue("{metacell_id}_{i}")
+        metacell_identifier = paste(.data$metacell_id, i, sep = "_")
       ) |>
       column_to_rownames("metacell_identifier")
 
