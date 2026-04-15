@@ -124,15 +124,21 @@ suppressPackageStartupMessages({
 ## Load and explore the metadata
 
 ### Load the metadata
+By default, `get_metadata()` loads harmonised annotations. Users can retrieve original Census annotations by the function `join_census_table()`. 
 
 ```{r load-metadata-demo, eval=FALSE}
-metadata <- get_metadata()
+metadata <- get_metadata() |>
+  join_census_table()
 metadata
 ```
 
 ```{r load-metadata-check, echo=FALSE}
 # Note: a custom cache is used here ONLY for R CHECK compliance purposes. Users will NOT need to specify a custom cache
-metadata <- get_metadata(cloud_metadata = METADATA_URL, cache_directory = tempdir())
+metadata <- get_metadata(
+  cloud_metadata = METADATA_URL["cellnexus"],
+  cache_directory = tempdir()
+) |>
+  join_census_table(cloud_metadata = METADATA_URL["census"])
 metadata
 ```
 
@@ -168,7 +174,7 @@ single_cell_counts <-
     self_reported_ethnicity == "African" &
       assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type == "T cell"
+      cell_type_unified_ensemble == "cd14 mono"
   ) |>
   get_single_cell_experiment()
 
@@ -184,7 +190,7 @@ single_cell_cpm <-
     self_reported_ethnicity == "African" &
       assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type == "T cell"
+      cell_type_unified_ensemble == "cd14 mono"
   ) |>
   get_single_cell_experiment(assays = "cpm")
 
@@ -199,7 +205,7 @@ single_cell_sct <-
     self_reported_ethnicity == "African" &
       assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type == "T cell"
+      cell_type_unified_ensemble == "cd14 mono"
   ) |>
   get_single_cell_experiment(assays = "sct")
 
@@ -212,13 +218,30 @@ single_cell_sct
 pseudobulk_counts <-
   metadata |>
   dplyr::filter(
-      assay  == "10x 5' v1" &
+    assay == "10x 5' v1" &
       tissue == "lung" &
-      cell_type == "classical monocyte"
+      cell_type_unified_ensemble == "treg"
   ) |>
   get_pseudobulk()
 
 pseudobulk_counts
+```
+
+## Download cell communication metadata
+
+Cell communication metadata was generated based on post-QC cells per sample using `CellChat v2` method. It uses our harmonised cell type annotation (cell_type_unified_ensemble) to infer the communication. It captures inferred communication at both the ligand–receptor pair level and the signalling pathway level.  
+
+interaction_count: The number of inferred interactions between each pair of cell groups.  
+interaction_weight: The aggregated communication strength between each pair of cell groups.  
+
+For definitions of additional annotations, please refer to the CellChat v2 documentation: https://github.com/jinworks/CellChat.
+
+```{r get-cell-communication, eval=FALSE}
+get_cell_communication_strength()
+```
+
+```{r get-cell-communication-demo, echo=FALSE}
+get_cell_communication_strength(cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet"))
 ```
 
 ### Extract only a subset of genes
@@ -230,9 +253,9 @@ single_cell_cpm <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay  == "10x 3' v3" &
+      assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type == "T cell"
+      cell_type_unified_ensemble == "cd14 mono"
   ) |>
   get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
 
@@ -248,9 +271,9 @@ seurat_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay  == "10x 3' v3" &
+      assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type == "T cell"
+      cell_type_unified_ensemble == "cd14 mono"
   ) |>
   head() |>
   get_seurat()
@@ -274,9 +297,9 @@ single_cell_counts <-
   metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African" &
-      assay  == "10x 3' v3" &
+      assay == "10x 3' v3" &
       tissue == "lung parenchyma" &
-      cell_type == "T cell"
+      cell_type_unified_ensemble == "cd14 mono"
   ) |>
   get_single_cell_experiment(cache_directory = "/MY/CUSTOM/PATH")
 
@@ -479,33 +502,94 @@ get_metadata(
 
 # Cell metadata
 
-Dataset-specific columns (definitions available at cellxgene.cziscience.com)
+Field definitions for the CELLxGENE schema follow the
+[CELLxGENE schema 5.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/5.1.0/schema.md).
 
-`cell_count`, `collection_id`, `filetype`, `is_primary_data`, `mean_genes_per_cell`, `published_at`, `revised_at`, `schema_version`, `tombstone`, `x_normalization`, `explorer_url`, `dataset_id`, `dataset_version_id`
+## Dataset-level columns
 
-Sample-specific columns (definitions available at cellxgene.cziscience.com)
+| Column | Description |
+|--------|-------------|
+| `dataset_id` | Primary dataset identifier in the atlas. |
+| `collection_id` | Parent collection grouping related datasets. |
+| `citation` | Citation or reference for the dataset. |
+| `dataset_version_id` | Versioned identifier for a dataset release. |
+| `explorer_url` | URL to browse the dataset in a public explorer. |
+| `filesize` | Reported size of source data files. |
+| `filetype` | Storage format of source expression files. |
+| `published_at` | Publication timestamp for dataset release. |
+| `raw_data_location` | Location of raw data upstream. |
+| `revised_at` | Last revision timestamp for dataset metadata. |
+| `schema_version` | CELLxGENE schema version for this record. |
+| `suspension_type` | Suspension type (e.g. cell vs nucleus). |
+| `title` | Dataset title. |
+| `url` | Dataset or resource URL. |
+| `donor_id` | Donor or participant identifier. |
 
-`sample_id`, `sample_`, `age_days`, `assay`, `assay_ontology_term_id`, `development_stage`, `development_stage_ontology_term_id`, `self_reported_ethnicity`, `self_reported_ethnicity_ontology_term_id`, `experiment___`, `organism`, `organism_ontology_term_id`, `sample_placeholder`, `sex`, `sex_ontology_term_id`, `tissue`, `tissue_type`, `tissue_ontology_term_id`, `tissue_groups`, `disease`, `disease_ontology_term_id`, `is_primary_data`, `donor_id`, `is_immune`
+## Sample-level columns
 
-Cell-specific columns (definitions available at cellxgene.cziscience.com)
+| Column | Description |
+|--------|-------------|
+| `assay` | Assay or platform label. |
+| `assay_ontology_term_id` | Ontology identifier for `assay`. |
+| `development_stage` | Developmental stage label. |
+| `development_stage_ontology_term_id` | Ontology identifier for `development_stage`. |
+| `self_reported_ethnicity` | Self-reported ancestry or ethnicity label. |
+| `self_reported_ethnicity_ontology_term_id` | Ontology identifier for self-reported ethnicity. |
+| `experiment___` | Upstream experiment grouping variable. |
+| `organism` | Organism name (e.g. human). |
+| `organism_ontology_term_id` | Ontology identifier for `organism`. |
+| `sex` | Recorded biological sex label. |
+| `sex_ontology_term_id` | Ontology identifier for `sex`. |
+| `tissue` | Tissue label. |
+| `tissue_type` | Tissue class (e.g. tissue vs organoid). |
+| `tissue_ontology_term_id` | Ontology identifier for `tissue`. |
+| `disease` | Disease or condition annotation. |
+| `disease_ontology_term_id` | Ontology identifier for `disease`. |
+| `is_primary_data` | Whether observations are marked as primary upstream. |
 
-`cell_id`, `cell_type`, `cell_type_ontology_term_id`, `cell_annotation_azimuth_l2`, 
-`cell_annotation_blueprint_singler`, `observation_joinid`, `empty_droplet`, `alive`, `scDblFinder.class`
+## Cell-level columns
 
-Through harmonisation and curation we introduced custom column, not present in the original CELLxGENE metadata
+| Column | Description |
+|--------|-------------|
+| `cell_id` | Unique cell barcode or identifier. |
+| `cell_type` | Cell-type label from source or curation. |
+| `cell_type_ontology_term_id` | Ontology identifier for `cell_type`. |
+| `cell_annotation_azimuth_l2` | Azimuth level-2 annotation used in harmonisation. |
+| `cell_annotation_blueprint_singler` | SingleR annotation using the Blueprint reference. |
+| `observation_joinid` | Join key linking metadata and expression records. |
+| `empty_droplet` | Quality-control flag for probable empty droplets. |
+| `alive` | Quality-control flag for viable cells (e.g. mitochondrial signal). |
+| `scDblFinder.class` | Doublet classification from `scDblFinder`. |
+| `is_immune` | Curated flag for immune-cell context. |
 
-- `age_days`: donors' age in days
-- `cell_type_unified_ensemble`: the consensus call identity (for immune cells) using the original and three novel annotations using Seurat Azimuth and SingleR
-- `cell_annotation_azimuth_l2`: Azimuth cell annotation
-- `cell_annotation_blueprint_singler`: SingleR cell annotation using Blueprint reference
-- `cell_annotation_blueprint_monaco`: SingleR cell annotation using Monaco reference
-- `sample_heuristic`: sample subdivision for internal use
-- `file_id_cellNexus_single_cell`: file subdivision for internal use
-- `file_id_cellNexus_pseudobulk`: file subdivision for internal use
-- `sample_id`: sample ID
-- `nCount_RNA`: total number of RNA detected in a cell per sample
-- `nFeature_expressed_in_sample`: total number of genes expressed in a cell per sample
+## Harmonised and custom columns (cellNexus)
 
+Through harmonisation and curation, cellNexus adds columns that are not present in the original CELLxGENE metadata alone.
+
+| Column | Description |
+|--------|-------------|
+| `cell_count` | Number of cells in a dataset. |
+| `feature_count` | Number of genes in a dataset. |
+| `age_days` | Donor age in days. |
+| `tissue_groups` | Coarse tissue grouping for analysis. |
+| `empty_droplet` | Whether a cell is called an empty droplet from expressed-gene count per sample (default threshold 200; targeted panels may differ). |
+| `alive` | Whether a cell passes viability / mitochondrial QC. |
+| `scDblFinder.class` | Doublet, singlet, or unknown (`scDblFinder` default parameters). |
+| `cell_type_unified_ensemble` | Consensus immune identity from Azimuth and SingleR (Blueprint, Monaco). |
+| `cell_annotation_azimuth_l2` | Azimuth cell annotation. |
+| `cell_annotation_blueprint_singler` | SingleR annotation (Blueprint). |
+| `cell_annotation_blueprint_monaco` | SingleR annotation (Monaco). |
+| `sample_heuristic` | Internal sample subdivision helper. |
+| `file_id_cellNexus_single_cell` | Internal file id for single-cell layers. |
+| `file_id_cellNexus_pseudobulk` | Internal file id for pseudobulk layers. |
+| `sample_id` | Harmonised sample identifier. |
+| `nCount_RNA` | Total RNA counts per cell (sample-aware). |
+| `nFeature_expressed_in_sample` | Number of expressed features per cell. |
+| `ethnicity_flagging_score` | Supporting score for ethnicity imputation. |
+| `low_confidence_ethnicity` | Supporting flag for low-confidence ethnicity calls. |
+| `.aggregated_cells` | Post-QC cells combined into each pseudobulk sample. |
+| `imputed_ethnicity` | Imputed ethnicity label. |
+| `atlas_id` | cellNexus atlas release identifier (internal use). |
 
 # RNA abundance
 
@@ -526,4 +610,3 @@ The `pseudobulk` assay includes aggregated RNA abundance for sample and cell typ
 ```{r session-info}
 sessionInfo()
 ```
-

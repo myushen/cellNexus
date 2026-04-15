@@ -305,11 +305,13 @@ downsample_metadata <- function(
     "sex", "sex_ontology_term_id", "tissue", "tissue_ontology_term_id"
   )
 
+  keys <- c("observation_joinid", "dataset_id", "sample_id")
+
   census_metadata <- metadata |>
     dplyr::select(dplyr::all_of(census_cols))
 
   cellnexus_metadata <- metadata |>
-    dplyr::select(-dplyr::all_of(census_cols))
+    dplyr::select(-dplyr::all_of(setdiff(census_cols, keys)))
 
   arrow::write_parquet(census_metadata, census_output)
   arrow::write_parquet(cellnexus_metadata, cellnexus_output)

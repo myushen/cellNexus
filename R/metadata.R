@@ -255,10 +255,10 @@ get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2
 #'   pathway dominance, and global communication structure between cell populations.
 #' @examples
 #' # For fast build purpose only, you do not need to specify anything in the function.
-#' communication_meta <- get_cell_communication_strength(cloud_metadata = SAMPLE_DATABASE_URL)
+#' communication_meta <- get_cell_communication_strength(cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet")
 #' @export
 get_cell_communication_strength <- function(
-  cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength.parquet"),
+  cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet"),
   local_metadata = NULL,
   cache_directory = get_default_cache_dir(),
   use_cache = TRUE
