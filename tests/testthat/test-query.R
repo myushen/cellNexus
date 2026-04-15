@@ -238,10 +238,13 @@ test_that("get_metadata() expect a unique cell_type `mature T cell` is present",
 
 test_that("get_cell_communication_strength() returns metadata-like tbl with sample URL", {
   # For fast check purposes, use sample_database_url.
-  tbl <- get_cell_communication_strength(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"], cache_directory = tempdir())
+  tbl <- get_cell_communication_strength(
+    cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet"),
+    cache_directory = tempdir()
+  )
   expect_s3_class(tbl, "tbl_lazy")
   expect_true(ncol(dplyr::collect(tbl |>
-                                    head(1))) >= 1L)
+    head(1))) >= 1L)
 })
 
 test_that("get_metadata() expect to combine local and cloud metadata", {
@@ -337,7 +340,7 @@ test_that("get_single_cell_experiment() expect to combine local and cloud counts
     get_single_cell_experiment(cache_directory = cache)
 
   expect_contains(colData(sce)[, "sample_id"] |>
-                    unique(), "pbmc3k")
+    unique(), "pbmc3k")
 })
 
 test_that("keep_quality_cells() return high quality cells", {
@@ -364,23 +367,23 @@ test_that("keep_quality_cells() return high quality cells", {
 
   # No empty droplets remain
   expect_true(meta_filtered |>
-                distinct(.data[[empty_droplet_col]]) |>
-                collect() |>
-                pull() |>
-                identical(FALSE))
+    distinct(.data[[empty_droplet_col]]) |>
+    collect() |>
+    pull() |>
+    identical(FALSE))
 
   # All cells are alive
   expect_true(meta_filtered |>
-                distinct(.data[[alive_col]]) |>
-                collect() |>
-                pull() |>
-                identical(TRUE))
+    distinct(.data[[alive_col]]) |>
+    collect() |>
+    pull() |>
+    identical(TRUE))
 
   # No doublets present
   expect_false("doublet" %in% (meta_filtered |>
-                                 distinct(.data[[doublet_col]]) |>
-                                 collect() |>
-                                 pull()))
+    distinct(.data[[doublet_col]]) |>
+    collect() |>
+    pull()))
 })
 
 test_that("get_atlas_versions() returns a registry-like data frame", {

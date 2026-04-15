@@ -539,7 +539,7 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
       "Your cache does not contain the file {experiment_path} you attempted",
       " to query. Please provide the repository parameter so that files can",
       " be synchronised from the internet"
-      ))
+    ))
   }
 
   experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE)
@@ -751,12 +751,12 @@ sync_assay_files <- function(
 #' @keywords internal
 #' @noRd
 build_assay_file_list <- function(
-    url,
-    atlas_name,
-    cell_aggregation,
-    cache_dir,
-    subdirs,
-    files
+  url,
+  atlas_name,
+  cell_aggregation,
+  cache_dir,
+  subdirs,
+  files
 ) {
   # Find every combination of file name, sample id, and assay, since each
   # will be a separate file we need to download

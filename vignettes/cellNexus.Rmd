@@ -498,98 +498,8 @@ get_metadata(
   get_single_cell_experiment(cache_directory = local_cache)
 ```
 
-
-
 # Cell metadata
-
-Field definitions for the CELLxGENE schema follow the
-[CELLxGENE schema 5.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/5.1.0/schema.md).
-
-## Dataset-level columns
-
-| Column | Description |
-|--------|-------------|
-| `dataset_id` | Primary dataset identifier in the atlas. |
-| `collection_id` | Parent collection grouping related datasets. |
-| `citation` | Citation or reference for the dataset. |
-| `dataset_version_id` | Versioned identifier for a dataset release. |
-| `explorer_url` | URL to browse the dataset in a public explorer. |
-| `filesize` | Reported size of source data files. |
-| `filetype` | Storage format of source expression files. |
-| `published_at` | Publication timestamp for dataset release. |
-| `raw_data_location` | Location of raw data upstream. |
-| `revised_at` | Last revision timestamp for dataset metadata. |
-| `schema_version` | CELLxGENE schema version for this record. |
-| `suspension_type` | Suspension type (e.g. cell vs nucleus). |
-| `title` | Dataset title. |
-| `url` | Dataset or resource URL. |
-| `donor_id` | Donor or participant identifier. |
-
-## Sample-level columns
-
-| Column | Description |
-|--------|-------------|
-| `assay` | Assay or platform label. |
-| `assay_ontology_term_id` | Ontology identifier for `assay`. |
-| `development_stage` | Developmental stage label. |
-| `development_stage_ontology_term_id` | Ontology identifier for `development_stage`. |
-| `self_reported_ethnicity` | Self-reported ancestry or ethnicity label. |
-| `self_reported_ethnicity_ontology_term_id` | Ontology identifier for self-reported ethnicity. |
-| `experiment___` | Upstream experiment grouping variable. |
-| `organism` | Organism name (e.g. human). |
-| `organism_ontology_term_id` | Ontology identifier for `organism`. |
-| `sex` | Recorded biological sex label. |
-| `sex_ontology_term_id` | Ontology identifier for `sex`. |
-| `tissue` | Tissue label. |
-| `tissue_type` | Tissue class (e.g. tissue vs organoid). |
-| `tissue_ontology_term_id` | Ontology identifier for `tissue`. |
-| `disease` | Disease or condition annotation. |
-| `disease_ontology_term_id` | Ontology identifier for `disease`. |
-| `is_primary_data` | Whether observations are marked as primary upstream. |
-
-## Cell-level columns
-
-| Column | Description |
-|--------|-------------|
-| `cell_id` | Unique cell barcode or identifier. |
-| `cell_type` | Cell-type label from source or curation. |
-| `cell_type_ontology_term_id` | Ontology identifier for `cell_type`. |
-| `cell_annotation_azimuth_l2` | Azimuth level-2 annotation used in harmonisation. |
-| `cell_annotation_blueprint_singler` | SingleR annotation using the Blueprint reference. |
-| `observation_joinid` | Join key linking metadata and expression records. |
-| `empty_droplet` | Quality-control flag for probable empty droplets. |
-| `alive` | Quality-control flag for viable cells (e.g. mitochondrial signal). |
-| `scDblFinder.class` | Doublet classification from `scDblFinder`. |
-| `is_immune` | Curated flag for immune-cell context. |
-
-## Harmonised and custom columns (cellNexus)
-
-Through harmonisation and curation, cellNexus adds columns that are not present in the original CELLxGENE metadata alone.
-
-| Column | Description |
-|--------|-------------|
-| `cell_count` | Number of cells in a dataset. |
-| `feature_count` | Number of genes in a dataset. |
-| `age_days` | Donor age in days. |
-| `tissue_groups` | Coarse tissue grouping for analysis. |
-| `empty_droplet` | Whether a cell is called an empty droplet from expressed-gene count per sample (default threshold 200; targeted panels may differ). |
-| `alive` | Whether a cell passes viability / mitochondrial QC. |
-| `scDblFinder.class` | Doublet, singlet, or unknown (`scDblFinder` default parameters). |
-| `cell_type_unified_ensemble` | Consensus immune identity from Azimuth and SingleR (Blueprint, Monaco). |
-| `cell_annotation_azimuth_l2` | Azimuth cell annotation. |
-| `cell_annotation_blueprint_singler` | SingleR annotation (Blueprint). |
-| `cell_annotation_blueprint_monaco` | SingleR annotation (Monaco). |
-| `sample_heuristic` | Internal sample subdivision helper. |
-| `file_id_cellNexus_single_cell` | Internal file id for single-cell layers. |
-| `file_id_cellNexus_pseudobulk` | Internal file id for pseudobulk layers. |
-| `sample_id` | Harmonised sample identifier. |
-| `nCount_RNA` | Total RNA counts per cell (sample-aware). |
-| `nFeature_expressed_in_sample` | Number of expressed features per cell. |
-| `ethnicity_flagging_score` | Supporting score for ethnicity imputation. |
-| `low_confidence_ethnicity` | Supporting flag for low-confidence ethnicity calls. |
-| `.aggregated_cells` | Post-QC cells combined into each pseudobulk sample. |
-| `imputed_ethnicity` | Imputed ethnicity label. |
-| `atlas_id` | cellNexus atlas release identifier (internal use). |
+The complete metadata dictionary (dataset-, sample-, and cell-level columns, plus cellNexus-specific harmonised fields) is available on the documentation site: [cellNexus documentation](https://cellnexus.org/).
 
 # RNA abundance
 
@@ -605,6 +515,7 @@ The `rank` assay is the representation of each cell’s gene expression profile 
 
 The `pseudobulk` assay includes aggregated RNA abundance for sample and cell type combination.
 
+The detailed documentation for RNA abundance is available on the documentation site: [cellNexus documentation](https://cellnexus.org/).
 
 # Session Info
 ```{r session-info}

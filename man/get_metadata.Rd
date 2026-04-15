@@ -55,49 +55,50 @@ The columns \code{dataset_id} and \code{file_id_cellNexus_single_cell} link the 
 Our representation, harmonises the metadata at dataset, sample and cell
 levels, in a unique coherent database table.
 
-Dataset-specific columns (definitions available at cellxgene.cziscience.com):
-\code{cell_count}, \code{collection_id}, \code{created_at.x}, \code{created_at.y},
-\code{dataset_deployments}, \code{dataset_id}, \code{file_id_cellNexus_single_cell}, \code{filename}, \code{filetype},
-\code{is_primary_data.y}, \code{is_valid}, \code{linked_genesets}, \code{mean_genes_per_cell},
-\code{name}, \code{published}, \code{published_at}, \code{revised_at}, \code{revision}, \code{s3_uri},
-\code{schema_version}, \code{tombstone}, \code{updated_at.x}, \code{updated_at.y},
-\code{user_submitted}, \code{x_normalization}
+Field definitions for the CELLxGENE schema follow the
+\href{https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/5.1.0/schema.md}{CELLxGENE schema 5.1.0}.
 
-Sample-specific columns (definitions available at cellxgene.cziscience.com):
-\code{sample_id}, \code{.sample_name}, \code{age_days}, \code{assay}, \code{assay_ontology_term_id},
-\code{development_stage}, \code{development_stage_ontology_term_id}, \code{ethnicity},
-\code{ethnicity_ontology_term_id}, \code{experiment___}, \code{organism},
-\code{organism_ontology_term_id}, \code{sample_placeholder}, \code{sex},
-\code{sex_ontology_term_id}, \code{tissue}, \code{tissue_harmonised},
-\code{tissue_ontology_term_id}, \code{disease}, \code{disease_ontology_term_id},
-\code{is_primary_data.x}
+Dataset-specific columns:
+\code{dataset_id}, \code{collection_id}, \code{citation}, \code{dataset_version_id},
+\code{explorer_url}, \code{filesize}, \code{filetype}, \code{published_at}, \code{raw_data_location},
+\code{revised_at}, \code{schema_version}, \code{suspension_type}, \code{title}, \code{url}, \code{donor_id}
 
-Cell-specific columns (definitions available at cellxgene.cziscience.com):
-\code{cell_id}, \code{cell_type}, \code{cell_type_ontology_term_idm}, \code{cell_type_harmonised},
-\code{confidence_class}, \code{cell_annotation_azimuth_l2},
-\code{cell_annotation_blueprint_singler}
+Sample-specific columns:
+\code{assay}, \code{assay_ontology_term_id}, \code{development_stage},
+\code{development_stage_ontology_term_id}, \code{self_reported_ethnicity},
+\code{self_reported_ethnicity_ontology_term_id}, \code{experiment___}, \code{organism},
+\code{organism_ontology_term_id}, \code{sex}, \code{sex_ontology_term_id}, \code{tissue},
+\code{tissue_type}, \code{tissue_ontology_term_id}, \code{disease}, \code{disease_ontology_term_id}, \code{is_primary_data}
+
+Cell-specific columns
+\code{cell_id}, \code{cell_type}, \code{cell_type_ontology_term_id}, \code{observation_joinid}
 
 Through harmonisation and curation we introduced custom columns not present
 in the original CELLxGENE metadata:
-\itemize{
-\item \code{tissue_harmonised}: a coarser tissue name for better filtering
-\item \code{age_days}: the number of days corresponding to the age
-\item \code{cell_type_harmonised}: the consensus call identity (for immune cells)
-using the original and three novel annotations using Seurat Azimuth and
-SingleR
-\item \code{confidence_class}: an ordinal class of how confident
-\code{cell_type_harmonised} is. 1 is complete consensus, 2 is 3 out of four and
-so on.
-\item \code{cell_annotation_azimuth_l2}: Azimuth cell annotation
-\item \code{cell_annotation_blueprint_singler}: SingleR cell annotation using
-Blueprint reference
-\item \code{cell_annotation_blueprint_monaco}: SingleR cell annotation using Monaco
-reference
-\item \code{sample_id_db}: Sample subdivision for internal use
-\item \code{file_id_db}: File subdivision for internal use
-\item \code{sample_id}: Sample ID
-\item \code{.sample_name}: How samples were defined
-}
+
+\code{cell_count}: Number of cells in a dataset.
+\code{feature_count}: Number of genes in a dataset.
+\code{age_days}: Donor age in days.
+\code{tissue_groups}: Coarse tissue grouping for analysis.
+\code{empty_droplet}: Whether a cell is called an empty droplet from expressed-gene count per sample (default threshold 200; targeted panels may differ).
+\code{alive}: Whether a cell passes viability / mitochondrial QC.
+\code{scDblFinder.class}: Doublet, singlet, or unknown (\code{scDblFinder} default parameters).
+\code{cell_type_unified_ensemble}: Consensus immune identity from Azimuth and SingleR (Blueprint, Monaco).
+\code{cell_annotation_azimuth_l2}: Azimuth cell annotation.
+\code{cell_annotation_blueprint_singler}: SingleR annotation (Blueprint).
+\code{cell_annotation_blueprint_monaco}: SingleR annotation (Monaco).
+\code{is_immune}: Whether a cell is an immune cell.
+\code{sample_heuristic}: Internal sample subdivision helper.
+\code{file_id_cellNexus_single_cell}: Internal file id for single-cell layers.
+\code{file_id_cellNexus_pseudobulk}: Internal file id for pseudobulk layers.
+\code{sample_id}: Harmonised sample identifier.
+\code{nCount_RNA}: Total RNA counts per cell (sample-aware).
+\code{nFeature_expressed_in_sample}: Number of expressed features per cell.
+\code{ethnicity_flagging_score}: Supporting score for ethnicity imputation.
+\code{low_confidence_ethnicity}: Supporting flag for low-confidence ethnicity calls.
+\code{.aggregated_cells}: Post-QC cells combined into each pseudobulk sample.
+\code{imputed_ethnicity}: Imputed ethnicity label.
+\code{atlas_id}: cellNexus atlas release identifier (internal use).
 
 \strong{Possible cache path issues}
 

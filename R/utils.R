@@ -98,7 +98,7 @@ sync_remote_file <- function(full_url, output_file, overwrite = FALSE, ...) {
   if (isTRUE(overwrite) && file.exists(output_file)) {
     file.remove(output_file)
   }
-  
+
   if (!file.exists(output_file)) {
     output_dir <- dirname(output_file)
     dir.create(output_dir,
@@ -229,7 +229,7 @@ delete_counts <- function(data,
   counts_path <- file.path(cache_directory, assay, ids)
   # counts
   map(counts_path, ~ .x |>
-        unlink(recursive = TRUE))
+    unlink(recursive = TRUE))
 
   # metadata
   filename <- get_metadata(cache_directory = cache_directory, use_cache = FALSE) |>
@@ -329,8 +329,8 @@ save_sce_as_h5ad <- function(sce, path, ...) {
 #' @noRd
 duplicate_single_column_assay <- function(sce) {
   assay_name <- (sce |>
-                   assays() |>
-                   names())[[1L]]
+    assays() |>
+    names())[[1L]]
 
   if (ncol(assay(sce)) == 1) {
     # Duplicate the assay to prevent saving errors due to single-column matrices
@@ -343,9 +343,11 @@ duplicate_single_column_assay <- function(sce) {
       rbind(cd)
     rownames(cd)[2] <- paste0("DUMMY", "___", rownames(cd)[2])
 
-    sce <- SingleCellExperiment(assay = list(my_assay) |>
-                                  set_names(assay_name), 
-                                colData = cd)
+    sce <- SingleCellExperiment(
+      assay = list(my_assay) |>
+        set_names(assay_name),
+      colData = cd
+    )
     sce
   }
   sce

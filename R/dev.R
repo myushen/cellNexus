@@ -88,13 +88,13 @@ upload_swift <- function(
 #' @examples
 #' \dontrun{
 #' register_atlas_version(
-#   atlas_id = "cellxgene_2024/0.1.0",
-#   census_version = "01-07-2024",
-#   change_type = "initial",
-#   description = "Initial release linked to CellxGene Census 01-07-2024.",
-#   credential_id = "ABCDEFGHIJK",
-#   credential_secret = "ABCD1234EFGH-5678IJK"
-# )
+#'   atlas_id = "cellxgene_2024/0.1.0",
+#'   census_version = "01-07-2024",
+#'   change_type = "initial",
+#'   description = "Initial release linked to CellxGene Census 01-07-2024.",
+#'   credential_id = "ABCDEFGHIJK",
+#'   credential_secret = "ABCD1234EFGH-5678IJK"
+#' )
 #' }
 register_atlas_version <- function(
   atlas_id,
@@ -132,7 +132,7 @@ register_atlas_version <- function(
   } else {
     new_row[0L, ]
   }
-  
+
   updated <- dplyr::bind_rows(existing, new_row)
   arrow::write_parquet(updated, local_path)
 
@@ -143,7 +143,7 @@ register_atlas_version <- function(
     credential_id     = credential_id,
     credential_secret = credential_secret
   )
-  
+
   invisible(NULL)
 }
 

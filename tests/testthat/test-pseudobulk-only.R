@@ -8,7 +8,7 @@ test_that("get_pseudobulk() syncs appropriate files", {
   meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     keep_quality_cells() |>
     filter(file_id_cellNexus_pseudobulk == id)
-  
+
   # The remote dataset should have many genes
   sme <- get_pseudobulk(meta, cache_directory = temp)
   sme |>
