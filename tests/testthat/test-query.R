@@ -15,8 +15,8 @@ test_that("get_default_cache_dir() returns the correct directory on Linux", {
 test_that("sync_assay_files() syncs appropriate files", {
   temp <- tempfile()
 
-  test_file <- "03319e4f54220f534de2c4e42e607126___1.h5ad"
-  atlas_name <- "cellxgene_2024/0.1.0"
+  test_file <- "72fd05df1f26137b07fd4f4fc799d61c___1.h5ad"
+  atlas_name <- "cellxgene_2024/0.2.0"
 
   sync_assay_files(
     atlas_name = atlas_name,
@@ -36,7 +36,7 @@ test_that("get_SingleCellExperiment() syncs appropriate files", {
   temp <- tempfile()
   test_file <- "4164d0eb972ad5e12719b6858c9559ea___1.h5ad"
 
-  meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
+  meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     head(2)
 
   # The remote dataset should have many genes
@@ -57,7 +57,7 @@ test_that(
     # We need this for the assays() function
     library(SummarizedExperiment)
 
-    meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
+    meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
       head(2)
 
     atlas_name <- meta |>
@@ -96,7 +96,7 @@ test_that(
 )
 
 test_that("The features argument to get_SingleCellExperiment subsets genes", {
-  meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
+  meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     head(2)
 
   # The un-subset dataset should have many genes
@@ -115,7 +115,7 @@ test_that("The features argument to get_SingleCellExperiment subsets genes", {
 })
 
 test_that("get_seurat() returns the appropriate data in Seurat format", {
-  meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
+  meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     head(2)
 
   sce <- get_SingleCellExperiment(meta, features = "ENSG00000010610")
@@ -140,7 +140,7 @@ test_that("as.sparse() works on DelayedMatrix", {
 })
 
 test_that("validate_data() returns list with expected names", {
-  meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir()) |>
+  meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"], cache_directory = tempdir()) |>
     head(1)
   out <- cellNexus:::validate_data(meta, "counts", "single_cell", tempdir(), NULL, NULL)
   expect_type(out, "list")
@@ -153,7 +153,7 @@ test_that("validate_data() returns list with expected names", {
 })
 
 test_that("validate_data() errors on invalid assays", {
-  meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir()) |>
+  meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"], cache_directory = tempdir()) |>
     head(1)
   expect_error(
     cellNexus:::validate_data(meta, "invalid_assay", "single_cell", tempdir(), NULL, NULL),
@@ -166,13 +166,13 @@ test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
   file_id_cellNexus_single_cell <- "7ddd6775d704d6826539abaee8d22f65___1.h5ad"
 
   # Retrieve atlas_id from metadata
-  atlas_id <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
+  atlas_id <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     filter(dataset_id == id) |>
     distinct(atlas_id) |>
     pull()
 
   # Force the file to be cached
-  get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
+  get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     filter(dataset_id == id) |>
     get_SingleCellExperiment()
 
@@ -207,8 +207,8 @@ test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
 })
 
 test_that("get_metadata() is cached", {
-  table <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
-  table_2 <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
+  table <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"])
+  table_2 <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"])
 
   identical(table, table_2) |>
     expect_true()
@@ -229,7 +229,7 @@ test_that("get_metadata_url() returns URLs for given database names", {
 })
 
 test_that("get_metadata() expect a unique cell_type `mature T cell` is present", {
-  n_cell <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
+  n_cell <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     filter(cell_type == "mature T cell") |>
     as_tibble() |>
     nrow()
@@ -238,7 +238,7 @@ test_that("get_metadata() expect a unique cell_type `mature T cell` is present",
 
 test_that("get_cell_communication_strength() returns metadata-like tbl with sample URL", {
   # For fast check purposes, use sample_database_url.
-  tbl <- get_cell_communication_strength(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir())
+  tbl <- get_cell_communication_strength(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"], cache_directory = tempdir())
   expect_s3_class(tbl, "tbl_lazy")
   expect_true(ncol(dplyr::collect(tbl |>
                                     head(1))) >= 1L)
@@ -273,7 +273,7 @@ test_that("get_metadata() expect to combine local and cloud metadata", {
   file_id_from_cloud <- "e52795dec7b626b6276b867d55328d9f___1.h5ad"
   file_id_local <- basename(sce_path)
 
-  sample_id <- get_metadata(local_metadata = meta_path, cloud_metadata = SAMPLE_DATABASE_URL) |>
+  sample_id <- get_metadata(local_metadata = meta_path, cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     filter(file_id_cellNexus_single_cell %in% c(file_id_from_cloud, file_id_local)) |>
     pull(sample_id) |>
     unique()
@@ -332,7 +332,7 @@ test_that("get_single_cell_experiment() expect to combine local and cloud counts
   file_id_from_cloud <- "e52795dec7b626b6276b867d55328d9f___1.h5ad"
   file_id_local <- basename(sce_path)
 
-  sce <- get_metadata(local_metadata = meta_path, cloud_metadata = SAMPLE_DATABASE_URL) |>
+  sce <- get_metadata(local_metadata = meta_path, cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     filter(file_id_cellNexus_single_cell %in% c(file_id_from_cloud, file_id_local)) |>
     get_single_cell_experiment(cache_directory = cache)
 
@@ -347,8 +347,8 @@ test_that("keep_quality_cells() return high quality cells", {
   alive_col <- "alive"
   doublet_col <- "scDblFinder.class"
 
-  meta_unfiltered <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
-  meta_filtered <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
+  meta_unfiltered <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"])
+  meta_filtered <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     keep_quality_cells()
 
   # Filtered should have fewer rows

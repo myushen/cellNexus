@@ -18,7 +18,10 @@ assay_map <- c(
 #' Base URL pointing to the count data at the current version
 #' @keywords internal
 #' @noRd
-COUNTS_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata"
+COUNTS_URL <- paste0(
+  "https://object-store.rc.nectar.org.au/v1/",
+  "AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata"
+)
 
 #' @inherit get_single_cell_experiment
 #' @inheritDotParams get_single_cell_experiment
@@ -532,11 +535,14 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   experiment_path <- file.path(dir_prefix, df[[grouping_column]][1])
 
   if (!file.exists(experiment_path)) {
-    cli_abort("Your cache does not contain the file {experiment_path} you attempted to query. Please provide the repository parameter so that files can be synchronised from the internet")
+    cli_abort(paste0(
+      "Your cache does not contain the file {experiment_path} you attempted",
+      " to query. Please provide the repository parameter so that files can",
+      " be synchronised from the internet"
+      ))
   }
 
-  experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |>
-    suppressMessages()
+  experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE)
 
   # Fix for https://github.com/tidyverse/dplyr/issues/6746
   force(i)
@@ -741,55 +747,44 @@ sync_assay_files <- function(
 #'   }
 #' @importFrom purrr map_chr
 #' @importFrom httr modify_url
-#' @importFrom dplyr transmute
 #' @importFrom rlang .data
 #' @keywords internal
 #' @noRd
 build_assay_file_list <- function(
-  url,
-  atlas_name,
-  cell_aggregation,
-  cache_dir,
-  subdirs,
-  files
+    url,
+    atlas_name,
+    cell_aggregation,
+    cache_dir,
+    subdirs,
+    files
 ) {
   # Find every combination of file name, sample id, and assay, since each
   # will be a separate file we need to download
-  expand.grid(
+  grid <- expand.grid(
     atlas_name = atlas_name,
     cell_aggregation = cell_aggregation,
     sample_id = files,
     subdir = subdirs,
     stringsAsFactors = FALSE
-  ) |>
-    transmute(
-      # Path to the file of interest from the root path. We use "/"
-      # since URLs must use these regardless of OS
-      full_url = paste0(
-        url$path,
-        "/",
-        .data$atlas_name,
-        "/",
-        .data$cell_aggregation,
-        "/",
-        .data$subdir,
-        "/",
-        .data$sample_id
-      ) |>
-        map_chr(~ modify_url(url, path = .)),
-      # Nectar cloud is strict to url slashes, thus we normalize the URLs
-      # by removing multiple slashes except in the protocol part.
-      full_url = gsub("(?<!:)/{2,}", "/", full_url, perl = TRUE),
-      # Path to save the file on local disk (and its parent directory)
-      # We use file.path since the file separator will differ on other OSs
-      output_file = file.path(
-        cache_dir,
-        .data$atlas_name,
-        .data$cell_aggregation,
-        .data$subdir,
-        .data$sample_id
-      )
-    )
+  )
+  # Build full remote URLs: construct the path, format into the base URL, then
+  # collapse any double-slashes (Nectar cloud is strict about these).
+  # Path to the file of interest from the root path. We use "/"
+  # since URLs must use these regardless of OS
+  raw_paths <- paste(
+    url$path, grid$atlas_name, grid$cell_aggregation, grid$subdir, grid$sample_id,
+    sep = "/"
+  )
+  full_urls <- gsub(
+    "(?<!:)/{2,}", "/",
+    map_chr(raw_paths, ~ modify_url(url, path = .x)),
+    perl = TRUE
+  )
+  data.frame(
+    full_url = full_urls,
+    output_file = file.path(cache_dir, grid$atlas_name, grid$cell_aggregation, grid$subdir, grid$sample_id),
+    stringsAsFactors = FALSE
+  )
 }
 
 #' Download all assay files in parallel

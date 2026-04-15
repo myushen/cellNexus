@@ -4,15 +4,11 @@ library(dplyr)
 
 test_that("get_pseudobulk() syncs appropriate files", {
   temp <- tempfile()
-  id <- "8977a940f296898898d92461e71c8e0d___1.h5ad"
-  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL) |>
-    filter(
-      empty_droplet == "FALSE",
-      alive == "TRUE",
-      scDblFinder.class != "doublet",
-      file_id_cellNexus_pseudobulk == id
-    )
-
+  id <- "a1c68b7b04c6f8c135b15db69c59fb38___1.h5ad"
+  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
+    keep_quality_cells() |>
+    filter(file_id_cellNexus_pseudobulk == id)
+  
   # The remote dataset should have many genes
   sme <- get_pseudobulk(meta, cache_directory = temp)
   sme |>
@@ -23,8 +19,8 @@ test_that("get_pseudobulk() syncs appropriate files", {
 
 test_that("get_pseudobulk() subsets to requested gene ENSG00000065485", {
   temp <- tempfile()
-  id <- "8977a940f296898898d92461e71c8e0d___1.h5ad"
-  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL) |>
+  id <- "a1c68b7b04c6f8c135b15db69c59fb38___1.h5ad"
+  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     filter(
       empty_droplet == "FALSE",
       alive == "TRUE",
@@ -44,8 +40,8 @@ test_that("get_pseudobulk() subsets to requested gene ENSG00000065485", {
 
 test_that("get_pseudobulk() as_SummarizedExperiment preserves rownames", {
   temp <- tempfile()
-  id <- "8977a940f296898898d92461e71c8e0d___1.h5ad"
-  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL) |>
+  id <- "a1c68b7b04c6f8c135b15db69c59fb38___1.h5ad"
+  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
     filter(
       empty_droplet == "FALSE",
       alive == "TRUE",
