@@ -1459,7 +1459,7 @@
       }
     },
     "cellNexus": {
-      "Source": "Bioconductor",
+      "Source": "github",
       "Repository": null,
       "description": {
         "Type": "Package",
