@@ -1459,13 +1459,13 @@
       }
     },
     "cellNexus": {
-      "Source": "Bioconductor",
-      "Repository": null,
+      "Source": "GitHub",
+      "Repository": "https://github.com/MangiolaLaboratory/cellNexus",
       "description": {
         "Type": "Package",
         "Package": "cellNexus",
         "Title": "Queries the Human Cell Atlas",
-        "Version": "0.99.20",
+        "Version": "0.99.19",
         "Authors@R": "c(\n    person(\n        \"Stefano\",\n        \"Mangiola\",\n        email = \"mangiolastefano@gmail.com\",\n        role = c(\"aut\", \"rev\", \"ctb\"),\n        comment = c(ORCID = \"0000-0001-7474-836X\")\n    ),\n    person(\n        \"Mengyuan\",\n        \"Shen\",\n        email = \"shen.m@wehi.edu.au\",\n        role = c(\"aut\", \"cre\", \"rev\"),\n        comment = c(ORCID = \"0009-0008-0057-8239\")\n    ),\n    person(\n        \"Michael\",\n        \"Milton\",\n        email = \"milton.m@wehi.edu.au\",\n        role = c(\"aut\", \"rev\", \"ctb\"),\n        comment = c(ORCID = \"0000-0002-8965-2595\")\n    ),\n    person(\n        \"Jared\",\n        \"Andrews\",\n        email = \"jared.andrews07@gmail.com\",\n        role = c(\"aut\", \"rev\", \"ctb\")\n    ),\n    person(\n        \"Juan\",\n        \"Henao\",\n        email = \"juan.henao@helmholtz-muenchen.de\",\n        role = c(\"aut\", \"ctb\")\n    ),\n    person(\n        \"Edward\",\n        \"Yang\",\n        email = \"edwardyang125@gmail.com\",\n        role = c(\"aut\", \"ctb\")\n    ),\n    person(\n        \"Julie\",\n        \"Iskander\",\n        email = \"iskander.j@wehi.edu.au\",\n        role = c( \"rev\")\n    ),\n    person(\n        \"Silicon Valley Foundation\",\n        \"CZF2019-002443\",\n        role = c( \"fnd\")\n    ),\n    person(\n        \"NIH NHGRI\",\n        \"5U24HG004059-18\",\n        role = c( \"fnd\")\n    ),\n    person(\n        \"Victoria Cancer Agency\",\n        \"ECRF21036\",\n        role = c( \"fnd\")\n    ),\n    person(\n        \"NHMRC\",\n        \"1116955\",\n        role = c( \"fnd\")\n    ))",
         "Description": "Provides access to a copy of the Human Cell Atlas, but with \n    harmonised metadata. This allows for uniform querying across numerous \n    datasets within the Atlas using common fields such as cell type, tissue \n    type, and patient ethnicity. Usage involves first querying the metadata\n    table for cells of interest, and then downloading the corresponding cells \n    into one of several supported formats, including SingleCellExperiment, Seurat,\n    or pseudobulk SummarizedExperiment objects. Note: The Human Cell Atlas data\n    accessed through this package is subject to its own licensing terms (typically\n    Creative Commons Attribution or similar open data licenses as specified by the\n    Human Cell Atlas Data Use Agreement), which differ from the package license\n    (GPL-3). See the package documentation for details. ",
         "License": "GPL-3",
@@ -1485,7 +1485,13 @@
         "SystemRequirements": "Python",
         "Author": "Stefano Mangiola [aut, rev, ctb] (ORCID:\n    <https://orcid.org/0000-0001-7474-836X>),\n  Mengyuan Shen [aut, cre, rev] (ORCID:\n    <https://orcid.org/0009-0008-0057-8239>),\n  Michael Milton [aut, rev, ctb] (ORCID:\n    <https://orcid.org/0000-0002-8965-2595>),\n  Jared Andrews [aut, rev, ctb],\n  Juan Henao [aut, ctb],\n  Edward Yang [aut, ctb],\n  Julie Iskander [rev],\n  Silicon Valley Foundation CZF2019-002443 [fnd],\n  NIH NHGRI 5U24HG004059-18 [fnd],\n  Victoria Cancer Agency ECRF21036 [fnd],\n  NHMRC 1116955 [fnd]",
         "Maintainer": "Mengyuan Shen <shen.m@wehi.edu.au>",
-        "Built": "R 4.5.3; ; 2026-04-16 04:10:48 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-04-16 04:10:48 UTC; unix",
+        "RemoteType": "github",
+        "RemoteHost": "api.github.com",
+        "RemoteUsername": "MangiolaLaboratory",
+        "RemoteRepo": "cellNexus",
+        "RemoteRef": "test-shiny",
+        "RemoteSha": "61dfcdb0f433717a40ca9b51ed53adc68eb579ea"
       }
     },
     "checkmate": {
