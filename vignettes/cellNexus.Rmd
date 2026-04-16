@@ -171,10 +171,10 @@ metadata <- metadata |>
 single_cell_counts <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
+    self_reported_ethnicity == "African American" &
       assay == "10x 3' v3" &
-      tissue == "lung parenchyma" &
-      cell_type_unified_ensemble == "cd14 mono"
+      tissue == "breast" &
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment()
 
@@ -187,10 +187,10 @@ single_cell_counts
 single_cell_cpm <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
+    self_reported_ethnicity == "African American" &
       assay == "10x 3' v3" &
-      tissue == "lung parenchyma" &
-      cell_type_unified_ensemble == "cd14 mono"
+      tissue == "breast" &
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "cpm")
 
@@ -202,10 +202,10 @@ single_cell_cpm
 single_cell_sct <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
+    self_reported_ethnicity == "African American" &
       assay == "10x 3' v3" &
-      tissue == "lung parenchyma" &
-      cell_type_unified_ensemble == "cd14 mono"
+      tissue == "breast" &
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "sct")
 
@@ -218,9 +218,9 @@ single_cell_sct
 pseudobulk_counts <-
   metadata |>
   dplyr::filter(
-    assay == "10x 5' v1" &
+      assay  == "10x 5' v1" &
       tissue == "lung" &
-      cell_type_unified_ensemble == "treg"
+      cell_type == "classical monocyte"
   ) |>
   get_pseudobulk()
 
@@ -252,10 +252,10 @@ This is helpful if just few genes are of interest (e.g ENSG00000134644 (PUM1)), 
 single_cell_cpm <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
+    self_reported_ethnicity == "African American" &
       assay == "10x 3' v3" &
-      tissue == "lung parenchyma" &
-      cell_type_unified_ensemble == "cd14 mono"
+      tissue == "breast" &
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
 
@@ -270,12 +270,11 @@ This convert the H5 SingleCellExperiment to Seurat so it might take long time an
 seurat_counts <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
+    self_reported_ethnicity == "African American" &
       assay == "10x 3' v3" &
-      tissue == "lung parenchyma" &
-      cell_type_unified_ensemble == "cd14 mono"
+      tissue == "breast" &
+      cell_type == "T cell"
   ) |>
-  head() |>
   get_seurat()
 
 seurat_counts
@@ -296,10 +295,10 @@ metadata <- get_metadata(cache_directory = "/MY/CUSTOM/PATH")
 single_cell_counts <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
+    self_reported_ethnicity == "African American" &
       assay == "10x 3' v3" &
-      tissue == "lung parenchyma" &
-      cell_type_unified_ensemble == "cd14 mono"
+      tissue == "breast" &
+      cell_type == "T cell"
   ) |>
   get_single_cell_experiment(cache_directory = "/MY/CUSTOM/PATH")
 

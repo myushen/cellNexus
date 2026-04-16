@@ -261,7 +261,7 @@ downsample_metadata <- function(
     .data$cell_type_unified_ensemble == "nk",
     .data$cell_type_unified_ensemble == "cd14 mono",
     .data$tissue == "kidney blood vessel",
-    .data$file_id_cellNexus_single_cell == "e52795dec7b626b6276b867d55328d9f___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "2aad1b31e2f3469b90409a420580a751___1.h5ad",
     # Used by tests
     .data$file_id_cellNexus_single_cell == "4164d0eb972ad5e12719b6858c9559ea___1.h5ad",
     .data$file_id_cellNexus_single_cell == "7ddd6775d704d6826539abaee8d22f65___1.h5ad",

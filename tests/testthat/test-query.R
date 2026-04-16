@@ -162,8 +162,8 @@ test_that("validate_data() errors on invalid assays", {
 })
 
 test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
-  id <- "a65bcc2d-4243-44c1-a262-ab7dcddfcf86"
-  file_id_cellNexus_single_cell <- "7ddd6775d704d6826539abaee8d22f65___1.h5ad"
+  id <- "842c6f5d-4a94-4eef-8510-8c792d1124bc"
+  file_id_cellNexus_single_cell <- "001f82656d61ccb98f0ae26a2eb9e5ba___1.h5ad"
 
   # Retrieve atlas_id from metadata
   atlas_id <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
@@ -228,9 +228,10 @@ test_that("get_metadata_url() returns URLs for given database names", {
   expect_true(all(vapply(dbs, \(d) any(grepl(d, urls, fixed = TRUE)), logical(1))))
 })
 
-test_that("get_metadata() expect a unique cell_type `mature T cell` is present", {
+test_that("get_metadata() expect a unique cell_type `CD4-positive, alpha-beta T cell` is present", {
   n_cell <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
-    filter(cell_type == "mature T cell") |>
+    join_census_table(cloud_metadata = SAMPLE_DATABASE_URL["census"]) |>
+    filter(cell_type == "CD4-positive, alpha-beta T cell") |>
     as_tibble() |>
     nrow()
   expect_true(n_cell > 0)

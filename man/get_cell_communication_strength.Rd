@@ -54,5 +54,9 @@ pathway dominance, and global communication structure between cell populations.
 }
 \examples{
 # For fast build purpose only, you do not need to specify anything in the function.
-communication_meta <- get_cell_communication_strength(cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet")
+communication_meta <- get_cell_communication_strength(
+  cloud_metadata = get_metadata_url(
+    "cellNexus_lr_signaling_pathway_strength_DEMO.parquet"
+  )
+)
 }
