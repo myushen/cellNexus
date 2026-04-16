@@ -1459,8 +1459,8 @@
       }
     },
     "cellNexus": {
-      "Source": "github",
-      "Repository": null,
+      "Source": "GitHub",
+      "Repository": "https://github.com/MangiolaLaboratory/cellNexus",
       "description": {
         "Type": "Package",
         "Package": "cellNexus",
@@ -1485,7 +1485,13 @@
         "SystemRequirements": "Python",
         "Author": "Stefano Mangiola [aut, rev, ctb] (ORCID:\n    <https://orcid.org/0000-0001-7474-836X>),\n  Mengyuan Shen [aut, cre, rev] (ORCID:\n    <https://orcid.org/0009-0008-0057-8239>),\n  Michael Milton [aut, rev, ctb] (ORCID:\n    <https://orcid.org/0000-0002-8965-2595>),\n  Jared Andrews [aut, rev, ctb],\n  Juan Henao [aut, ctb],\n  Edward Yang [aut, ctb],\n  Julie Iskander [rev],\n  Silicon Valley Foundation CZF2019-002443 [fnd],\n  NIH NHGRI 5U24HG004059-18 [fnd],\n  Victoria Cancer Agency ECRF21036 [fnd],\n  NHMRC 1116955 [fnd]",
         "Maintainer": "Mengyuan Shen <shen.m@wehi.edu.au>",
-        "Built": "R 4.5.3; ; 2026-04-16 04:10:48 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-04-16 04:10:48 UTC; unix",
+        "RemoteType": "github",
+        "RemoteHost": "api.github.com",
+        "RemoteUsername": "MangiolaLaboratory",
+        "RemoteRepo": "cellNexus",
+        "RemoteRef": "test-shiny",
+        "RemoteSha": "61dfcdb0f433717a40ca9b51ed53adc68eb579ea"
       }
     },
     "checkmate": {
