@@ -218,7 +218,7 @@ single_cell_sct
 pseudobulk_counts <-
   metadata |>
   dplyr::filter(
-      assay  == "10x 5' v1" &
+    assay == "10x 5' v1" &
       tissue == "lung" &
       cell_type == "classical monocyte"
   ) |>

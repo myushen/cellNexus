@@ -90,6 +90,7 @@ upload_swift <- function(
 #' register_atlas_version(
 #'   atlas_id = "cellxgene_2024/0.1.0",
 #'   census_version = "01-07-2024",
+#'   container = "cellNexus-metadata",
 #'   change_type = "initial",
 #'   description = "Initial release linked to CellxGene Census 01-07-2024.",
 #'   credential_id = "ABCDEFGHIJK",
