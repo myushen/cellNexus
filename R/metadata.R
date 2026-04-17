@@ -151,6 +151,8 @@ SAMPLE_DATABASE_URL <- c(
 #' `.aggregated_cells`: Post-QC cells combined into each pseudobulk sample.
 #' `imputed_ethnicity`: Imputed ethnicity label.
 #' `atlas_id`: cellNexus atlas release identifier (internal use).
+#' 
+#' For all fields definitions, please refer to our [documentation site](https://cellnexus.org/)
 #'
 #' **Possible cache path issues**
 #'

@@ -100,6 +100,8 @@ in the original CELLxGENE metadata:
 \code{imputed_ethnicity}: Imputed ethnicity label.
 \code{atlas_id}: cellNexus atlas release identifier (internal use).
 
+For all fields definitions, please refer to our \href{https://cellnexus.org/}{documentation site}
+
 \strong{Possible cache path issues}
 
 If your default R cache path includes non-standard characters (e.g. dash

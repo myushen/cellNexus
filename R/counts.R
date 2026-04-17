@@ -159,7 +159,9 @@ get_single_cell_experiment <- function(data,
 #' @importFrom S4Vectors DataFrame
 #' @examples
 #' # Use the lightweight sample database URL (for fast checks during development only)
-#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |>
+#'   keep_quality_cells() |>
+#'   dplyr::filter(cell_type_unified_ensemble == "epithelial")
 #' pseudobulk <- meta |> get_pseudobulk()
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
