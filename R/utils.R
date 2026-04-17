@@ -171,7 +171,7 @@ sync_remote_files <- function(urls, output_files, progress = TRUE) {
     )
 
     # Check for failures
-    failed <- results$success == FALSE | results$status_code >= 400
+    failed <- !results$success | results$status_code >= 400
     if (any(failed, na.rm = TRUE)) {
       failed_urls <- urls_to_download[failed]
       failed_files <- files_to_download[failed]
@@ -443,8 +443,8 @@ keep_quality_cells <- function(data,
                                doublet_col = "scDblFinder.class") {
   data |>
     filter(
-      .data[[empty_droplet_col]] == FALSE,
-      .data[[alive_col]] == TRUE,
+      !.data[[empty_droplet_col]],
+      .data[[alive_col]],
       .data[[doublet_col]] != "doublet"
     )
 }
