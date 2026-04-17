@@ -1,7 +1,7 @@
 Type: Package
 Package: cellNexus
 Title: Queries the Human Cell Atlas
-Version: 0.99.19
+Version: 0.99.20
 Authors@R: c(
     person(
         "Stefano",
@@ -133,6 +133,7 @@ Biarch: true
 biocViews: 
     AssayDomain,
     Infrastructure,
+    SingleCell,
     RNASeq,
     DifferentialExpression,
     GeneExpression,

@@ -18,7 +18,10 @@ assay_map <- c(
 #' Base URL pointing to the count data at the current version
 #' @keywords internal
 #' @noRd
-COUNTS_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata"
+COUNTS_URL <- paste0(
+  "https://object-store.rc.nectar.org.au/v1/",
+  "AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata"
+)
 
 #' @inherit get_single_cell_experiment
 #' @inheritDotParams get_single_cell_experiment
@@ -29,7 +32,9 @@ COUNTS_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @source [Mangiola et al., 2023](
+#'   https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3
+#' )
 get_SingleCellExperiment <- function(...) {
   cli_alert_warning(paste(
     "This function name is deprecated.",
@@ -154,7 +159,9 @@ get_single_cell_experiment <- function(data,
 #' @importFrom S4Vectors DataFrame
 #' @examples
 #' # Use the lightweight sample database URL (for fast checks during development only)
-#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
+#' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |>
+#'   keep_quality_cells() |>
+#'   dplyr::filter(cell_type_unified_ensemble == "epithelial")
 #' pseudobulk <- meta |> get_pseudobulk()
 #' @export
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
@@ -222,7 +229,7 @@ get_pseudobulk <- function(data,
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
-#' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
+#' @importFrom dplyr pull filter mutate as_tibble inner_join collect transmute group_split
 #' @return A `SingleCellExperiment` object.
 #' @importFrom tibble column_to_rownames
 #' @importFrom BiocGenerics cbind
@@ -254,7 +261,7 @@ get_metacell <- function(data,
   # Separate metacell and single_cell in group_to_data_container without
   # producing a repetitive column in the metadata
   raw_data <- raw_data |>
-    mutate(file_id_cellNexus_metacell = file_id_cellNexus_single_cell)
+    mutate(file_id_cellNexus_metacell = .data$file_id_cellNexus_single_cell)
 
   validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
 
@@ -292,6 +299,7 @@ get_metacell <- function(data,
 #' @importFrom checkmate assert check_true
 #' @importFrom SummarizedExperiment assays<- assayNames assay<-
 #' @importFrom BiocGenerics cbind
+#' @importFrom rlang .data
 #' @keywords internal
 #' @noRd
 .fetch_experiments <- function(
@@ -315,7 +323,7 @@ get_metacell <- function(data,
     file_lists <- raw_data |>
       transmute(
         files = .data[[grouping_column]],
-        atlas_name = atlas_id,
+        atlas_name = .data$atlas_id,
         cache_dir = cache_directory
       ) |>
       distinct() |>
@@ -443,6 +451,7 @@ get_metacell <- function(data,
 #' @importFrom purrr map
 #' @importFrom checkmate assert check_true
 #' @importFrom cli cli_alert_info cli_abort
+#' @importFrom rlang .data
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
@@ -477,8 +486,8 @@ validate_data <- function(
   cli_alert_info("Realising metadata.")
   raw_data <- collect(data)
   atlas_name <- raw_data |>
-    distinct(atlas_id) |>
-    pull()
+    distinct(.data$atlas_id) |>
+    pull(.data$atlas_id)
   versioned_cache_directory <- file.path(cache_directory, atlas_name, cell_aggregation)
 
   versioned_cache_directory |>
@@ -516,7 +525,7 @@ validate_data <- function(
 #' @param grouping_column A character vector of metadata column for grouping
 #' @param metacell_column A character vector of metacell column (e.g. "metacell_2", "metacell_4") from metadata.
 #' @return A `SummarizedExperiment` object
-#' @importFrom dplyr mutate filter
+#' @importFrom dplyr mutate filter select left_join distinct any_of all_of contains matches
 #' @importFrom SummarizedExperiment colData<-
 #' @importFrom tibble column_to_rownames
 #' @importFrom utils head
@@ -530,11 +539,14 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
   experiment_path <- file.path(dir_prefix, df[[grouping_column]][1])
 
   if (!file.exists(experiment_path)) {
-    cli_abort("Your cache does not contain the file {experiment_path} you attempted to query. Please provide the repository parameter so that files can be synchronised from the internet")
+    cli_abort(paste0(
+      "Your cache does not contain the file {experiment_path} you attempted",
+      " to query. Please provide the repository parameter so that files can",
+      " be synchronised from the internet"
+    ))
   }
 
-  experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE) |>
-    suppressMessages()
+  experiment <- zellkonverter::readH5AD(experiment_path, reader = "R", use_hdf5 = TRUE)
 
   # Fix for https://github.com/tidyverse/dplyr/issues/6746
   force(i)
@@ -588,10 +600,14 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     new_coldata <- df |>
       select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
       # Remove metacell and single-cell level annotations in pseudobulk
-      select(-contains("metacell"), -matches("azimuth|monaco|blueprint|subsets_|high_")) |>
+      dplyr::select(-dplyr::contains("metacell"), -dplyr::matches("azimuth|monaco|blueprint|subsets_|high_")) |>
       distinct() |>
       mutate(
-        sample_identifier = glue("{sample_id}___{cell_type_unified_ensemble}"),
+        sample_identifier = paste(
+          .data$sample_id,
+          .data$cell_type_unified_ensemble,
+          sep = "___"
+        ),
         original_sample_id = .data$sample_identifier
       ) |>
       column_to_rownames("original_sample_id")
@@ -627,18 +643,18 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
       )
 
     mapping_tbl <- as.data.frame(SummarizedExperiment::colData(experiment)) |>
-      dplyr::select(sample_id, !!rlang::sym(metacell_column), metacell_id)
+      select(all_of(c("sample_id", metacell_column, "metacell_id")))
 
     new_coldata <- df |>
-      left_join(
+      dplyr::left_join(
         mapping_tbl,
         by = c("sample_id", metacell_column)
       ) |>
-      select(any_of(annotations), metacell_id) |>
+      select(any_of(annotations), all_of("metacell_id")) |>
       distinct() |>
       mutate(
         original_metacell_id = .data$metacell_id,
-        metacell_identifier = glue("{metacell_id}_{i}")
+        metacell_identifier = paste(.data$metacell_id, i, sep = "_")
       ) |>
       column_to_rownames("metacell_identifier")
 
@@ -735,7 +751,6 @@ sync_assay_files <- function(
 #'   }
 #' @importFrom purrr map_chr
 #' @importFrom httr modify_url
-#' @importFrom dplyr transmute
 #' @importFrom rlang .data
 #' @keywords internal
 #' @noRd
@@ -749,41 +764,31 @@ build_assay_file_list <- function(
 ) {
   # Find every combination of file name, sample id, and assay, since each
   # will be a separate file we need to download
-  expand.grid(
+  grid <- expand.grid(
     atlas_name = atlas_name,
     cell_aggregation = cell_aggregation,
     sample_id = files,
     subdir = subdirs,
     stringsAsFactors = FALSE
-  ) |>
-    transmute(
-      # Path to the file of interest from the root path. We use "/"
-      # since URLs must use these regardless of OS
-      full_url = paste0(
-        url$path,
-        "/",
-        .data$atlas_name,
-        "/",
-        .data$cell_aggregation,
-        "/",
-        .data$subdir,
-        "/",
-        .data$sample_id
-      ) |>
-        map_chr(~ modify_url(url, path = .)),
-      # Nectar cloud is strict to url slashes, thus we normalize the URLs
-      # by removing multiple slashes except in the protocol part.
-      full_url = gsub("(?<!:)/{2,}", "/", full_url, perl = TRUE),
-      # Path to save the file on local disk (and its parent directory)
-      # We use file.path since the file separator will differ on other OSs
-      output_file = file.path(
-        cache_dir,
-        .data$atlas_name,
-        .data$cell_aggregation,
-        .data$subdir,
-        .data$sample_id
-      )
-    )
+  )
+  # Build full remote URLs: construct the path, format into the base URL, then
+  # collapse any double-slashes (Nectar cloud is strict about these).
+  # Path to the file of interest from the root path. We use "/"
+  # since URLs must use these regardless of OS
+  raw_paths <- paste(
+    url$path, grid$atlas_name, grid$cell_aggregation, grid$subdir, grid$sample_id,
+    sep = "/"
+  )
+  full_urls <- gsub(
+    "(?<!:)/{2,}", "/",
+    map_chr(raw_paths, ~ modify_url(url, path = .x)),
+    perl = TRUE
+  )
+  data.frame(
+    full_url = full_urls,
+    output_file = file.path(cache_dir, grid$atlas_name, grid$cell_aggregation, grid$subdir, grid$sample_id),
+    stringsAsFactors = FALSE
+  )
 }
 
 #' Download all assay files in parallel

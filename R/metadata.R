@@ -13,15 +13,15 @@ cache <- rlang::env(
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
-#' get_metadata_url("cellnexus_metadata.2.1.0.parquet")
+#' get_metadata_url("cellnexus_metadata.2.2.0.parquet")
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_metadata_url <- function(databases = c(
-                               "cellnexus_metadata.2.1.0.parquet",
-                               "census_cell_metadata.2.1.0.parquet"
+                               "cellnexus_metadata.2.2.0.parquet",
+                               "census_cell_metadata.2.2.0.parquet"
                              )) {
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}"
@@ -31,15 +31,24 @@ get_metadata_url <- function(databases = c(
 #' URL pointing to the sample metadata file, which is smaller and for test,
 #' demonstration, and vignette purposes only
 #' @export
-#' @return A character scalar consisting of the URL
+#' @return Character scalar consisting of the URL/URLs
 #' @examples
-#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir())
+#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"], cache_directory = tempdir())
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_metadata.2.1.0.parquet"
+SAMPLE_DATABASE_URL <- c(
+  cellnexus = paste0(
+    "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
+    "cellNexus-metadata/cellnexus_sample_metadata.2.2.0.parquet"
+  ),
+  census = paste0(
+    "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
+    "cellNexus-metadata/census_sample_metadata.2.2.0.parquet"
+  )
+)
 
 #' Gets the CellNexus metadata as a data frame.
 #'
@@ -98,48 +107,52 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #' Our representation, harmonises the metadata at dataset, sample and cell
 #' levels, in a unique coherent database table.
 #'
-#' Dataset-specific columns (definitions available at cellxgene.cziscience.com):
-#' `cell_count`, `collection_id`, `created_at.x`, `created_at.y`,
-#' `dataset_deployments`, `dataset_id`, `file_id_cellNexus_single_cell`, `filename`, `filetype`,
-#' `is_primary_data.y`, `is_valid`, `linked_genesets`, `mean_genes_per_cell`,
-#' `name`, `published`, `published_at`, `revised_at`, `revision`, `s3_uri`,
-#' `schema_version`, `tombstone`, `updated_at.x`, `updated_at.y`,
-#' `user_submitted`, `x_normalization`
+#' Field definitions for the CELLxGENE schema follow the
+#' [CELLxGENE schema 5.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/5.1.0/schema.md).
 #'
-#' Sample-specific columns (definitions available at cellxgene.cziscience.com):
-#' `sample_id`, `.sample_name`, `age_days`, `assay`, `assay_ontology_term_id`,
-#' `development_stage`, `development_stage_ontology_term_id`, `ethnicity`,
-#' `ethnicity_ontology_term_id`, `experiment___`, `organism`,
-#' `organism_ontology_term_id`, `sample_placeholder`, `sex`,
-#' `sex_ontology_term_id`, `tissue`, `tissue_harmonised`,
-#' `tissue_ontology_term_id`, `disease`, `disease_ontology_term_id`,
-#' `is_primary_data.x`
+#' Dataset-specific columns:
+#' `dataset_id`, `collection_id`, `citation`, `dataset_version_id`,
+#' `explorer_url`, `filesize`, `filetype`, `published_at`, `raw_data_location`,
+#' `revised_at`, `schema_version`, `suspension_type`, `title`, `url`, `donor_id`
 #'
-#' Cell-specific columns (definitions available at cellxgene.cziscience.com):
-#' `cell_id`, `cell_type`, `cell_type_ontology_term_idm`, `cell_type_harmonised`,
-#' `confidence_class`, `cell_annotation_azimuth_l2`,
-#' `cell_annotation_blueprint_singler`
+#' Sample-specific columns:
+#'  `assay`, `assay_ontology_term_id`, `development_stage`,
+#'  `development_stage_ontology_term_id`, `self_reported_ethnicity`,
+#'  `self_reported_ethnicity_ontology_term_id`, `experiment___`, `organism`,
+#'  `organism_ontology_term_id`, `sex`, `sex_ontology_term_id`, `tissue`,
+#'  `tissue_type`, `tissue_ontology_term_id`, `disease`, `disease_ontology_term_id`, `is_primary_data`
+#'
+#' Cell-specific columns
+#' `cell_id`, `cell_type`, `cell_type_ontology_term_id`, `observation_joinid`
 #'
 #' Through harmonisation and curation we introduced custom columns not present
 #' in the original CELLxGENE metadata:
 #'
-#' - `tissue_harmonised`: a coarser tissue name for better filtering
-#' - `age_days`: the number of days corresponding to the age
-#' - `cell_type_harmonised`: the consensus call identity (for immune cells)
-#'   using the original and three novel annotations using Seurat Azimuth and
-#'   SingleR
-#' - `confidence_class`: an ordinal class of how confident
-#'   `cell_type_harmonised` is. 1 is complete consensus, 2 is 3 out of four and
-#'   so on.
-#' - `cell_annotation_azimuth_l2`: Azimuth cell annotation
-#' - `cell_annotation_blueprint_singler`: SingleR cell annotation using
-#'   Blueprint reference
-#' - `cell_annotation_blueprint_monaco`: SingleR cell annotation using Monaco
-#'   reference
-#' - `sample_id_db`: Sample subdivision for internal use
-#' - `file_id_db`: File subdivision for internal use
-#' - `sample_id`: Sample ID
-#' - `.sample_name`: How samples were defined
+#' `cell_count`: Number of cells in a dataset.
+#' `feature_count`: Number of genes in a dataset.
+#' `age_days`: Donor age in days.
+#' `tissue_groups`: Coarse tissue grouping for analysis.
+#' `empty_droplet`: Whether a cell is called an empty droplet from expressed-gene count per sample (default threshold 200; targeted panels may differ).
+#' `alive`: Whether a cell passes viability / mitochondrial QC.
+#' `scDblFinder.class`: Doublet, singlet, or unknown (`scDblFinder` default parameters).
+#' `cell_type_unified_ensemble`: Consensus immune identity from Azimuth and SingleR (Blueprint, Monaco).
+#' `cell_annotation_azimuth_l2`: Azimuth cell annotation.
+#' `cell_annotation_blueprint_singler`: SingleR annotation (Blueprint).
+#' `cell_annotation_blueprint_monaco`: SingleR annotation (Monaco).
+#' `is_immune`: Whether a cell is an immune cell.
+#' `sample_heuristic`: Internal sample subdivision helper.
+#' `file_id_cellNexus_single_cell`: Internal file id for single-cell layers.
+#' `file_id_cellNexus_pseudobulk`: Internal file id for pseudobulk layers.
+#' `sample_id`: Harmonised sample identifier.
+#' `nCount_RNA`: Total RNA counts per cell (sample-aware).
+#' `nFeature_expressed_in_sample`: Number of expressed features per cell.
+#' `ethnicity_flagging_score`: Supporting score for ethnicity imputation.
+#' `low_confidence_ethnicity`: Supporting flag for low-confidence ethnicity calls.
+#' `.aggregated_cells`: Post-QC cells combined into each pseudobulk sample.
+#' `imputed_ethnicity`: Imputed ethnicity label.
+#' `atlas_id`: cellNexus atlas release identifier (internal use).
+#' 
+#' For all fields definitions, please refer to our [documentation site](https://cellnexus.org/)
 #'
 #' **Possible cache path issues**
 #'
@@ -162,7 +175,7 @@ SAMPLE_DATABASE_URL <- "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2.1.0.parquet"),
+get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2.2.0.parquet"),
                          local_metadata = NULL,
                          cache_directory = get_default_cache_dir(),
                          use_cache = TRUE) {
@@ -246,10 +259,14 @@ get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2
 #'   pathway dominance, and global communication structure between cell populations.
 #' @examples
 #' # For fast build purpose only, you do not need to specify anything in the function.
-#' communication_meta <- get_cell_communication_strength(cloud_metadata = SAMPLE_DATABASE_URL)
+#' communication_meta <- get_cell_communication_strength(
+#'   cloud_metadata = get_metadata_url(
+#'     "cellNexus_lr_signaling_pathway_strength_DEMO.parquet"
+#'   )
+#' )
 #' @export
 get_cell_communication_strength <- function(
-  cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength.parquet"),
+  cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet"),
   local_metadata = NULL,
   cache_directory = get_default_cache_dir(),
   use_cache = TRUE
@@ -269,6 +286,7 @@ get_cell_communication_strength <- function(
 #' @param join_keys A character vector of column names used for the join.
 #'   Defaults to `c("sample_id", "dataset_id", "cell_id")`.
 #' @return A lazy SQL table with metacell metadata joined to the cellNexus metadata.
+#' @importFrom dplyr left_join
 #' @keywords internal
 #' @noRd
 join_metacell_table <- function(tbl,
@@ -322,9 +340,10 @@ join_metacell_table <- function(tbl,
 #'     cache_directory = tempdir()
 #'   )
 #' @return A lazy SQL table with Census metadata joined to the cellNexus metadata.
+#' @importFrom dplyr left_join
 #' @export
 join_census_table <- function(tbl,
-                              cloud_metadata = get_metadata_url("census_cell_metadata.2.1.0.parquet"),
+                              cloud_metadata = get_metadata_url("census_cell_metadata.2.2.0.parquet"),
                               cache_directory = get_default_cache_dir(),
                               join_keys = c("sample_id", "dataset_id", "observation_joinid")) {
   # Synchronize remote files
@@ -364,7 +383,7 @@ join_census_table <- function(tbl,
 #' Census snapshot any cell in your query came from.
 #'
 #' @param cache Optional character scalar. A local directory used to
-#'   cache the downloaded parquet file. Defaults to a temporary directory to 
+#'   cache the downloaded parquet file. Defaults to a temporary directory to
 #'   separate from the main cache directory.
 #' @return A tibble with columns:
 #'   \describe{

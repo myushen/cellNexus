@@ -142,6 +142,7 @@ organize_inputs <- function(
 #' @importFrom shiny fluidPage sidebarLayout sidebarPanel mainPanel titlePanel textAreaInput reactive
 #'   verbatimTextOutput renderText shinyApp h3 h4 p a tagList reactiveValues selectInput hr
 #'   conditionalPanel fluidRow column uiOutput renderUI icon tags observeEvent updateSelectInput
+#'   isolate
 #' @importFrom shinyWidgets pickerInput pickerOptions
 #' @importFrom rclipboard rclipboardSetup rclipButton
 #' @importFrom shiny actionButton

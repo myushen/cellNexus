@@ -4,7 +4,7 @@
 \alias{get_SingleCellExperiment}
 \title{Gets a SingleCellExperiment from curated metadata}
 \source{
-\href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
+\href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al., 2023}
 }
 \usage{
 get_SingleCellExperiment(...)

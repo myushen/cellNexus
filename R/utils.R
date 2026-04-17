@@ -76,8 +76,7 @@ get_default_cache_dir <- function() {
     R_user_dir(
       "cache"
     ) |>
-    normalizePath() |>
-    suppressWarnings()
+    normalizePath(mustWork = FALSE)
 }
 
 #' Clear the default cache directory
@@ -99,7 +98,7 @@ sync_remote_file <- function(full_url, output_file, overwrite = FALSE, ...) {
   if (isTRUE(overwrite) && file.exists(output_file)) {
     file.remove(output_file)
   }
-  
+
   if (!file.exists(output_file)) {
     output_dir <- dirname(output_file)
     dir.create(output_dir,
@@ -216,6 +215,7 @@ duckdb_read_parquet <- function(conn, path) {
 #' Deletes specific counts and metadata from cache
 #' @importFrom purrr map
 #' @importFrom dplyr filter distinct pull collect
+#' @importFrom rlang .data
 #' @return `NULL`, invisibly
 #' @keywords internal
 #' @noRd
@@ -224,20 +224,20 @@ delete_counts <- function(data,
                           cache_directory = get_default_cache_dir()) {
   data <- collect(data)
   ids <- data |>
-    distinct(file_id_db) |>
-    pull(file_id_db)
+    distinct(.data$file_id_db) |>
+    pull(.data$file_id_db)
   counts_path <- file.path(cache_directory, assay, ids)
   # counts
   map(counts_path, ~ .x |>
-        unlink(recursive = TRUE))
+    unlink(recursive = TRUE))
 
   # metadata
   filename <- get_metadata(cache_directory = cache_directory, use_cache = FALSE) |>
-    filter(file_id_db %in% ids) |>
-    distinct(meta_filename) |>
-    pull(meta_filename)
+    filter(.data$file_id_db %in% ids) |>
+    distinct(.data$meta_filename) |>
+    pull(.data$meta_filename)
   arrow::read_parquet(filename) |>
-    filter(!file_id_db %in% ids) |>
+    filter(!(.data$file_id_db %in% ids)) |>
     arrow::write_parquet(filename)
 }
 
@@ -329,8 +329,8 @@ save_sce_as_h5ad <- function(sce, path, ...) {
 #' @noRd
 duplicate_single_column_assay <- function(sce) {
   assay_name <- (sce |>
-                   assays() |>
-                   names())[[1L]]
+    assays() |>
+    names())[[1L]]
 
   if (ncol(assay(sce)) == 1) {
     # Duplicate the assay to prevent saving errors due to single-column matrices
@@ -343,9 +343,11 @@ duplicate_single_column_assay <- function(sce) {
       rbind(cd)
     rownames(cd)[2] <- paste0("DUMMY", "___", rownames(cd)[2])
 
-    sce <- SingleCellExperiment(assay = list(my_assay) |>
-                                  set_names(assay_name), 
-                                colData = cd)
+    sce <- SingleCellExperiment(
+      assay = list(my_assay) |>
+        set_names(assay_name),
+      colData = cd
+    )
     sce
   }
   sce
@@ -380,7 +382,7 @@ sync_metadata_assay_files <- function(data,
                                       cache_directory = get_default_cache_dir()) {
   assert(check_subset(c("cell_id", "atlas_id", grouping_column), colnames(data)))
   atlas_name <- data |>
-    pull(atlas_id) |>
+    pull(.data$atlas_id) |>
     unique()
 
   subdirs <- assay_map[assays]
@@ -394,7 +396,7 @@ sync_metadata_assay_files <- function(data,
       data |>
       transmute(
         files = .data[[grouping_column]],
-        atlas_name = atlas_id,
+        atlas_name = .data$atlas_id,
         cache_dir = cache_directory
       ) |>
       distinct() |>

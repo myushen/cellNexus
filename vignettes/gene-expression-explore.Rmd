@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 This page focuses on expression-layer retrieval workflows after metadata filtering.
 
-```{r, eval = FALSE}
+```{r load-packages, eval = FALSE}
 library(cellNexus)
 library(dplyr)
 
@@ -24,7 +24,7 @@ metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
 
 # Choose cells through metadata filters
 
-```{r, eval = FALSE}
+```{r filter-metadata, eval = FALSE}
 query_metadata <- metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African",
@@ -38,28 +38,28 @@ query_metadata <- metadata |>
 
 ## Single-cell counts
 
-```{r, eval = FALSE}
+```{r get-sce-counts, eval = FALSE}
 sce_counts <- query_metadata |>
   get_single_cell_experiment()
 ```
 
 ## Counts per million
 
-```{r, eval = FALSE}
+```{r get-sce-cpm, eval = FALSE}
 sce_cpm <- query_metadata |>
   get_single_cell_experiment(assays = "cpm")
 ```
 
 ## Pseudobulk
 
-```{r, eval = FALSE}
+```{r get-pseudobulk, eval = FALSE}
 pb_counts <- query_metadata |>
   get_pseudobulk()
 ```
 
 ## Metacell
 
-```{r, eval = FALSE}
+```{r get-metacell, eval = FALSE}
 mc_counts <- metadata |>
   dplyr::filter(!is.na(metacell_2)) |>
   dplyr::filter(
@@ -73,7 +73,7 @@ mc_counts <- metadata |>
 
 # Targeted gene queries
 
-```{r, eval = FALSE}
+```{r get-targeted-genes, eval = FALSE}
 # ENSEMBL IDs are expected
 sce_gene <- query_metadata |>
   get_single_cell_experiment(
@@ -84,7 +84,7 @@ sce_gene <- query_metadata |>
 
 # Output options
 
-```{r, eval = FALSE}
+```{r output-options, eval = FALSE}
 # Seurat conversion
 seurat_obj <- query_metadata |>
   get_seurat()
@@ -106,3 +106,7 @@ anndataR::write_h5ad(sce_counts, "single_cell_counts.h5ad")
 - Use `cpm` for normalized cross-cell comparisons.
 - Use pseudobulk for sample/cell-type aggregation analyses.
 - Use metacells for robust grouped-cell expression summarization.
+
+```{r session-info}
+sessionInfo()
+```

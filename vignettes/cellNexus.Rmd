@@ -35,7 +35,7 @@ knit: >
     })
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -82,12 +82,12 @@ removal of empty droplets and dead cells, followed by harmonised quality control
 normalisation, and multi-layer data generation. Through this process, it 
 produces updated datasets that remain aligned with the evolving CELLxGENE releases.
 
-```{r, echo=FALSE, out.height = c("139px"), out.width = "120x" }
+```{r fig-logo, echo=FALSE, out.height = c("139px"), out.width = "120x" }
 find_figure("logo.png") |>
   knitr::include_graphics()
 ```
 
-```{r, echo=FALSE, out.height = c("58px"), out.width = c("155x", "129px", "202px", "219px", "180px")}
+```{r fig-funders, echo=FALSE, out.height = c("58px"), out.width = c("155x", "129px", "202px", "219px", "180px")}
 c(
   "svcf_logo.jpeg",
   "czi_logo.png",
@@ -103,19 +103,19 @@ c(
 
 ## Installation
 
-```{r, eval=FALSE}
+```{r install-dev, eval=FALSE}
 devtools::install_github("MangiolaLaboratory/cellNexus")
 ```
 
 ## Load the package
 
-```{r, message=FALSE, warning=FALSE}
+```{r load-cellnexus, message=FALSE, warning=FALSE}
 library(cellNexus)
 ```
 
 ## Load additional packages
 
-```{r}
+```{r load-ggplot2}
 suppressPackageStartupMessages({
   library(ggplot2)
 })
@@ -124,15 +124,21 @@ suppressPackageStartupMessages({
 ## Load and explore the metadata
 
 ### Load the metadata
+By default, `get_metadata()` loads harmonised annotations. Users can retrieve original Census annotations by the function `join_census_table()`. 
 
-```{r, eval=FALSE}
-metadata <- get_metadata()
+```{r load-metadata-demo, eval=FALSE}
+metadata <- get_metadata() |>
+  join_census_table()
 metadata
 ```
 
-```{r, echo=FALSE}
+```{r load-metadata-check, echo=FALSE}
 # Note: a custom cache is used here ONLY for R CHECK compliance purposes. Users will NOT need to specify a custom cache
-metadata <- get_metadata(cloud_metadata = METADATA_URL, cache_directory = tempdir())
+metadata <- get_metadata(
+  cloud_metadata = METADATA_URL["cellnexus"],
+  cache_directory = tempdir()
+) |>
+  join_census_table(cloud_metadata = METADATA_URL["census"])
 metadata
 ```
 
@@ -140,7 +146,7 @@ Metadata is saved to `get_default_cache_dir()` unless a custom path is provided 
 
 ### Explore the tissue 
 
-```{r}
+```{r explore-tissue}
 metadata |>
   dplyr::distinct(tissue, cell_type_unified_ensemble)
 ```
@@ -148,7 +154,7 @@ metadata |>
 ## Quality control
 cellNexus metadata applies standardised quality control to filter out empty droplets, dead or damaged cells, doublets, and samples with low gene counts.
 
-```{r}
+```{r qc-filter}
 metadata <- metadata |>
   keep_quality_cells()
 
@@ -161,13 +167,13 @@ metadata <- metadata |>
 
 ### Query raw counts
 
-```{r}
+```{r get-sce-counts}
 single_cell_counts <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
+    self_reported_ethnicity == "African American" &
       assay == "10x 3' v3" &
-      tissue == "lung parenchyma" &
+      tissue == "breast" &
       cell_type == "T cell"
   ) |>
   get_single_cell_experiment()
@@ -177,13 +183,13 @@ single_cell_counts
 
 ### Query counts scaled per million
 
-```{r}
+```{r get-sce-cpm}
 single_cell_cpm <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
+    self_reported_ethnicity == "African American" &
       assay == "10x 3' v3" &
-      tissue == "lung parenchyma" &
+      tissue == "breast" &
       cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "cpm")
@@ -192,13 +198,13 @@ single_cell_cpm
 ```
 
 ### Query SCT normalised counts
-```{r}
+```{r get-sce-sct}
 single_cell_sct <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
+    self_reported_ethnicity == "African American" &
       assay == "10x 3' v3" &
-      tissue == "lung parenchyma" &
+      tissue == "breast" &
       cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "sct")
@@ -208,11 +214,11 @@ single_cell_sct
 
 ### Query pseudobulk
 
-```{r}
+```{r get-pseudobulk}
 pseudobulk_counts <-
   metadata |>
   dplyr::filter(
-      assay  == "10x 5' v1" &
+    assay == "10x 5' v1" &
       tissue == "lung" &
       cell_type == "classical monocyte"
   ) |>
@@ -221,17 +227,34 @@ pseudobulk_counts <-
 pseudobulk_counts
 ```
 
+## Download cell communication metadata
+
+Cell communication metadata was generated based on post-QC cells per sample using `CellChat v2` method. It uses our harmonised cell type annotation (cell_type_unified_ensemble) to infer the communication. It captures inferred communication at both the ligand–receptor pair level and the signalling pathway level.  
+
+interaction_count: The number of inferred interactions between each pair of cell groups.  
+interaction_weight: The aggregated communication strength between each pair of cell groups.  
+
+For definitions of additional annotations, please refer to the CellChat v2 documentation: https://github.com/jinworks/CellChat.
+
+```{r get-cell-communication, eval=FALSE}
+get_cell_communication_strength()
+```
+
+```{r get-cell-communication-demo, echo=FALSE}
+get_cell_communication_strength(cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet"))
+```
+
 ### Extract only a subset of genes
 
 This is helpful if just few genes are of interest (e.g ENSG00000134644 (PUM1)), as they can be compared across samples. cellNexus uses ENSEMBL gene ID(s).
 
-```{r}
+```{r get-sce-genes}
 single_cell_cpm <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
-      assay  == "10x 3' v3" &
-      tissue == "lung parenchyma" &
+    self_reported_ethnicity == "African American" &
+      assay == "10x 3' v3" &
+      tissue == "breast" &
       cell_type == "T cell"
   ) |>
   get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
@@ -243,16 +266,15 @@ single_cell_cpm
 
 This convert the H5 SingleCellExperiment to Seurat so it might take long time and occupy a lot of memory depending on how many cells you are requesting.
 
-```{r}
+```{r get-seurat}
 seurat_counts <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
-      assay  == "10x 3' v3" &
-      tissue == "lung parenchyma" &
+    self_reported_ethnicity == "African American" &
+      assay == "10x 3' v3" &
+      tissue == "breast" &
       cell_type == "T cell"
   ) |>
-  head() |>
   get_seurat()
 
 seurat_counts
@@ -262,20 +284,20 @@ By default, data is downloaded to `get_default_cache_dir()` output. If memory is
 
 ## Load metadata from the custom cache directory
 
-```{r eval=FALSE}
+```{r custom-cache-metadata, eval=FALSE}
 metadata <- get_metadata(cache_directory = "/MY/CUSTOM/PATH")
 ```
 
 
 ## Query raw counts from the custom cache directory
 
-```{r eval=FALSE}
+```{r custom-cache-counts, eval=FALSE}
 single_cell_counts <-
   metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African" &
-      assay  == "10x 3' v3" &
-      tissue == "lung parenchyma" &
+    self_reported_ethnicity == "African American" &
+      assay == "10x 3' v3" &
+      tissue == "breast" &
       cell_type == "T cell"
   ) |>
   get_single_cell_experiment(cache_directory = "/MY/CUSTOM/PATH")
@@ -297,7 +319,7 @@ However it has the disadvantage that for big `SingleCellExperiment` objects, whi
 In addition, an `.rds` saved in this way is not portable: you will not be able
 to share it with other users.
 
-```{r, eval=FALSE}
+```{r save-rds, eval=FALSE}
 single_cell_counts |>
   saveRDS("single_cell_counts.rds")
 ```
@@ -310,7 +332,7 @@ The resulting `.hdf5` file will also be totally portable and sharable.
 
 However this `.hdf5` has the disadvantage of being larger than the corresponding `.rds` as it includes a copy of the count information, and the saving process is going to be slow for large objects.
 
-```{r, eval=FALSE}
+```{r save-hdf5, eval=FALSE}
 # ! IMPORTANT if you save 200K+ cells
 HDF5Array::setAutoBlockSize(size = 1e+09)
 
@@ -330,7 +352,7 @@ The `H5AD` format is the HDF5 disk representation of the AnnData object and is w
 
 However this `.h5ad` saving strategy has a bottleneck of handling columns with only NA values of a `SingleCellExperiment` metadata. 
 
-```{r eval=FALSE}
+```{r save-h5ad, eval=FALSE}
 # ! IMPORTANT if you save 200K+ cells
 HDF5Array::setAutoBlockSize(size = 1e+09)
 
@@ -345,7 +367,7 @@ single_cell_counts |>
 
 We can gather all CD14 monocytes cells and plot the distribution of ENSG00000085265 (FCN1) across all tissues
 
-```{r, eval=FALSE,  results='hide'}
+```{r plot-fcn1-disease, eval=FALSE,  results='hide'}
 # Plots with styling
 counts <- metadata |>
   # Filter and subset
@@ -377,12 +399,12 @@ counts |>
   ggtitle("FCN1 in CD14 monocytes by disease. Coloured by datasets")
 ```
 
-```{r echo=FALSE}
+```{r fig-fcn1-disease, echo=FALSE}
 find_figure("FCN1_disease_plot.png") |>
   knitr::include_graphics()
 ```
 
-```{r, eval=FALSE, results='hide'}
+```{r plot-fcn1-tissue, eval=FALSE, results='hide'}
 # Plot by tissue
 counts |>
   dplyr::with_groups(tissue, ~ .x |>
@@ -408,7 +430,7 @@ counts |>
   theme(legend.position = "none", axis.text.x = element_text(size = 6.5))
 ```
 
-```{r echo=FALSE}
+```{r fig-fcn1-tissue, echo=FALSE}
 find_figure("FCN1_tissue_plot.png") |>
   knitr::include_graphics()
 ```
@@ -420,7 +442,7 @@ find_figure("FCN1_tissue_plot.png") |>
 To enable this feature, users must include `file_id_cellNexus_single_cell`
 and `atlas_id` (e.g cellxgene/dd-mm-yy) columns in the metadata. See metadata structure in cellNexus::pbmc3k_sce
 
-``` {r}
+```{r integrate-local-setup}
 # Set up local cache and paths
 local_cache <- tempdir()
 layer <- "counts"
@@ -459,7 +481,7 @@ pbmc3k_sce |>
   anndataR::write_h5ad(sce_path, compression = "gzip", mode = "w")
 ```
 
-``` {r}
+```{r integrate-local-query}
 # A cellNexus file
 file_id_from_cloud <- "e52795dec7b626b6276b867d55328d9f___1.h5ad"
 file_id_local <- basename(sce_path)
@@ -475,37 +497,8 @@ get_metadata(
   get_single_cell_experiment(cache_directory = local_cache)
 ```
 
-
-
 # Cell metadata
-
-Dataset-specific columns (definitions available at cellxgene.cziscience.com)
-
-`cell_count`, `collection_id`, `filetype`, `is_primary_data`, `mean_genes_per_cell`, `published_at`, `revised_at`, `schema_version`, `tombstone`, `x_normalization`, `explorer_url`, `dataset_id`, `dataset_version_id`
-
-Sample-specific columns (definitions available at cellxgene.cziscience.com)
-
-`sample_id`, `sample_`, `age_days`, `assay`, `assay_ontology_term_id`, `development_stage`, `development_stage_ontology_term_id`, `self_reported_ethnicity`, `self_reported_ethnicity_ontology_term_id`, `experiment___`, `organism`, `organism_ontology_term_id`, `sample_placeholder`, `sex`, `sex_ontology_term_id`, `tissue`, `tissue_type`, `tissue_ontology_term_id`, `tissue_groups`, `disease`, `disease_ontology_term_id`, `is_primary_data`, `donor_id`, `is_immune`
-
-Cell-specific columns (definitions available at cellxgene.cziscience.com)
-
-`cell_id`, `cell_type`, `cell_type_ontology_term_id`, `cell_annotation_azimuth_l2`, 
-`cell_annotation_blueprint_singler`, `observation_joinid`, `empty_droplet`, `alive`, `scDblFinder.class`
-
-Through harmonisation and curation we introduced custom column, not present in the original CELLxGENE metadata
-
-- `age_days`: donors' age in days
-- `cell_type_unified_ensemble`: the consensus call identity (for immune cells) using the original and three novel annotations using Seurat Azimuth and SingleR
-- `cell_annotation_azimuth_l2`: Azimuth cell annotation
-- `cell_annotation_blueprint_singler`: SingleR cell annotation using Blueprint reference
-- `cell_annotation_blueprint_monaco`: SingleR cell annotation using Monaco reference
-- `sample_heuristic`: sample subdivision for internal use
-- `file_id_cellNexus_single_cell`: file subdivision for internal use
-- `file_id_cellNexus_pseudobulk`: file subdivision for internal use
-- `sample_id`: sample ID
-- `nCount_RNA`: total number of RNA detected in a cell per sample
-- `nFeature_expressed_in_sample`: total number of genes expressed in a cell per sample
-
+The complete metadata dictionary (dataset-, sample-, and cell-level columns, plus cellNexus-specific harmonised fields) is available on the documentation site: [cellNexus documentation](https://cellnexus.org/).
 
 # RNA abundance
 
@@ -521,9 +514,9 @@ The `rank` assay is the representation of each cell’s gene expression profile 
 
 The `pseudobulk` assay includes aggregated RNA abundance for sample and cell type combination.
 
+The detailed documentation for RNA abundance is available on the documentation site: [cellNexus documentation](https://cellnexus.org/).
 
 # Session Info
-```{r}
+```{r session-info}
 sessionInfo()
 ```
-

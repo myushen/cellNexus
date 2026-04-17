@@ -88,13 +88,14 @@ upload_swift <- function(
 #' @examples
 #' \dontrun{
 #' register_atlas_version(
-#   atlas_id = "cellxgene_2024/0.1.0",
-#   census_version = "01-07-2024",
-#   change_type = "initial",
-#   description = "Initial release linked to CellxGene Census 01-07-2024.",
-#   credential_id = "ABCDEFGHIJK",
-#   credential_secret = "ABCD1234EFGH-5678IJK"
-# )
+#'   atlas_id = "cellxgene_2024/0.1.0",
+#'   census_version = "01-07-2024",
+#'   container = "cellNexus-metadata",
+#'   change_type = "initial",
+#'   description = "Initial release linked to CellxGene Census 01-07-2024.",
+#'   credential_id = "ABCDEFGHIJK",
+#'   credential_secret = "ABCD1234EFGH-5678IJK"
+#' )
 #' }
 register_atlas_version <- function(
   atlas_id,
@@ -132,7 +133,7 @@ register_atlas_version <- function(
   } else {
     new_row[0L, ]
   }
-  
+
   updated <- dplyr::bind_rows(existing, new_row)
   arrow::write_parquet(updated, local_path)
 
@@ -143,7 +144,7 @@ register_atlas_version <- function(
     credential_id     = credential_id,
     credential_secret = credential_secret
   )
-  
+
   invisible(NULL)
 }
 
@@ -231,13 +232,17 @@ hdf5_to_anndata <- function(input_directory, output_directory) {
   }, env = zellkonverter::zellkonverterAnnDataEnv())
 }
 
-#' Makes a "downsampled" metadata file that only contains the minimal data
+#' Makes "downsampled" metadata files that only contains the minimal data
 #' needed to run the vignette and unit tests
 #' @keywords internal
 #' @noRd
-#' @param output Character scalar. Path to the output file.
+#' @param cellnexus_output Character scalar. Path to the cellnexus file.
+#' @param census_output Character scalar. Path to the census file.
 #' @return NULL
-downsample_metadata <- function(output = "sample_metadata.2.1.0.parquet") {
+downsample_metadata <- function(
+  cellnexus_output = "cellnexus_sample_metadata.2.2.0.parquet",
+  census_output = "census_sample_metadata.2.2.0.parquet"
+) {
   metadata <- get_metadata() |>
     join_census_table()
 
@@ -257,7 +262,7 @@ downsample_metadata <- function(output = "sample_metadata.2.1.0.parquet") {
     .data$cell_type_unified_ensemble == "nk",
     .data$cell_type_unified_ensemble == "cd14 mono",
     .data$tissue == "kidney blood vessel",
-    .data$file_id_cellNexus_single_cell == "e52795dec7b626b6276b867d55328d9f___1.h5ad",
+    .data$file_id_cellNexus_single_cell == "2aad1b31e2f3469b90409a420580a751___1.h5ad",
     # Used by tests
     .data$file_id_cellNexus_single_cell == "4164d0eb972ad5e12719b6858c9559ea___1.h5ad",
     .data$file_id_cellNexus_single_cell == "7ddd6775d704d6826539abaee8d22f65___1.h5ad",
@@ -286,11 +291,31 @@ downsample_metadata <- function(output = "sample_metadata.2.1.0.parquet") {
     }) |>
     purrr::reduce(union)
 
-  metadata |>
+  metadata <- metadata |>
     dplyr::filter(.data$file_id_cellNexus_single_cell %in% minimal_file_ids) |>
     dplyr::arrange(.data$file_id_cellNexus_single_cell, .data$sample_id) |>
-    dplyr::collect() |>
-    arrow::write_parquet(output)
+    dplyr::collect()
+
+  census_cols <- c(
+    "observation_joinid", "dataset_id", "sample_id", "cell_type",
+    "cell_type_ontology_term_id", "assay", "assay_ontology_term_id",
+    "development_stage", "development_stage_ontology_term_id",
+    "disease", "disease_ontology_term_id", "donor_id", "is_primary_data",
+    "organism", "organism_ontology_term_id",
+    "self_reported_ethnicity", "self_reported_ethnicity_ontology_term_id",
+    "sex", "sex_ontology_term_id", "tissue", "tissue_ontology_term_id"
+  )
+
+  keys <- c("observation_joinid", "dataset_id", "sample_id")
+
+  census_metadata <- metadata |>
+    dplyr::select(dplyr::all_of(census_cols))
+
+  cellnexus_metadata <- metadata |>
+    dplyr::select(-dplyr::all_of(setdiff(census_cols, keys)))
+
+  arrow::write_parquet(census_metadata, census_output)
+  arrow::write_parquet(cellnexus_metadata, cellnexus_output)
 
   NULL
 }
