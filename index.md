@@ -71,40 +71,38 @@ Through harmonisation and curation, `cellNexus` adds columns that are not presen
 | `dataset_id` | Primary dataset identifier in the atlas. |
 | `sample_id` | Harmonised sample identifier. |
 | `sample_` | Internal sample subdivision helper. |
-| `cell_count` | Number of cells in a dataset. |
 | `experiment___` | Upstream experiment grouping variable. |
-| `explorer_url` | URL to browse the dataset in CELLxGENE explorer. |
-| `feature_count` | Number of genes in a dataset. |
-| `filesize` | Reported size of source data files. |
-| `filetype` | Storage format of source expression files. |
-| `url` | Dataset H5AD URL. |
-| `tissue_groups` | Coarse tissue grouping for analysis. |
+| `sample_heuristic` | Internal sample subdivision helper. |
 | `age_days` | Donor age in days. |
+| `tissue_groups` | Coarse tissue grouping for analysis. |
+| `nFeature_expressed_in_sample` | Number of expressed features per cell. |
+| `nCount_RNA` | Total RNA counts per cell (sample-aware). |
 | `empty_droplet` | Quality-control flag for empty droplets. |
-| `alive` | Quality-control flag for viable cells (e.g. mitochondrial signal). |
-| `scDblFinder.class` | Quality-control flag for doublet classification from `scDblFinder`. |
 | `cell_type_unified_ensemble` | Consensus immune identity from Azimuth and `SingleR` (Blueprint, Monaco). |
 | `is_immune` | Curated flag for immune-cell context. |
 | `subsets_Mito_percent` | Percent of each cell’s total counts coming from mitochondrial genes in a sample. |
 | `subsets_Ribo_percent` | Percent of each cell’s total counts coming from ribosomal genes in a sample. |
 | `high_mitochondrion` | TRUE if the cell’s mitochondrial percent exceeds the QC cutoff. |
 | `high_ribosome` | TRUE if the cell’s ribosomal percent exceeds the QC cutoff. |
+| `scDblFinder.class` | Quality-control flag for doublet classification from `scDblFinder`. |
 | `sample_chunk ` | Internal sample subdivision chunks. |
 | `cell_chunk ` | Internal cell subdivision chunks. |
 | `sample_pseudobulk_chunk ` | Internal pseudobulk subdivision chunks. |
-| `cell_annotation_azimuth_l2` | Azimuth cell annotation. |
-| `cell_annotation_blueprint_singler` | `SingleR` annotation (Blueprint). |
-| `cell_annotation_blueprint_monaco` | `SingleR` annotation (Monaco). |
-| `sample_heuristic` | Internal sample subdivision helper. |
 | `file_id_cellNexus_single_cell` | Internal file id for single-cell layers. |
 | `file_id_cellNexus_pseudobulk` | Internal file id for pseudobulk layers. |
-| `nCount_RNA` | Total RNA counts per cell (sample-aware). |
-| `nFeature_expressed_in_sample` | Number of expressed features per cell. |
+| `count_upper_bound` | Count capping threshold used in transformation. |
+| `nfeature_expressed_thresh` | Threshold of the number of expressed features per cell. |
+| `inverse_transform` | Transformation method used in pre-processing pipeline. |
+| `alive` | Quality-control flag for viable cells (e.g. mitochondrial signal). |
+| `cell_annotation_blueprint_singler` | `SingleR` annotation (Blueprint). |
+| `cell_annotation_monaco_singler` | `SingleR` annotation (Monaco). |
+| `cell_annotation_azimuth_l2` | Azimuth cell annotation. |
 | `ethnicity_flagging_score` | Supporting score for ethnicity imputation. |
 | `low_confidence_ethnicity` | Supporting flag for low-confidence ethnicity calls. |
 | `.aggregated_cells` | Post-QC cells combined into each pseudobulk sample. |
 | `imputed_ethnicity` | Imputed ethnicity label. |
 | `atlas_id` | cellNexus atlas release identifier (internal use). |
+
 
 Field definitions for the CELLxGENE schema follow the
 [CELLxGENE schema 5.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/5.1.0/schema.md), and [CELLxGENE Census schema](https://github.com/chanzuckerberg/cellxgene-census/blob/main/docs/cellxgene_census_schema.md#schema)

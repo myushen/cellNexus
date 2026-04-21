@@ -1,7 +1,7 @@
 Type: Package
 Package: cellNexus
 Title: Queries the Human Cell Atlas
-Version: 0.99.20
+Version: 0.99.21
 Authors@R: c(
     person(
         "Stefano",

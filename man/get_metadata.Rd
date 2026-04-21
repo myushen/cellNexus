@@ -8,7 +8,7 @@
 }
 \usage{
 get_metadata(
-  cloud_metadata = get_metadata_url("cellnexus_metadata.2.2.0.parquet"),
+  cloud_metadata = get_metadata_url("cellnexus_metadata.2.2.1.parquet"),
   local_metadata = NULL,
   cache_directory = get_default_cache_dir(),
   use_cache = TRUE
@@ -57,21 +57,6 @@ levels, in a unique coherent database table.
 
 Field definitions for the CELLxGENE schema follow the
 \href{https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/5.1.0/schema.md}{CELLxGENE schema 5.1.0}.
-
-Dataset-specific columns:
-\code{dataset_id}, \code{collection_id}, \code{citation}, \code{dataset_version_id},
-\code{explorer_url}, \code{filesize}, \code{filetype}, \code{published_at}, \code{raw_data_location},
-\code{revised_at}, \code{schema_version}, \code{suspension_type}, \code{title}, \code{url}, \code{donor_id}
-
-Sample-specific columns:
-\code{assay}, \code{assay_ontology_term_id}, \code{development_stage},
-\code{development_stage_ontology_term_id}, \code{self_reported_ethnicity},
-\code{self_reported_ethnicity_ontology_term_id}, \code{experiment___}, \code{organism},
-\code{organism_ontology_term_id}, \code{sex}, \code{sex_ontology_term_id}, \code{tissue},
-\code{tissue_type}, \code{tissue_ontology_term_id}, \code{disease}, \code{disease_ontology_term_id}, \code{is_primary_data}
-
-Cell-specific columns
-\code{cell_id}, \code{cell_type}, \code{cell_type_ontology_term_id}, \code{observation_joinid}
 
 Through harmonisation and curation we introduced custom columns not present
 in the original CELLxGENE metadata:

@@ -8,7 +8,7 @@
 }
 \usage{
 get_metadata_url(
-  databases = c("cellnexus_metadata.2.2.0.parquet", "census_cell_metadata.2.2.0.parquet")
+  databases = c("cellnexus_metadata.2.2.1.parquet", "census_cell_metadata.2.2.1.parquet")
 )
 }
 \arguments{
@@ -22,7 +22,7 @@ A character vector of URLs to parquet files to download
 Returns the URLs for all metadata files
 }
 \examples{
-get_metadata_url("cellnexus_metadata.2.2.0.parquet")
+get_metadata_url("cellnexus_metadata.2.2.1.parquet")
 }
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,

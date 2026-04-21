@@ -240,8 +240,8 @@ hdf5_to_anndata <- function(input_directory, output_directory) {
 #' @param census_output Character scalar. Path to the census file.
 #' @return NULL
 downsample_metadata <- function(
-  cellnexus_output = "cellnexus_sample_metadata.2.2.0.parquet",
-  census_output = "census_sample_metadata.2.2.0.parquet"
+  cellnexus_output = "cellnexus_sample_metadata.2.2.1.parquet",
+  census_output = "census_sample_metadata.2.2.1.parquet"
 ) {
   metadata <- get_metadata() |>
     join_census_table()

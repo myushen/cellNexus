@@ -6,7 +6,7 @@
 \usage{
 join_census_table(
   tbl,
-  cloud_metadata = get_metadata_url("census_cell_metadata.2.2.0.parquet"),
+  cloud_metadata = get_metadata_url("census_cell_metadata.2.2.1.parquet"),
   cache_directory = get_default_cache_dir(),
   join_keys = c("sample_id", "dataset_id", "observation_joinid")
 )
