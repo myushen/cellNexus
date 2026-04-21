@@ -41,6 +41,7 @@ When a new data version is released, run the following in R:
 cellNexus:::register_atlas_version(
   atlas_id       = "cellxgene_YEAR/0.2.0",
   census_version = "DD-MM-YY",
+  container      = "cellNexus-metadata",
   change_type    = "minor",
   description    = "Describe what changed.",
   credential_id     = Sys.getenv("NECTAR_CREDENTIAL_ID"),

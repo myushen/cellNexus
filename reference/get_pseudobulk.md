@@ -94,7 +94,9 @@ doi:10.1101/2023.06.08.542671.
 
 ``` r
 # Use the lightweight sample database URL (for fast checks during development only)
-meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
+meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |>
+  keep_quality_cells() |>
+  dplyr::filter(cell_type_unified_ensemble == "epithelial")
 pseudobulk <- meta |> get_pseudobulk()
 #> ℹ Realising metadata.
 #> ℹ Synchronising files

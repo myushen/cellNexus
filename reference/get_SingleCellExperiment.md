@@ -14,8 +14,8 @@ get_SingleCellExperiment(...)
 
 ## Source
 
-[Mangiola et
-al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+[Mangiola et al.,
+2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 
 ## Arguments
 
@@ -88,5 +88,11 @@ sce <- get_single_cell_experiment(meta)
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Reading files.
+#> For native R and reading and writing of H5AD files, an R <AnnData> object, and
+#> conversion to <SingleCellExperiment> or <Seurat> objects, check out the
+#> anndataR package:
+#> ℹ Install it from Bioconductor with `BiocManager::install("anndataR")`
+#> ℹ See more at <https://bioconductor.org/packages/anndataR/>
+#> This message is displayed once per session.
 #> ℹ Compiling Experiment.
 ```
