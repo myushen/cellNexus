@@ -24,7 +24,8 @@ The harmonisation pipeline standardises data across datasets so queries are cons
 ### Quality control steps 
 
 The QC flags used throughout `cellNexus` are computed using [HPCell](https://github.com/MangiolaLaboratory/HPCell). In brief:
-- Empty droplets (`empty_droplet`):
+
+  - Empty droplets (`empty_droplet`):
   - Computed from a `SingleCellExperiment`.
   - Excludes mitochondrial genes and ribosomal genes before scoring:
   - Computes, per cell, the number of expressed genes and flags a cell as an empty droplet when \(n_\mathrm{feature} <\) `RNA_feature_threshold` (by default 200, except for targeted panels such as Rhapsody technology).
@@ -61,90 +62,50 @@ The QC flags used throughout `cellNexus` are computed using [HPCell](https://git
 
 ## Metadata Explore
 
-Detailed field definitions for the CELLxGENE schema follow the
-[CELLxGENE schema 5.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/5.1.0/schema.md), and [CELLxGENE Census schema](https://github.com/chanzuckerberg/cellxgene-census/blob/main/docs/cellxgene_census_schema.md#schema)
-
-### Dataset-level columns
-
-| Column | Description |
-|--------|-------------|
-| `dataset_id` | Primary dataset identifier in the atlas. |
-| `collection_id` | Parent collection grouping related datasets. |
-| `citation` | Citation or reference for the dataset. |
-| `dataset_version_id` | Versioned identifier for a dataset release. |
-| `explorer_url` | URL to browse the dataset in CELLxGENE explorer. |
-| `filesize` | Reported size of source data files. |
-| `filetype` | Storage format of source expression files. |
-| `published_at` | Publication timestamp for dataset release. |
-| `raw_data_location` | Location of raw data upstream. |
-| `revised_at` | Last revision timestamp for dataset metadata. |
-| `schema_version` | CELLxGENE schema version for this record. |
-| `suspension_type` | Suspension type (e.g. cell vs nucleus). |
-| `title` | Dataset publication title. |
-| `url` | Dataset H5AD URL. |
-| `donor_id` | Donor identifier. |
-
-### Sample-level columns
-
-| Column | Description |
-|--------|-------------|
-| `assay` | Sequencing technology label. |
-| `assay_ontology_term_id` | Ontology identifier for `assay`. |
-| `development_stage` | Developmental stage label. |
-| `development_stage_ontology_term_id` | Ontology identifier for `development_stage`. |
-| `self_reported_ethnicity` | Self-reported ancestry or ethnicity label. |
-| `self_reported_ethnicity_ontology_term_id` | Ontology identifier for self-reported ethnicity. |
-| `experiment___` | Upstream experiment grouping variable. |
-| `organism` | Organism name (e.g. human). |
-| `organism_ontology_term_id` | Ontology identifier for `organism`. |
-| `sex` | Recorded biological sex label. |
-| `sex_ontology_term_id` | Ontology identifier for `sex`. |
-| `tissue` | Tissue label. |
-| `tissue_type` | Tissue class (e.g. tissue vs organoid). |
-| `tissue_ontology_term_id` | Ontology identifier for `tissue`. |
-| `disease` | Disease annotation. |
-| `disease_ontology_term_id` | Ontology identifier for `disease`. |
-| `is_primary_data` | Whether observations are marked as primary (avoid duplicated cells). |
-
-### Cell-level columns
-
-| Column | Description |
-|--------|-------------|
-| `cell_id` | Cell identifier. |
-| `cell_type` | Cell-type label from CELLxGENE Census API. |
-| `cell_type_ontology_term_id` | Ontology identifier for `cell_type`. |
-| `observation_joinid` | Cell ID join key linking metadata. |
-
-### Harmonised and custom columns (cellNexus)
-
 Through harmonisation and curation, `cellNexus` adds columns that are not present in the original CELLxGENE metadata alone.
 
 | Column | Description |
 |--------|-------------|
-| `cell_count` | Number of cells in a dataset. |
-| `feature_count` | Number of genes in a dataset. |
+| `cell_id` | Cell identifier. |
+| `observation_joinid` | Cell ID join key linking metadata. |
+| `dataset_id` | Primary dataset identifier in the atlas. |
+| `sample_id` | Harmonised sample identifier. |
+| `sample_` | Internal sample subdivision helper. |
+| `experiment___` | Upstream experiment grouping variable. |
+| `sample_heuristic` | Internal sample subdivision helper. |
 | `age_days` | Donor age in days. |
 | `tissue_groups` | Coarse tissue grouping for analysis. |
+| `nFeature_expressed_in_sample` | Number of expressed features per cell. |
+| `nCount_RNA` | Total RNA counts per cell (sample-aware). |
 | `empty_droplet` | Quality-control flag for empty droplets. |
-| `alive` | Quality-control flag for viable cells (e.g. mitochondrial signal). |
-| `scDblFinder.class` | Quality-control flag for doublet classification from `scDblFinder`. |
 | `cell_type_unified_ensemble` | Consensus immune identity from Azimuth and `SingleR` (Blueprint, Monaco). |
-| `cell_annotation_azimuth_l2` | Azimuth cell annotation. |
-| `cell_annotation_blueprint_singler` | `SingleR` annotation (Blueprint). |
-| `cell_annotation_blueprint_monaco` | `SingleR` annotation (Monaco). |
-| `sample_heuristic` | Internal sample subdivision helper. |
+| `is_immune` | Curated flag for immune-cell context. |
+| `subsets_Mito_percent` | Percent of each cell’s total counts coming from mitochondrial genes in a sample. |
+| `subsets_Ribo_percent` | Percent of each cell’s total counts coming from ribosomal genes in a sample. |
+| `high_mitochondrion` | TRUE if the cell’s mitochondrial percent exceeds the QC cutoff. |
+| `high_ribosome` | TRUE if the cell’s ribosomal percent exceeds the QC cutoff. |
+| `scDblFinder.class` | Quality-control flag for doublet classification from `scDblFinder`. |
+| `sample_chunk ` | Internal sample subdivision chunks. |
+| `cell_chunk ` | Internal cell subdivision chunks. |
+| `sample_pseudobulk_chunk ` | Internal pseudobulk subdivision chunks. |
 | `file_id_cellNexus_single_cell` | Internal file id for single-cell layers. |
 | `file_id_cellNexus_pseudobulk` | Internal file id for pseudobulk layers. |
-| `sample_id` | Harmonised sample identifier. |
-| `nCount_RNA` | Total RNA counts per cell (sample-aware). |
-| `nFeature_expressed_in_sample` | Number of expressed features per cell. |
+| `count_upper_bound` | Count capping threshold used in transformation. |
+| `nfeature_expressed_thresh` | Threshold of the number of expressed features per cell. |
+| `inverse_transform` | Transformation method used in pre-processing pipeline. |
+| `alive` | Quality-control flag for viable cells (e.g. mitochondrial signal). |
+| `cell_annotation_blueprint_singler` | `SingleR` annotation (Blueprint). |
+| `cell_annotation_monaco_singler` | `SingleR` annotation (Monaco). |
+| `cell_annotation_azimuth_l2` | Azimuth cell annotation. |
 | `ethnicity_flagging_score` | Supporting score for ethnicity imputation. |
 | `low_confidence_ethnicity` | Supporting flag for low-confidence ethnicity calls. |
 | `.aggregated_cells` | Post-QC cells combined into each pseudobulk sample. |
 | `imputed_ethnicity` | Imputed ethnicity label. |
 | `atlas_id` | cellNexus atlas release identifier (internal use). |
-| `is_immune` | Curated flag for immune-cell context. |
 
+
+Field definitions for the CELLxGENE schema follow the
+[CELLxGENE schema 5.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/5.1.0/schema.md), and [CELLxGENE Census schema](https://github.com/chanzuckerberg/cellxgene-census/blob/main/docs/cellxgene_census_schema.md#schema)
 
 ## Client Usage Examples
 

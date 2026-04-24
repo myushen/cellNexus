@@ -13,15 +13,15 @@ cache <- rlang::env(
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
-#' get_metadata_url("cellnexus_metadata.2.2.0.parquet")
+#' get_metadata_url("cellnexus_metadata.2.2.1.parquet")
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_metadata_url <- function(databases = c(
-                               "cellnexus_metadata.2.2.0.parquet",
-                               "census_cell_metadata.2.2.0.parquet"
+                               "cellnexus_metadata.2.2.1.parquet",
+                               "census_cell_metadata.2.2.1.parquet"
                              )) {
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}"
@@ -42,11 +42,11 @@ get_metadata_url <- function(databases = c(
 SAMPLE_DATABASE_URL <- c(
   cellnexus = paste0(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
-    "cellNexus-metadata/cellnexus_sample_metadata.2.2.0.parquet"
+    "cellNexus-metadata/cellnexus_sample_metadata.2.2.1.parquet"
   ),
   census = paste0(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
-    "cellNexus-metadata/census_sample_metadata.2.2.0.parquet"
+    "cellNexus-metadata/census_sample_metadata.2.2.1.parquet"
   )
 )
 
@@ -110,21 +110,6 @@ SAMPLE_DATABASE_URL <- c(
 #' Field definitions for the CELLxGENE schema follow the
 #' [CELLxGENE schema 5.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/5.1.0/schema.md).
 #'
-#' Dataset-specific columns:
-#' `dataset_id`, `collection_id`, `citation`, `dataset_version_id`,
-#' `explorer_url`, `filesize`, `filetype`, `published_at`, `raw_data_location`,
-#' `revised_at`, `schema_version`, `suspension_type`, `title`, `url`, `donor_id`
-#'
-#' Sample-specific columns:
-#'  `assay`, `assay_ontology_term_id`, `development_stage`,
-#'  `development_stage_ontology_term_id`, `self_reported_ethnicity`,
-#'  `self_reported_ethnicity_ontology_term_id`, `experiment___`, `organism`,
-#'  `organism_ontology_term_id`, `sex`, `sex_ontology_term_id`, `tissue`,
-#'  `tissue_type`, `tissue_ontology_term_id`, `disease`, `disease_ontology_term_id`, `is_primary_data`
-#'
-#' Cell-specific columns
-#' `cell_id`, `cell_type`, `cell_type_ontology_term_id`, `observation_joinid`
-#'
 #' Through harmonisation and curation we introduced custom columns not present
 #' in the original CELLxGENE metadata:
 #'
@@ -151,7 +136,7 @@ SAMPLE_DATABASE_URL <- c(
 #' `.aggregated_cells`: Post-QC cells combined into each pseudobulk sample.
 #' `imputed_ethnicity`: Imputed ethnicity label.
 #' `atlas_id`: cellNexus atlas release identifier (internal use).
-#' 
+#'
 #' For all fields definitions, please refer to our [documentation site](https://cellnexus.org/)
 #'
 #' **Possible cache path issues**
@@ -175,7 +160,7 @@ SAMPLE_DATABASE_URL <- c(
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2.2.0.parquet"),
+get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2.2.1.parquet"),
                          local_metadata = NULL,
                          cache_directory = get_default_cache_dir(),
                          use_cache = TRUE) {
@@ -343,7 +328,7 @@ join_metacell_table <- function(tbl,
 #' @importFrom dplyr left_join
 #' @export
 join_census_table <- function(tbl,
-                              cloud_metadata = get_metadata_url("census_cell_metadata.2.2.0.parquet"),
+                              cloud_metadata = get_metadata_url("census_cell_metadata.2.2.1.parquet"),
                               cache_directory = get_default_cache_dir(),
                               join_keys = c("sample_id", "dataset_id", "observation_joinid")) {
   # Synchronize remote files
