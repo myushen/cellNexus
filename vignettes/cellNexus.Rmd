@@ -436,7 +436,7 @@ find_figure("FCN1_tissue_plot.png") |>
 `cellNexus` not only enables users to query our metadata but also allows integration with your local metadata. Additionally, users can integrate with your metadata stored in the cloud. 
 
 To enable this feature, users must include `file_id_cellNexus_single_cell`
-and `atlas_id` (e.g cellxgene/dd-mm-yy) columns in the metadata. See metadata structure in cellNexus::pbmc3k_sce
+and `atlas_id` (e.g cellxgene/dd-mm-yy) columns in the metadata. See metadata structure in `cellNexus::pbmc3k_sce()`
 
 ```{r integrate-local-setup}
 # Set up local cache and paths
