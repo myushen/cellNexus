@@ -40,21 +40,18 @@ CELLxGENE releases.
 ### Installation
 
 ``` r
-
 devtools::install_github("MangiolaLaboratory/cellNexus")
 ```
 
 ### Load the package
 
 ``` r
-
 library(cellNexus)
 ```
 
 ### Load additional packages
 
 ``` r
-
 suppressPackageStartupMessages({
   library(ggplot2)
 })
@@ -71,14 +68,13 @@ annotations by the function
 [`join_census_table()`](https://mangiolalaboratory.github.io/cellNexus/reference/join_census_table.md).
 
 ``` r
-
 metadata <- get_metadata() |>
   join_census_table()
 metadata
 ```
 
     #> ℹ Downloading 1 file, totalling 0 GB
-    #> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/cellnexus_sample_metadata.2.2.1.parquet to /tmp/RtmpwhOhL5/cellnexus_sample_metadata.2.2.1.parquet
+    #> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/cellnexus_sample_metadata.2.2.1.parquet to /tmp/RtmpYSV1M4/cellnexus_sample_metadata.2.2.1.parquet
     #> # Source:   SQL [?? x 76]
     #> # Database: DuckDB 1.5.2 [unknown@Linux 6.17.0-1010-azure:R 4.6.0/:memory:]
     #>    cell_id observation_joinid dataset_id         sample_id sample_ experiment___
@@ -109,7 +105,6 @@ unless a custom path is provided via the cache_directory argument. The
 #### Explore the tissue
 
 ``` r
-
 metadata |>
   dplyr::distinct(tissue, cell_type_unified_ensemble)
 #> # Source:   SQL [?? x 2]
@@ -136,7 +131,6 @@ empty droplets, dead or damaged cells, doublets, and samples with low
 gene counts.
 
 ``` r
-
 metadata <- metadata |>
   keep_quality_cells()
 
@@ -149,7 +143,6 @@ metadata <- metadata |>
 #### Query raw counts
 
 ``` r
-
 single_cell_counts <-
   metadata |>
   dplyr::filter(
@@ -161,6 +154,8 @@ single_cell_counts <-
   get_single_cell_experiment()
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
+#> ℹ Downloading 1 file, totalling 0 GB
+#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene_2024/0.2.1/counts/2aad1b31e2f3469b90409a420580a751___1.h5ad to /home/runner/.cache/R/cellNexus/cellxgene_2024/0.2.1//counts/2aad1b31e2f3469b90409a420580a751___1.h5ad
 #> ℹ Reading files.
 #> For native R and reading and writing of H5AD files, an R <AnnData> object, and
 #> conversion to <SingleCellExperiment> or <Seurat> objects, check out the
@@ -190,7 +185,6 @@ single_cell_counts
 #### Query counts scaled per million
 
 ``` r
-
 single_cell_cpm <-
   metadata |>
   dplyr::filter(
@@ -202,6 +196,8 @@ single_cell_cpm <-
   get_single_cell_experiment(assays = "cpm")
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
+#> ℹ Downloading 1 file, totalling 0 GB
+#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene_2024/0.2.1/cpm/2aad1b31e2f3469b90409a420580a751___1.h5ad to /home/runner/.cache/R/cellNexus/cellxgene_2024/0.2.1//cpm/2aad1b31e2f3469b90409a420580a751___1.h5ad
 #> ℹ Reading files.
 #> ℹ Compiling Experiment.
 
@@ -224,7 +220,6 @@ single_cell_cpm
 #### Query SCT normalised counts
 
 ``` r
-
 single_cell_sct <-
   metadata |>
   dplyr::filter(
@@ -236,6 +231,8 @@ single_cell_sct <-
   get_single_cell_experiment(assays = "sct")
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
+#> ℹ Downloading 1 file, totalling 0 GB
+#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene_2024/0.2.1/sct/2aad1b31e2f3469b90409a420580a751___1.h5ad to /home/runner/.cache/R/cellNexus/cellxgene_2024/0.2.1//sct/2aad1b31e2f3469b90409a420580a751___1.h5ad
 #> ℹ Reading files.
 #> ℹ Compiling Experiment.
 
@@ -258,7 +255,6 @@ single_cell_sct
 #### Query pseudobulk
 
 ``` r
-
 pseudobulk_counts <-
   metadata |>
   dplyr::filter(
@@ -269,6 +265,8 @@ pseudobulk_counts <-
   get_pseudobulk()
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
+#> ℹ Downloading 1 file, totalling 0 GB
+#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-anndata/cellxgene_2024/0.2.1/pseudobulk/counts/11d9b242ad2fc637e43a23a6b7389fde___1.h5ad to /home/runner/.cache/R/cellNexus/cellxgene_2024/0.2.1/pseudobulk/counts/11d9b242ad2fc637e43a23a6b7389fde___1.h5ad
 #> ℹ Reading files.
 #> ℹ Compiling Experiment.
 
@@ -306,7 +304,6 @@ For definitions of additional annotations, please refer to the CellChat
 v2 documentation: <https://github.com/jinworks/CellChat>.
 
 ``` r
-
 get_cell_communication_strength()
 ```
 
@@ -331,7 +328,6 @@ This is helpful if just few genes are of interest (e.g ENSG00000134644
 gene ID(s).
 
 ``` r
-
 single_cell_cpm <-
   metadata |>
   dplyr::filter(
@@ -368,7 +364,6 @@ time and occupy a lot of memory depending on how many cells you are
 requesting.
 
 ``` r
-
 seurat_counts <-
   metadata |>
   dplyr::filter(
@@ -398,14 +393,12 @@ directory to metadata and counts functions:
 ### Load metadata from the custom cache directory
 
 ``` r
-
 metadata <- get_metadata(cache_directory = "/MY/CUSTOM/PATH")
 ```
 
 ### Query raw counts from the custom cache directory
 
 ``` r
-
 single_cell_counts <-
   metadata |>
   dplyr::filter(
@@ -442,7 +435,6 @@ be slow. In addition, an `.rds` saved in this way is not portable: you
 will not be able to share it with other users.
 
 ``` r
-
 single_cell_counts |>
   saveRDS("single_cell_counts.rds")
 ```
@@ -460,7 +452,6 @@ corresponding `.rds` as it includes a copy of the count information, and
 the saving process is going to be slow for large objects.
 
 ``` r
-
 # ! IMPORTANT if you save 200K+ cells
 HDF5Array::setAutoBlockSize(size = 1e+09)
 
@@ -484,7 +475,6 @@ However this `.h5ad` saving strategy has a bottleneck of handling
 columns with only NA values of a `SingleCellExperiment` metadata.
 
 ``` r
-
 # ! IMPORTANT if you save 200K+ cells
 HDF5Array::setAutoBlockSize(size = 1e+09)
 
@@ -501,7 +491,6 @@ We can gather all CD14 monocytes cells and plot the distribution of
 ENSG00000085265 (FCN1) across all tissues
 
 ``` r
-
 # Plots with styling
 counts <- metadata |>
   # Filter and subset
@@ -536,7 +525,6 @@ counts |>
 ![](../reference/figures/FCN1_disease_plot.png)
 
 ``` r
-
 # Plot by tissue
 counts |>
   dplyr::with_groups(tissue, ~ .x |>
@@ -575,7 +563,6 @@ To enable this feature, users must include
 columns in the metadata. See metadata structure in cellNexus::pbmc3k_sce
 
 ``` r
-
 # Set up local cache and paths
 local_cache <- tempdir()
 layer <- "counts"
@@ -615,7 +602,6 @@ pbmc3k_sce |>
 ```
 
 ``` r
-
 # A cellNexus file
 file_id_from_cloud <- "e52795dec7b626b6276b867d55328d9f___1.h5ad"
 file_id_local <- basename(sce_path)
@@ -630,7 +616,7 @@ get_metadata(
   dplyr::select(cell_id, sample_id, dataset_id, cell_type_unified_ensemble, atlas_id, file_id_cellNexus_single_cell) |>
   get_single_cell_experiment(cache_directory = local_cache)
 #> ℹ Downloading 1 file, totalling 0 GB
-#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/census_sample_metadata.2.2.1.parquet to /tmp/RtmpwhOhL5/census_sample_metadata.2.2.1.parquet
+#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/census_sample_metadata.2.2.1.parquet to /tmp/RtmpYSV1M4/census_sample_metadata.2.2.1.parquet
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Reading files.
@@ -684,7 +670,6 @@ documentation site: [cellNexus documentation](https://cellnexus.org/).
 ## Session Info
 
 ``` r
-
 sessionInfo()
 #> R version 4.6.0 (2026-04-24)
 #> Platform: x86_64-pc-linux-gnu
@@ -695,12 +680,10 @@ sessionInfo()
 #> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
 #> 
 #> locale:
-#>  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
-#>  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
-#>  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
-#>  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
-#>  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
-#> [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
 #> 
 #> time zone: UTC
 #> tzcode source: system (glibc)
