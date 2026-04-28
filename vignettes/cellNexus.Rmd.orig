@@ -1,0 +1,441 @@
+---
+title: "cellNexus"
+author: "Mangiola et al."
+package: cellNexus
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+vignette: >
+  %\VignetteIndexEntry{cellNexus}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = file.path(
+   rprojroot::find_package_root_file(), "vignettes", "figure", ""
+  )
+)
+find_figure <- function(names) {
+  rprojroot::find_package_root_file("man", "figures", names)
+}
+```
+
+<!-- badges: start -->
+[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
+<!-- badges: end -->
+
+# Introduction
+
+`cellNexus` extends the functionality of `CuratedAtlasQueryR` by providing a unified interface for querying and accessing the harmonised, curated, and reannotated CELLxGENE human cell atlas. It enables reproducible, programmatic exploration of large-scale single-cell datasets, supporting data retrieval at the cell, sample, and dataset levels with flexible filtering based on tissue, cell type, experimental condition, and other metadata. Retrieved data are returned in formats ready for downstream analysis.
+
+The package integrates over 44 million human cells processed through a standardised pipeline, including consistent quality control, normalisation, and unified abundance representations (e.g., single-cell, counts-per-million, normalised expression, and pseudobulk). This harmonisation facilitates efficient cross-dataset comparison and integration.
+
+Data are hosted on the ARDC Nectar Research Cloud, and most functions access them via web requests; therefore, an active network connection is required for typical use.
+
+While both cellNexus and CuratedAtlasQueryR rely on precomputed expression layers, cellNexus adopts a more standardised and transparent processing workflow. This includes explicit removal of empty droplets and dead cells, followed by harmonised quality control, normalisation, and multi-layer data generation, ensuring alignment with evolving CELLxGENE releases.
+
+
+```{r fig-logo, echo=FALSE, out.height = c("139px"), out.width = "120x" }
+find_figure("logo.png") |>
+  knitr::include_graphics()
+```
+
+```{r fig-funders, echo=FALSE, out.height = c("58px"), out.width = c("155x", "129px", "202px", "219px", "180px")}
+c(
+  "svcf_logo.jpeg",
+  "czi_logo.png",
+  "bioconductor_logo.jpg",
+  "vca_logo.png",
+  "nectar_logo.png"
+) |>
+  find_figure() |>
+  knitr::include_graphics()
+```
+
+# Query interface
+
+## Installation
+
+```{r install-dev, eval=FALSE}
+devtools::install_github("MangiolaLaboratory/cellNexus")
+```
+
+## Load the package
+
+```{r load-cellnexus, message=FALSE, warning=FALSE}
+library(cellNexus)
+```
+
+## Load additional packages
+
+```{r load-ggplot2}
+suppressPackageStartupMessages({
+  library(ggplot2)
+})
+```
+
+## Load and explore the metadata
+
+### Load the metadata
+By default, `get_metadata()` loads harmonised annotations. Users can retrieve original Census annotations by the function `join_census_table()`. 
+
+```{r load-metadata}
+metadata <- get_metadata() |>
+  join_census_table()
+metadata
+```
+
+Metadata is saved to `get_default_cache_dir()` unless a custom path is provided via the cache_directory argument. The `metadata` variable can then be re-used for all subsequent queries. 
+
+### Explore the tissue 
+
+```{r explore-tissue}
+metadata |>
+  dplyr::distinct(tissue, cell_type_unified_ensemble)
+```
+
+## Quality control
+cellNexus metadata applies standardised quality control to filter out empty droplets, dead or damaged cells, doublets, and samples with low gene counts.
+
+```{r qc-filter}
+metadata <- metadata |>
+  keep_quality_cells()
+
+metadata <- metadata |>
+  dplyr::filter(feature_count >= 5000)
+```
+
+
+## Download single-cell RNA sequencing counts 
+
+### Query raw counts
+
+```{r get-sce-counts}
+single_cell_counts <-
+  metadata |>
+  dplyr::filter(
+    self_reported_ethnicity == "African American" &
+      assay == "10x 3' v3" &
+      tissue == "breast" &
+      cell_type == "T cell"
+  ) |>
+  get_single_cell_experiment()
+
+single_cell_counts
+```
+
+### Query counts scaled per million
+
+```{r get-sce-cpm}
+single_cell_cpm <-
+  metadata |>
+  dplyr::filter(
+    self_reported_ethnicity == "African American" &
+      assay == "10x 3' v3" &
+      tissue == "breast" &
+      cell_type == "T cell"
+  ) |>
+  get_single_cell_experiment(assays = "cpm")
+
+single_cell_cpm
+```
+
+### Query SCT normalised counts
+```{r get-sce-sct}
+single_cell_sct <-
+  metadata |>
+  dplyr::filter(
+    self_reported_ethnicity == "African American" &
+      assay == "10x 3' v3" &
+      tissue == "breast" &
+      cell_type == "T cell"
+  ) |>
+  get_single_cell_experiment(assays = "sct")
+
+single_cell_sct
+```
+
+### Query pseudobulk
+
+```{r get-pseudobulk}
+pseudobulk_counts <-
+  metadata |>
+  dplyr::filter(
+    assay == "10x 5' v1" &
+      tissue == "lung" &
+      cell_type == "classical monocyte"
+  ) |>
+  get_pseudobulk()
+
+pseudobulk_counts
+```
+
+## Download cell communication metadata
+
+Cell communication metadata was generated based on post-QC cells per sample using `CellChat v2` method. It uses our harmonised cell type annotation (cell_type_unified_ensemble) to infer the communication. It captures inferred communication at both the ligand–receptor pair level and the signalling pathway level.  
+
+- interaction_count: The number of inferred interactions between each pair of cell groups.  
+
+- interaction_weight: The aggregated communication strength between each pair of cell groups.  
+
+For definitions of additional annotations, please refer to the CellChat v2 documentation: https://github.com/jinworks/CellChat.
+
+For demonstration purpose, read cell communication metadata from a demo file here. Users do not need to specify cloud_metadata argument in this case.
+```{r get-cell-communication-demo}
+get_cell_communication_strength(cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet"))
+```
+
+### Extract only a subset of genes
+
+This is helpful if just few genes are of interest (e.g ENSG00000134644 (PUM1)), as they can be compared across samples. cellNexus uses ENSEMBL gene ID(s).
+
+```{r get-sce-genes}
+single_cell_cpm <-
+  metadata |>
+  dplyr::filter(
+    self_reported_ethnicity == "African American" &
+      assay == "10x 3' v3" &
+      tissue == "breast" &
+      cell_type == "T cell"
+  ) |>
+  get_single_cell_experiment(assays = "cpm", features = "ENSG00000134644")
+
+single_cell_cpm
+```
+
+### Extract the counts as a Seurat object
+
+This convert the H5 SingleCellExperiment to Seurat so it might take long time and occupy a lot of memory depending on how many cells you are requesting.
+
+```{r get-seurat}
+seurat_counts <-
+  metadata |>
+  dplyr::filter(
+    self_reported_ethnicity == "African American" &
+      assay == "10x 3' v3" &
+      tissue == "breast" &
+      cell_type == "T cell"
+  ) |>
+  get_seurat()
+
+seurat_counts
+```
+
+By default, data is downloaded to `get_default_cache_dir()` output. If memory is a concern, users can specify a custom path to metadata and counts `cache_directory` argument. 
+For example, `get_metadata(cache_directory = "your_own_path")` and `get_single_cell_experiment(cache_directory = "your_own_path")`.
+
+Same strategy can be applied for functions `get_pseuodbulk()` and `get_seurat()`.
+
+## Save your `SingleCellExperiment`
+
+The returned `SingleCellExperiment` can be saved with three modalities, as `.rds` or as `HDF5` or as `H5AD`.
+
+### Saving as RDS (fast saving, slow reading)
+
+Saving as `.rds` has the advantage of being fast, and the `.rds` file occupies very little disk space as it only stores the links to the files in your cache.
+
+However it has the disadvantage that for big `SingleCellExperiment` objects, which merge a lot of HDF5 from your `get_single_cell_experiment`, the display and manipulation is going to be slow.
+In addition, an `.rds` saved in this way is not portable: you will not be able
+to share it with other users.
+
+```{r save-rds, eval=FALSE}
+single_cell_counts |>
+  saveRDS("single_cell_counts.rds")
+```
+
+### Saving as HDF5 (slow saving, fast reading)
+
+Saving as `.hdf5` executes any computation on the `SingleCellExperiment` and writes it to disk as a monolithic `HDF5`.
+Once this is done, operations on the `SingleCellExperiment` will be comparatively very fast.
+The resulting `.hdf5` file will also be totally portable and sharable.
+
+However this `.hdf5` has the disadvantage of being larger than the corresponding `.rds` as it includes a copy of the count information, and the saving process is going to be slow for large objects.
+
+```{r save-hdf5, eval=FALSE}
+# ! IMPORTANT if you save 200K+ cells
+HDF5Array::setAutoBlockSize(size = 1e+09)
+
+single_cell_counts |>
+  HDF5Array::saveHDF5SummarizedExperiment(
+    "single_cell_counts",
+    replace = TRUE,
+    as.sparse = TRUE,
+    verbose = TRUE
+  )
+```
+
+### Saving as H5AD (slow saving, fast reading)
+
+Saving as `.h5ad` executes any computation on the `SingleCellExperiment` and writes it to disk as a monolithic `H5AD`.
+The `H5AD` format is the HDF5 disk representation of the AnnData object and is well-supported in Python.
+
+However this `.h5ad` saving strategy has a bottleneck of handling columns with only NA values of a `SingleCellExperiment` metadata. 
+
+```{r save-h5ad, eval=FALSE}
+single_cell_counts |>
+  anndataR::write_h5ad("single_cell_counts.h5ad",
+    compression = "gzip",
+    verbose = TRUE
+  )
+```
+
+## Visualise gene transcription
+
+We can gather all CD14 monocytes cells and plot the distribution of ENSG00000085265 (FCN1) across all tissues
+
+```{r plot-fcn1-disease, fig.width=7, fig.height=7, dpi=150}
+# Plots with styling
+counts <- metadata |>
+
+  # Filter and subset
+  dplyr::filter(cell_type_unified_ensemble == "cd14 mono") |>
+
+  # Get counts per million for FCN1 gene
+  get_single_cell_experiment(assays = "cpm", features = "ENSG00000085265") |>
+  suppressMessages() |>
+
+  # Add feature to table
+  tidySingleCellExperiment::join_features("ENSG00000085265", shape = "wide") |>
+
+  # Rank x axis
+  tibble::as_tibble() |>
+
+  # Rename to gene symbol
+  dplyr::rename(FCN1 = ENSG00000085265)
+
+# Plot by disease
+counts |>
+  dplyr::with_groups(disease, ~ .x |>
+    dplyr::mutate(median_count = median(`FCN1`, rm.na = TRUE))) |>
+
+  # Plot
+  ggplot(aes(forcats::fct_reorder(disease, median_count, .desc = TRUE), `FCN1`, color = dataset_id)) +
+  geom_jitter(shape = ".") +
+
+  # Style
+  guides(color = "none") +
+  scale_y_log10() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1)) +
+  xlab("Disease") +
+  ggtitle("FCN1 in CD14 monocytes by disease. Coloured by datasets")
+```
+
+```{r plot-fcn1-tissue, fig.width=12, fig.height=7, dpi=150}
+# Plot by tissue
+counts |>
+  dplyr::with_groups(tissue, ~ .x |>
+    dplyr::mutate(median_count = median(`FCN1`, rm.na = TRUE))) |>
+
+  # Plot
+  ggplot(aes(
+    forcats::fct_reorder(tissue,
+      median_count,
+      .desc = TRUE
+    ),
+    `FCN1`,
+    color = dataset_id
+  )) +
+  geom_jitter(shape = ".") +
+
+  # Style
+  guides(color = "none") +
+  scale_y_log10() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1)) +
+  xlab("Tissue") +
+  ggtitle("FCN1 in CD14 monocytes by tissue. Colored by datasets") +
+  theme(legend.position = "none", axis.text.x = element_text(size = 6.5))
+```
+
+
+## Integrate cloud and local metadata
+`cellNexus` not only enables users to query our metadata but also allows integration with your local metadata. Additionally, users can integrate with your metadata stored in the cloud. 
+
+To enable this feature, users must include `file_id_cellNexus_single_cell`
+and `atlas_id` (e.g cellxgene/dd-mm-yy) columns in the metadata. See metadata structure in cellNexus::pbmc3k_sce
+
+```{r integrate-local-setup}
+# Set up local cache and paths
+local_cache <- tempdir()
+layer <- "counts"
+meta_path <- file.path(local_cache, "pbmc3k_metadata.parquet")
+data(pbmc3k_sce)
+
+# Extract and prepare metadata
+pbmc3k_metadata <- pbmc3k_sce |>
+  S4Vectors::metadata() |>
+  purrr::pluck("data") |>
+  dplyr::mutate(
+    counts_directory = file.path(tempdir(), atlas_id, layer),
+    sce_path = file.path(counts_directory, file_id_cellNexus_single_cell)
+  )
+
+# Get unique paths
+counts_directory <- pbmc3k_metadata |>
+  dplyr::pull(counts_directory) |>
+  unique()
+
+sce_path <- pbmc3k_metadata |>
+  dplyr::pull(sce_path) |>
+  unique()
+
+# Create directory structure
+dir.create(counts_directory, recursive = TRUE, showWarnings = FALSE)
+
+# Save data to disk
+pbmc3k_sce |>
+  S4Vectors::metadata() |>
+  purrr::pluck("data") |>
+  arrow::write_parquet(meta_path)
+
+# Save SCE object
+pbmc3k_sce |>
+  anndataR::write_h5ad(sce_path, compression = "gzip", mode = "w")
+```
+
+```{r integrate-local-query}
+# A cellNexus file
+file_id_from_cloud <- "e52795dec7b626b6276b867d55328d9f___1.h5ad"
+file_id_local <- basename(sce_path)
+
+get_metadata(
+  cloud_metadata = cellNexus::SAMPLE_DATABASE_URL,
+  local_metadata = meta_path,
+  cache_directory = local_cache
+) |>
+  # For illustration purpose, only filter a selected cloud metadata and the saved metadata
+  dplyr::filter(file_id_cellNexus_single_cell %in% c(file_id_from_cloud, file_id_local)) |>
+  dplyr::select(cell_id, sample_id, dataset_id, cell_type_unified_ensemble, atlas_id, file_id_cellNexus_single_cell) |>
+  get_single_cell_experiment(cache_directory = local_cache)
+```
+
+# Cell metadata
+
+The complete metadata dictionary for the harmonised fields is available on the documentation site: [cellNexus documentation](https://cellnexus.org/).
+
+# RNA abundance
+
+The `counts` assay represents RNA abundance on the positive real scale, without non-linear transformations (e.g., log or square root). In the original CELLxGENE data, values were provided using a mix of scales and transformations. The method required to invert these transformations is recorded in `inverse_transform` column.
+
+The `cpm` assay includes counts per million.
+
+The `sct` assay includes normalised counts by `sctranform`.
+
+# Other representations
+
+The `rank` assay is the representation of each cell's gene expression profile where genes are ranked by expression intensity using `singscore`.
+
+The `pseudobulk` assay includes aggregated RNA abundance for sample and cell type combination.
+
+The detailed documentation for RNA abundance is available on the documentation site: [cellNexus documentation](https://cellnexus.org/).
+
+# Session Info
+```{r session-info}
+sessionInfo()
+```
