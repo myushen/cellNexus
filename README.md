@@ -1,6 +1,5 @@
 cellNexus
 ================
-Mangiola et al.
 
 <!-- badges: start -->
 
