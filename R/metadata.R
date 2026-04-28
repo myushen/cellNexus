@@ -259,51 +259,6 @@ get_cell_communication_strength <- function(
   get_metadata(cloud_metadata, local_metadata, cache_directory, use_cache)
 }
 
-#' Join metacell metadata to an existing data frame
-#'
-#' Downloads and joins the metacell metadata with cellNexus metadata.
-#' This function creates indexed tables for efficient joining and returns a data frame.
-#'
-#' @param tbl A `tbl_sql` object (from get_metadata) or a database connection
-#' @param cache_directory A character string specifying the local cache
-#'   directory where remote parquet files will be stored. Defaults to
-#'   [get_default_cache_dir()].
-#' @param join_keys A character vector of column names used for the join.
-#'   Defaults to `c("sample_id", "dataset_id", "cell_id")`.
-#' @return A lazy SQL table with metacell metadata joined to the cellNexus metadata.
-#' @importFrom dplyr left_join
-#' @keywords internal
-#' @noRd
-join_metacell_table <- function(tbl,
-                                cache_directory = get_default_cache_dir(),
-                                join_keys = c("sample_id", "dataset_id", "cell_id")) {
-  # Temporary only because internal
-  cloud_metadata <- SAMPLE_DATABASE_URL
-  # Synchronize remote files
-  walk(cloud_metadata, function(url) {
-    # Calculate the file path from the URL
-    path <- file.path(cache_directory, url |>
-      basename())
-    if (!file.exists(path)) {
-      report_file_sizes(url)
-      sync_remote_file(
-        url,
-        path,
-        progress(type = "down", con = stderr())
-      )
-    }
-  })
-  parquet_path <- file.path(cache_directory, cloud_metadata |>
-    basename())
-  # Fetch current connection
-  conn <- dbplyr::remote_con(tbl)
-  # Register the metacell parquet as a lazy table
-  metacell_tbl <- duckdb_read_parquet(conn, parquet_path)
-  # Join to the incoming tbl_lazy
-  tbl |>
-    left_join(metacell_tbl, by = join_keys)
-}
-
 #' Join Census metadata to an existing data frame
 #'
 #' Downloads and joins the Census metadata with cellNexus metadata.

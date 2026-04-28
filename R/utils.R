@@ -79,15 +79,6 @@ get_default_cache_dir <- function() {
     normalizePath(mustWork = FALSE)
 }
 
-#' Clear the default cache directory
-#' @return A length one character vector.
-#' @keywords internal
-#' @noRd
-clear_cache <- function() {
-  get_default_cache_dir() |>
-    unlink(TRUE, TRUE)
-}
-
 #' Synchronises a single remote file with a local path
 #' @importFrom httr write_disk GET stop_for_status
 #' @importFrom cli cli_abort cli_alert_info
@@ -212,58 +203,6 @@ duckdb_read_parquet <- function(conn, path) {
   tbl(conn, from_clause)
 }
 
-#' Deletes specific counts and metadata from cache
-#' @importFrom purrr map
-#' @importFrom dplyr filter distinct pull collect
-#' @importFrom rlang .data
-#' @return `NULL`, invisibly
-#' @keywords internal
-#' @noRd
-delete_counts <- function(data,
-                          assay = c("original", "cpm"),
-                          cache_directory = get_default_cache_dir()) {
-  data <- collect(data)
-  ids <- data |>
-    distinct(.data$file_id_db) |>
-    pull(.data$file_id_db)
-  counts_path <- file.path(cache_directory, assay, ids)
-  # counts
-  map(counts_path, ~ .x |>
-    unlink(recursive = TRUE))
-
-  # metadata
-  filename <- get_metadata(cache_directory = cache_directory, use_cache = FALSE) |>
-    filter(.data$file_id_db %in% ids) |>
-    distinct(.data$meta_filename) |>
-    pull(.data$meta_filename)
-  arrow::read_parquet(filename) |>
-    filter(!(.data$file_id_db %in% ids)) |>
-    arrow::write_parquet(filename)
-}
-
-#' Write table to Parquet file using DuckDB
-#' This function takes an SQL table, renders it into an SQL query, and writes the output directly
-#' to a Parquet file without loading into disk.
-#' @param .tbl_sql A data frame loaded by DuckDB.
-#' @param path A string specifying the file path where the Parquet file will be saved.
-#' @param con A DuckDB connection object that allows executing SQL queries on the DuckDB database.
-#' @return An integer specifying the row number of the output data frame.
-#' @importFrom DBI dbConnect dbExecute
-#' @keywords internal
-#' @noRd
-duckdb_write_parquet <- function(.tbl_sql,
-                                 path,
-                                 con = dbConnect(duckdb::duckdb(), dbdir = ":memory:")) {
-  sql_tbl <-
-    .tbl_sql |>
-    dbplyr::sql_render()
-
-  sql_call <- glue::glue("COPY ({sql_tbl}) TO '{path}' (FORMAT 'parquet')")
-
-  res <- dbExecute(con, sql_call)
-  res
-}
-
 #' Check whether a column is all NA in a dataframe, drop the column and warn users
 #' @return A data frame where all values are not NA
 #' @keywords internal
@@ -280,37 +219,6 @@ clean_and_report_NA_columns <- function(df) {
       dplyr::select(-dplyr::all_of(na_column_names))
   }
   df
-}
-
-#' Save a SingleCellExperiment as an AnnData file
-#'
-#' Reports and removes `colData` columns that are entirely `NA` before writing to `.h5ad`.
-#' If the object contains only one column, the assay is duplicated to avoid
-#' single-column export issues.
-#'
-#' @param sce A `SingleCellExperiment` object.
-#' @param path Output file path for the `.h5ad` file.
-#' @param ... Additional arguments passed to [zellkonverter::writeH5AD()].
-#'
-#' @return Called for its side effect of writing an `.h5ad` file.
-#' @inheritDotParams zellkonverter::writeH5AD
-#' @keywords internal
-#' @noRd
-save_sce_as_h5ad <- function(sce, path, ...) {
-  # Remove columns in colData that are all NA and warn the user
-  cleaned_coldata <- SummarizedExperiment::colData(sce) |>
-    as.data.frame() |>
-    clean_and_report_NA_columns()
-  SummarizedExperiment::colData(sce) <- S4Vectors::DataFrame(cleaned_coldata)
-
-  if (ncol(SummarizedExperiment::assay(sce)) == 1) {
-    sce <- sce |>
-      duplicate_single_column_assay()
-  }
-
-  # anndataR does not support writing DelayedArray yet. Issue: https://github.com/scverse/anndataR/pull/387
-  sce |>
-    zellkonverter::writeH5AD(path, compression = "gzip", ...)
 }
 
 #' Duplicate Single-Column Assay in SingleCellExperiment Object
@@ -351,68 +259,6 @@ duplicate_single_column_assay <- function(sce) {
     sce
   }
   sce
-}
-
-#' Synchronize metadata assay files with remote repository
-#'
-#' @description Downloads and caches assay files from a remote repository based on metadata specifications.
-#'
-#' @param data A data frame or tbl_sql containing metadata with required columns `cell_id`, `atlas_id`, and a grouping column
-#' @param assays Character vector specifying which assays to sync
-#' @param repository URL of the remote repository containing the assay files
-#' @param cell_aggregation Character string specifying the cell aggregation strategy
-#' @param grouping_column Column name in data used to group files for synchronization
-#' @param cache_directory Local directory path where files will be cached. Uses default cache if not specified
-#'
-#' @return `NULL`, invisibly. Progress messages are displayed for the downloads.
-#'
-#' @importFrom dplyr pull transmute distinct
-#' @importFrom checkmate assert check_subset check_true
-#' @importFrom cli cli_alert_info
-#' @importFrom purrr pmap
-#' @importFrom httr parse_url
-#' @importFrom rlang .data
-#' @keywords internal
-#' @noRd
-sync_metadata_assay_files <- function(data,
-                                      assays = "counts",
-                                      repository = COUNTS_URL,
-                                      cell_aggregation = "",
-                                      grouping_column,
-                                      cache_directory = get_default_cache_dir()) {
-  assert(check_subset(c("cell_id", "atlas_id", grouping_column), colnames(data)))
-  atlas_name <- data |>
-    pull(.data$atlas_id) |>
-    unique()
-
-  subdirs <- assay_map[assays]
-
-  if (!is.null(repository)) {
-    cli_alert_info("Synchronising files")
-    parsed_repo <- parse_url(repository)
-    assert(check_true(parsed_repo$scheme %in% c("http", "https")))
-
-    files_to_read <-
-      data |>
-      transmute(
-        files = .data[[grouping_column]],
-        atlas_name = .data$atlas_id,
-        cache_dir = cache_directory
-      ) |>
-      distinct() |>
-      # Convert to tibble here to avoid breaking the memory after loading all metadata
-      tibble::as_tibble() |>
-      pmap(function(files, atlas_name, cache_dir) {
-        sync_assay_files(
-          files = files,
-          atlas_name = atlas_name,
-          cache_dir = cache_dir,
-          url = parsed_repo,
-          cell_aggregation = cell_aggregation,
-          subdirs = subdirs
-        )
-      })
-  }
 }
 
 #' Keep high-quality cells based on QC columns

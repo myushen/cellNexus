@@ -319,3 +319,209 @@ downsample_metadata <- function(
 
   NULL
 }
+
+#' Join metacell metadata to an existing data frame
+#'
+#' Downloads and joins the metacell metadata with cellNexus metadata.
+#' This function creates indexed tables for efficient joining and returns a data frame.
+#'
+#' @param tbl A `tbl_sql` object (from get_metadata) or a database connection
+#' @param cache_directory A character string specifying the local cache
+#'   directory where remote parquet files will be stored. Defaults to
+#'   [get_default_cache_dir()].
+#' @param join_keys A character vector of column names used for the join.
+#'   Defaults to `c("sample_id", "dataset_id", "cell_id")`.
+#' @return A lazy SQL table with metacell metadata joined to the cellNexus metadata.
+#' @importFrom dplyr left_join
+#' @keywords internal
+#' @noRd
+join_metacell_table <- function(tbl,
+                                cache_directory = get_default_cache_dir(),
+                                join_keys = c("sample_id", "dataset_id", "cell_id")) {
+  # Temporary only because internal
+  cloud_metadata <- SAMPLE_DATABASE_URL
+  # Synchronize remote files
+  walk(cloud_metadata, function(url) {
+    # Calculate the file path from the URL
+    path <- file.path(cache_directory, url |>
+                        basename())
+    if (!file.exists(path)) {
+      report_file_sizes(url)
+      sync_remote_file(
+        url,
+        path,
+        progress(type = "down", con = stderr())
+      )
+    }
+  })
+  parquet_path <- file.path(cache_directory, cloud_metadata |>
+                              basename())
+  # Fetch current connection
+  conn <- dbplyr::remote_con(tbl)
+  # Register the metacell parquet as a lazy table
+  metacell_tbl <- duckdb_read_parquet(conn, parquet_path)
+  # Join to the incoming tbl_lazy
+  tbl |>
+    left_join(metacell_tbl, by = join_keys)
+}
+
+#' Returns unharmonised metadata for a metadata query
+#' @inherit get_unharmonised_dataset description
+#' @param metadata A lazy data frame obtained from [get_metadata()], filtered
+#'   down to some cells of interest
+#' @inheritDotParams get_unharmonised_dataset
+#' @return A tibble with two columns:
+#'  * `file_id_cellNexus_single_cell`: the same `file_id_cellNexus_single_cell` as the main metadata table obtained from
+#'    [get_metadata()]
+#'  * `unharmonised`: a nested tibble, with one row per cell in the input
+#'    `metadata`, containing unharmonised metadata
+#' @importFrom dplyr group_by summarise filter collect
+#' @importFrom rlang .data
+#' @importFrom dbplyr remote_con
+#' @keywords internal
+#' @noRd
+#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
+#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
+#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
+#'   doi:10.1101/2023.06.08.542671.
+get_unharmonised_metadata <- function(metadata, ...) {
+  args <- list(...)
+  metadata |>
+    collect() |>
+    group_by(.data$file_id_cellNexus_single_cell) |>
+    summarise(
+      unharmonised = list(
+        dataset_id = .data$file_id_cellNexus_single_cell[[1L]],
+        cells = .data$cell_id,
+        conn = remote_con(metadata)
+      ) |>
+        c(args) |>
+        do.call(get_unharmonised_dataset, args = _) |>
+        list()
+    )
+}
+
+#' Clear the default cache directory
+#' @return A length one character vector.
+#' @keywords internal
+#' @noRd
+clear_cache <- function() {
+  get_default_cache_dir() |>
+    unlink(TRUE, TRUE)
+}
+
+#' Write table to Parquet file using DuckDB
+#' This function takes an SQL table, renders it into an SQL query, and writes the output directly
+#' to a Parquet file without loading into disk.
+#' @param .tbl_sql A data frame loaded by DuckDB.
+#' @param path A string specifying the file path where the Parquet file will be saved.
+#' @param con A DuckDB connection object that allows executing SQL queries on the DuckDB database.
+#' @return An integer specifying the row number of the output data frame.
+#' @importFrom DBI dbConnect dbExecute
+#' @keywords internal
+#' @noRd
+duckdb_write_parquet <- function(.tbl_sql,
+                                 path,
+                                 con = dbConnect(duckdb::duckdb(), dbdir = ":memory:")) {
+  sql_tbl <-
+    .tbl_sql |>
+    dbplyr::sql_render()
+  
+  sql_call <- glue::glue("COPY ({sql_tbl}) TO '{path}' (FORMAT 'parquet')")
+  
+  res <- dbExecute(con, sql_call)
+  res
+}
+
+#' Save a SingleCellExperiment as an AnnData file
+#'
+#' Reports and removes `colData` columns that are entirely `NA` before writing to `.h5ad`.
+#' If the object contains only one column, the assay is duplicated to avoid
+#' single-column export issues.
+#'
+#' @param sce A `SingleCellExperiment` object.
+#' @param path Output file path for the `.h5ad` file.
+#' @param ... Additional arguments passed to [zellkonverter::writeH5AD()].
+#'
+#' @return Called for its side effect of writing an `.h5ad` file.
+#' @inheritDotParams zellkonverter::writeH5AD
+#' @keywords internal
+#' @noRd
+save_sce_as_h5ad <- function(sce, path, ...) {
+  # Remove columns in colData that are all NA and warn the user
+  cleaned_coldata <- SummarizedExperiment::colData(sce) |>
+    as.data.frame() |>
+    clean_and_report_NA_columns()
+  SummarizedExperiment::colData(sce) <- S4Vectors::DataFrame(cleaned_coldata)
+  
+  if (ncol(SummarizedExperiment::assay(sce)) == 1) {
+    sce <- sce |>
+      duplicate_single_column_assay()
+  }
+  
+  # anndataR does not support writing DelayedArray yet. Issue: https://github.com/scverse/anndataR/pull/387
+  sce |>
+    zellkonverter::writeH5AD(path, compression = "gzip", ...)
+}
+
+#' Synchronize metadata assay files with remote repository
+#'
+#' @description Downloads and caches assay files from a remote repository based on metadata specifications.
+#'
+#' @param data A data frame or tbl_sql containing metadata with required columns `cell_id`, `atlas_id`, and a grouping column
+#' @param assays Character vector specifying which assays to sync
+#' @param repository URL of the remote repository containing the assay files
+#' @param cell_aggregation Character string specifying the cell aggregation strategy
+#' @param grouping_column Column name in data used to group files for synchronization
+#' @param cache_directory Local directory path where files will be cached. Uses default cache if not specified
+#'
+#' @return `NULL`, invisibly. Progress messages are displayed for the downloads.
+#'
+#' @importFrom dplyr pull transmute distinct
+#' @importFrom checkmate assert check_subset check_true
+#' @importFrom cli cli_alert_info
+#' @importFrom purrr pmap
+#' @importFrom httr parse_url
+#' @importFrom rlang .data
+#' @keywords internal
+#' @noRd
+sync_metadata_assay_files <- function(data,
+                                      assays = "counts",
+                                      repository = COUNTS_URL,
+                                      cell_aggregation = "",
+                                      grouping_column,
+                                      cache_directory = get_default_cache_dir()) {
+  assert(check_subset(c("cell_id", "atlas_id", grouping_column), colnames(data)))
+  atlas_name <- data |>
+    pull(.data$atlas_id) |>
+    unique()
+  
+  subdirs <- assay_map[assays]
+  
+  if (!is.null(repository)) {
+    cli_alert_info("Synchronising files")
+    parsed_repo <- parse_url(repository)
+    assert(check_true(parsed_repo$scheme %in% c("http", "https")))
+    
+    files_to_read <-
+      data |>
+      transmute(
+        files = .data[[grouping_column]],
+        atlas_name = .data$atlas_id,
+        cache_dir = cache_directory
+      ) |>
+      distinct() |>
+      # Convert to tibble here to avoid breaking the memory after loading all metadata
+      tibble::as_tibble() |>
+      pmap(function(files, atlas_name, cache_dir) {
+        sync_assay_files(
+          files = files,
+          atlas_name = atlas_name,
+          cache_dir = cache_dir,
+          url = parsed_repo,
+          cell_aggregation = cell_aggregation,
+          subdirs = subdirs
+        )
+      })
+  }
+}
