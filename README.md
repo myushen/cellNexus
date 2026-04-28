@@ -37,7 +37,7 @@ CELLxGENE releases.
 
 <img src="man/figures/logo.png" alt="" width="120x" height="139px" />
 
-<img src="man/figures/svcf_logo.jpeg" alt="" width="155x" height="58px" /><img src="man/figures/czi_logo.png" alt="" width="129px" height="58px" /><img src="man/figures/bioconductor_logo.jpg" alt="" width="202px" height="58px" /><img src="man/figures/vca_logo.png" alt="" width="219px" height="58px" /><img src="man/figures/nectar_logo.png" alt="" width="180px" height="58px" /><img src="man/figures/CSL_Limited_logo.svg.png" alt="" width="150px" height="58px" />
+<img src="man/figures/svcf_logo.jpeg" alt="" width="155x" height="58px" /><img src="man/figures/czi_logo.png" alt="" width="129px" height="58px" /><img src="man/figures/bioconductor_logo.jpg" alt="" width="202px" height="58px" /><img src="man/figures/vca_logo.png" alt="" width="219px" height="58px" /><img src="man/figures/nectar_logo.png" alt="" width="180px" height="58px" /><img src="man/figures/CSL_Limited_logo.svg.png" alt="" width="120px" height="50px" />
 
 # Query interface
 
