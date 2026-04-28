@@ -10,10 +10,10 @@ cellNexus
 
 `cellNexus` extends the functionality of `CuratedAtlasQueryR` by
 providing a unified interface for querying and accessing the harmonised,
-curated, and reannotated CELLxGENE human cell atlas. It enables
+curated, and reannotated the CELLxGENE human cell atlas. It enables
 reproducible, programmatic exploration of large-scale single-cell
-datasets, supporting data retrieval at the cell, sample, and dataset
-levels with flexible filtering based on tissue, cell type, experimental
+datasets, supporting data retrieval at the cell, sample, and dataset levels
+levels with flexible filtering based on tissue, cell type, and experimental
 condition, and other metadata. Retrieved data are returned in formats
 ready for downstream analysis.
 
@@ -25,7 +25,7 @@ harmonisation facilitates efficient cross-dataset comparison and
 integration.
 
 Data are hosted on the ARDC Nectar Research Cloud, and most functions
-access them via web requests; therefore, an active network connection is
+access them via web requests; therefore, an active network connection is required
 required for typical use.
 
 While both cellNexus and CuratedAtlasQueryR rely on precomputed
@@ -37,7 +37,7 @@ CELLxGENE releases.
 
 <img src="man/figures/logo.png" alt="" width="120x" height="139px" />
 
-<img src="man/figures/svcf_logo.jpeg" alt="" width="155x" height="58px" /><img src="man/figures/czi_logo.png" alt="" width="129px" height="58px" /><img src="man/figures/bioconductor_logo.jpg" alt="" width="202px" height="58px" /><img src="man/figures/vca_logo.png" alt="" width="219px" height="58px" /><img src="man/figures/nectar_logo.png" alt="" width="180px" height="58px" />
+<img src="man/figures/svcf_logo.jpeg" alt="" width="155x" height="58px" /><img src="man/figures/czi_logo.png" alt="" width="129px" height="58px" /><img src="man/figures/bioconductor_logo.jpg" alt="" width="202px" height="58px" /><img src="man/figures/vca_logo.png" alt="" width="219px" height="58px" /><img src="man/figures/nectar_logo.png" alt="" width="180px" height="58px" /><img src="man/figures/CSL_Limited_logo.svg.png" alt="" width="120px" height="50px" />
 
 # Query interface
 
