@@ -72,39 +72,3 @@ get_unharmonised_dataset <- function(
   duckdb_read_parquet(conn, local_path) |>
     filter(.data$cell_id %in% cells)
 }
-
-#' Returns unharmonised metadata for a metadata query
-#' @inherit get_unharmonised_dataset description
-#' @param metadata A lazy data frame obtained from [get_metadata()], filtered
-#'   down to some cells of interest
-#' @inheritDotParams get_unharmonised_dataset
-#' @return A tibble with two columns:
-#'  * `file_id_cellNexus_single_cell`: the same `file_id_cellNexus_single_cell` as the main metadata table obtained from
-#'    [get_metadata()]
-#'  * `unharmonised`: a nested tibble, with one row per cell in the input
-#'    `metadata`, containing unharmonised metadata
-#' @importFrom dplyr group_by summarise filter collect
-#' @importFrom rlang .data
-#' @importFrom dbplyr remote_con
-#' @keywords internal
-#' @noRd
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-get_unharmonised_metadata <- function(metadata, ...) {
-  args <- list(...)
-  metadata |>
-    collect() |>
-    group_by(.data$file_id_cellNexus_single_cell) |>
-    summarise(
-      unharmonised = list(
-        dataset_id = .data$file_id_cellNexus_single_cell[[1L]],
-        cells = .data$cell_id,
-        conn = remote_con(metadata)
-      ) |>
-        c(args) |>
-        do.call(get_unharmonised_dataset, args = _) |>
-        list()
-    )
-}

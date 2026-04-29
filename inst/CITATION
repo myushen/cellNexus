@@ -1,7 +1,8 @@
 citHeader("To cite cellNexus in publications use:")
-citEntry(entry = "article",
+bibentry(
+  bibtype = "article",
   title = "A multi-organ map of the human immune system across age, sex and ethnicity",
-  author = personList(
+  author = c(
     as.person("Stefano Mangiola"),
     as.person("Michael Milton"),
     as.person("Nishika Ranathunga"),
@@ -22,11 +23,6 @@ citEntry(entry = "article",
   ),
   year = 2024,
   journal = "bioRxiv",
-  doi = "10.1101/2023.06.08.542671",
-  textVersion = paste(
-    "Mangiola, S., Milton, M., Ranathunga, N., Li-Wai-Suen, C., Odainic, A., Yang, E., Hutchison, W., Garnham, A., Iskander, J., Pal, B., Yadav, V., Rossello, J., Carey, V. J., Morgan, M., Bedoui, S., Kallies, A., & Papenfuss, A. T.",
-    "A multi-organ map of the human immune system across age, sex and ethnicity.",
-    "bioRxiv [Preprint]. 2023.06.08.542671"
-  )
+  doi = "10.1101/2023.06.08.542671"
 )
 citFooter("URL: https://github.com/MangiolaLaboratory/cellNexus")

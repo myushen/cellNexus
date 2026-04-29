@@ -102,11 +102,11 @@ organize_inputs <- function(
     n.tags <- length(tag.list)
 
     # Calculate missing dimension based on the provided one and total tags
-    if (is.null(columns) & !is.null(rows)) {
+    if (is.null(columns) && !is.null(rows)) {
       columns <- ceiling(n.tags / rows)
-    } else if (is.null(rows) & !is.null(columns)) {
+    } else if (is.null(rows) && !is.null(columns)) {
       rows <- ceiling(n.tags / columns)
-    } else if (is.null(rows) & is.null(columns)) {
+    } else if (is.null(rows) && is.null(columns)) {
       stop("Either rows or columns must be provided.")
     }
 
