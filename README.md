@@ -1,6 +1,4 @@
 cellNexus
-================
-Mangiola et al.
 
 <!-- badges: start -->
 
@@ -11,10 +9,10 @@ Mangiola et al.
 
 `cellNexus` extends the functionality of `CuratedAtlasQueryR` by
 providing a unified interface for querying and accessing the harmonised,
-curated, and reannotated CELLxGENE human cell atlas. It enables
+curated, and reannotated the CELLxGENE human cell atlas. It enables
 reproducible, programmatic exploration of large-scale single-cell
-datasets, supporting data retrieval at the cell, sample, and dataset
-levels with flexible filtering based on tissue, cell type, experimental
+datasets, supporting data retrieval at the cell, sample, and dataset levels
+levels with flexible filtering based on tissue, cell type, and experimental
 condition, and other metadata. Retrieved data are returned in formats
 ready for downstream analysis.
 
@@ -26,7 +24,7 @@ harmonisation facilitates efficient cross-dataset comparison and
 integration.
 
 Data are hosted on the ARDC Nectar Research Cloud, and most functions
-access them via web requests; therefore, an active network connection is
+access them via web requests; therefore, an active network connection is required
 required for typical use.
 
 While both cellNexus and CuratedAtlasQueryR rely on precomputed
@@ -95,6 +93,17 @@ plot of chunk fig-funders
 </p>
 
 </div>
+
+<div class="figure">
+
+<img src="man/figures/CSL_Limited_logo.svg.png" alt="plot of chunk fig-funders" width="120px" height="50px" />
+<p class="caption">
+
+plot of chunk fig-funders
+</p>
+
+</div>
+
 
 # Query interface
 
