@@ -16,12 +16,10 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = file.path(
-   rprojroot::find_package_root_file(), "vignettes", ""
-  )
+  fig.path = ""
 )
 find_figure <- function(names) {
-  rprojroot::find_package_root_file("man", "figures", names)
+  file.path("..", "man", "figures", names)
 }
 ```
 
