@@ -6,7 +6,6 @@ This page focuses on expression-layer retrieval workflows after metadata
 filtering.
 
 ``` r
-
 library(cellNexus)
 library(dplyr)
 
@@ -16,7 +15,6 @@ metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
 ## Choose cells through metadata filters
 
 ``` r
-
 query_metadata <- metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African",
@@ -31,7 +29,6 @@ query_metadata <- metadata |>
 ### Single-cell counts
 
 ``` r
-
 sce_counts <- query_metadata |>
   get_single_cell_experiment()
 ```
@@ -39,7 +36,6 @@ sce_counts <- query_metadata |>
 ### Counts per million
 
 ``` r
-
 sce_cpm <- query_metadata |>
   get_single_cell_experiment(assays = "cpm")
 ```
@@ -47,7 +43,6 @@ sce_cpm <- query_metadata |>
 ### Pseudobulk
 
 ``` r
-
 pb_counts <- query_metadata |>
   get_pseudobulk()
 ```
@@ -55,7 +50,6 @@ pb_counts <- query_metadata |>
 ## Targeted gene queries
 
 ``` r
-
 # ENSEMBL IDs are expected
 sce_gene <- query_metadata |>
   get_single_cell_experiment(
@@ -67,7 +61,6 @@ sce_gene <- query_metadata |>
 ## Output options
 
 ``` r
-
 # Seurat conversion
 seurat_obj <- query_metadata |>
   get_seurat()
@@ -91,7 +84,6 @@ anndataR::write_h5ad(sce_counts, "single_cell_counts.h5ad")
 - Use metacells for robust grouped-cell expression summarization.
 
 ``` r
-
 sessionInfo()
 #> R version 4.5.3 (2026-03-11)
 #> Platform: x86_64-pc-linux-gnu

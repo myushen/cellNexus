@@ -55,26 +55,28 @@ plot of chunk fig-funders
 
 plot of chunk fig-funders
 
+![plot of chunk
+fig-funders](../reference/figures/CSL_Limited_logo.svg.png)
+
+plot of chunk fig-funders
+
 ## Query interface
 
 ### Installation
 
 ``` r
-
 devtools::install_github("MangiolaLaboratory/cellNexus")
 ```
 
 ### Load the package
 
 ``` r
-
 library(cellNexus)
 ```
 
 ### Load additional packages
 
 ``` r
-
 suppressPackageStartupMessages({
   library(ggplot2)
 })
@@ -91,7 +93,6 @@ annotations by the function
 [`join_census_table()`](https://mangiolalaboratory.github.io/cellNexus/reference/join_census_table.md).
 
 ``` r
-
 metadata <- get_metadata() |>
   join_census_table()
 #> ℹ Downloading 1 file, totalling 0.48 GB
@@ -130,7 +131,6 @@ unless a custom path is provided via the cache_directory argument. The
 #### Explore the tissue
 
 ``` r
-
 metadata |>
   dplyr::distinct(tissue, cell_type_unified_ensemble)
 #> # Source:   SQL [?? x 2]
@@ -157,7 +157,6 @@ empty droplets, dead or damaged cells, doublets, and samples with low
 gene counts.
 
 ``` r
-
 metadata <- metadata |>
   keep_quality_cells()
 
@@ -376,7 +375,6 @@ file here. Users do not need to specify cloud_metadata argument in this
 case.
 
 ``` r
-
 get_cell_communication_strength(cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet"))
 #> ℹ Downloading 1 file, totalling 0 GB
 #> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/cellNexus_lr_signaling_pathway_strength_DEMO.parquet to /vast/scratch/users/shen.m/r_cache/R/cellNexus/cellNexus_lr_signaling_pathway_strength_DEMO.parquet
@@ -519,7 +517,6 @@ be slow. In addition, an `.rds` saved in this way is not portable: you
 will not be able to share it with other users.
 
 ``` r
-
 single_cell_counts |>
   saveRDS("single_cell_counts.rds")
 ```
@@ -537,7 +534,6 @@ corresponding `.rds` as it includes a copy of the count information, and
 the saving process is going to be slow for large objects.
 
 ``` r
-
 # ! IMPORTANT if you save 200K+ cells
 HDF5Array::setAutoBlockSize(size = 1e+09)
 
@@ -561,7 +557,6 @@ However this `.h5ad` saving strategy has a bottleneck of handling
 columns with only NA values of a `SingleCellExperiment` metadata.
 
 ``` r
-
 single_cell_counts |>
   anndataR::write_h5ad("single_cell_counts.h5ad",
     compression = "gzip",
@@ -575,7 +570,6 @@ We can gather all CD14 monocytes cells and plot the distribution of
 ENSG00000085265 (FCN1) across all tissues
 
 ``` r
-
 # Plots with styling
 counts <- metadata |>
 
@@ -619,7 +613,6 @@ counts |>
 plot of chunk plot-fcn1-disease
 
 ``` r
-
 # Plot by tissue
 counts |>
   dplyr::with_groups(tissue, ~ .x |>
@@ -662,7 +655,6 @@ To enable this feature, users must include
 columns in the metadata. See metadata structure in cellNexus::pbmc3k_sce
 
 ``` r
-
 # Set up local cache and paths
 local_cache <- tempdir()
 layer <- "counts"
@@ -702,7 +694,6 @@ pbmc3k_sce |>
 ```
 
 ``` r
-
 # A cellNexus file
 file_id_from_cloud <- "e52795dec7b626b6276b867d55328d9f___1.h5ad"
 file_id_local <- basename(sce_path)
@@ -763,7 +754,6 @@ documentation site: [cellNexus documentation](https://cellnexus.org/).
 ## Session Info
 
 ``` r
-
 sessionInfo()
 #> R version 4.5.3 (2026-03-11)
 #> Platform: x86_64-pc-linux-gnu
