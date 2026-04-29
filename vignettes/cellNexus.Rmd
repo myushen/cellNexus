@@ -88,6 +88,16 @@ plot of chunk fig-funders
 </p>
 :::
 
+::: figure
+<img src="../man/figures/CSL_Limited_logo.svg.png" alt="plot of chunk fig-funders" width="120px" height="50px"/>
+
+<p class="caption">
+
+plot of chunk fig-funders
+
+</p>
+:::
+
 # Query interface
 
 ## Installation
