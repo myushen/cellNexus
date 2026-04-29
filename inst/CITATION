@@ -1,5 +1,5 @@
 citHeader("To cite cellNexus in publications use:")
-bibEntry(
+bibentry(
   bibtype = "article",
   title = "A multi-organ map of the human immune system across age, sex and ethnicity",
   author = c(

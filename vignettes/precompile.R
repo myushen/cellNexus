@@ -1,11 +1,13 @@
-# Pre-compute the cellNexus vignette and regenerate all derived outputs.
+# Pre-compute all vignettes and regenerate derived outputs.
 #
-# Run this script whenever cellNexus.Rmd.orig is updated.
-#  It executes all code once and produces three outputs:
+# Run this script whenever any .Rmd.orig file is updated (e.g. before a
+# release). It executes all code once and produces:
 #
-#   1. vignettes/cellNexus.Rmd  — pre-computed vignette
-#   2. vignettes/cellNexus.html — HTML vignette rendered from the above.
-#   3. README.md                — GitHub-flavoured markdown rendered from the above.
+#   vignettes/cellNexus.Rmd             — pre-computed main vignette
+#   vignettes/cellNexus.html            — HTML version of the above
+#   README.md                           — GitHub-flavoured markdown
+#   vignettes/gene-expression-explore.Rmd  — pre-computed article vignette
+#   vignettes/metadata-explore.Rmd         — pre-computed article vignette
 #
 # Usage (from the package root):
 #   source("vignettes/precompile.R")
@@ -38,3 +40,7 @@ rmarkdown::render(
   output_dir     = proj_root,
   knit_root_dir  = proj_root
 )
+
+# Article vignettes
+knitr::knit("vignettes/gene-expression-explore.Rmd.orig", "vignettes/gene-expression-explore.Rmd")
+knitr::knit("vignettes/metadata-explore.Rmd.orig", "vignettes/metadata-explore.Rmd")
