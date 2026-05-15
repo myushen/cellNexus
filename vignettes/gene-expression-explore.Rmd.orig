@@ -6,7 +6,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 ---
-  
+
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 This page focuses on expression-layer retrieval workflows after metadata filtering.
 
-```r
+```{r load-packages}
 library(cellNexus)
 library(dplyr)
 
@@ -24,7 +24,7 @@ metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
 
 # Choose cells through metadata filters
 
-```r
+```{r filter-metadata}
 query_metadata <- metadata |>
   dplyr::filter(
     self_reported_ethnicity == "African",
@@ -38,28 +38,28 @@ query_metadata <- metadata |>
 
 ## Single-cell counts
 
-```r
+```{r get-sce-counts}
 sce_counts <- query_metadata |>
   get_single_cell_experiment()
 ```
 
 ## Counts per million
 
-```r
+```{r get-sce-cpm}
 sce_cpm <- query_metadata |>
   get_single_cell_experiment(assays = "cpm")
 ```
 
 ## Pseudobulk
 
-```r
+```{r get-pseudobulk}
 pb_counts <- query_metadata |>
   get_pseudobulk()
 ```
 
 # Targeted gene queries
 
-```r
+```{r get-targeted-genes}
 # ENSEMBL IDs are expected
 sce_gene <- query_metadata |>
   get_single_cell_experiment(
@@ -70,7 +70,7 @@ sce_gene <- query_metadata |>
 
 # Output options
 
-```r
+```{r output-options}
 # Seurat conversion
 seurat_obj <- query_metadata |>
   get_seurat()
