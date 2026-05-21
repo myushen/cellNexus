@@ -19,7 +19,9 @@ This page focuses on expression-layer retrieval workflows after metadata filteri
 library(cellNexus)
 library(dplyr)
 
-metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
+metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"])
+metadata <- metadata |>
+  keep_quality_cells()
 ```
 
 # Choose cells through metadata filters
@@ -27,11 +29,12 @@ metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
 ```{r filter-metadata}
 query_metadata <- metadata |>
   dplyr::filter(
-    self_reported_ethnicity == "African",
-    stringr::str_like(assay, "%10x%"),
-    tissue == "lung parenchyma",
-    stringr::str_like(cell_type, "%CD4%")
+    age_days >= 40*365,
+    cell_type_unified_ensemble == "cd16 mono",
+    tissue_groups == "breast",
+    imputed_ethnicity == "African American"
   )
+query_metadata  
 ```
 
 # Retrieve expression by representation
@@ -48,6 +51,7 @@ sce_counts <- query_metadata |>
 ```{r get-sce-cpm}
 sce_cpm <- query_metadata |>
   get_single_cell_experiment(assays = "cpm")
+sce_cpm
 ```
 
 ## Pseudobulk
@@ -55,6 +59,7 @@ sce_cpm <- query_metadata |>
 ```{r get-pseudobulk}
 pb_counts <- query_metadata |>
   get_pseudobulk()
+sce_cpm
 ```
 
 # Targeted gene queries
@@ -66,16 +71,20 @@ sce_gene <- query_metadata |>
     assays = "cpm",
     features = "ENSG00000134644"
   )
+sce_gene
 ```
 
-# Output options
+# Seurat
 
-```{r output-options}
+```{r get-seurat}
 # Seurat conversion
 seurat_obj <- query_metadata |>
   get_seurat()
+seurat_obj
+```
 
 # Portable output examples
+```{r output-options, eval=FALSE}
 saveRDS(sce_counts, "single_cell_counts.rds")
 HDF5Array::saveHDF5SummarizedExperiment(
   sce_counts,
@@ -90,8 +99,9 @@ anndataR::write_h5ad(sce_counts, "single_cell_counts.h5ad")
 
 - Use `counts` for raw-scale abundance.
 - Use `cpm` for normalized cross-cell comparisons.
-- Use pseudobulk for sample/cell-type aggregation analyses.
-- Use metacells for robust grouped-cell expression summarization.
+- Use `rank` for ranked signature.
+- Use `sct` for normalized cross-cell comparison by `Seurat::SCTransform`.
+- Use `pseudobulk` for sample/cell-type aggregation analyses.
 
 ```{r session-info}
 sessionInfo()

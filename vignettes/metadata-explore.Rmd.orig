@@ -17,7 +17,7 @@ This page is a standalone metadata guide for `cellNexus` and documents the key f
 
 ```{r load-metadata-example}
 library(cellNexus)
-metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
+metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"])
 metadata
 ```
 
@@ -70,16 +70,17 @@ metadata
   | `imputed_ethnicity` | Imputed ethnicity label. |
   | `atlas_id` | cellNexus atlas release identifier (internal use). |
   
-  # Practical exploration
+
+# Practical exploration
 
 ```{r explore-metadata-example}
 # Which columns are available?
 colnames(metadata)
 
-# How many datasets per tissue?
+# How many datasets per tissue group?
 metadata |>
-  dplyr::distinct(dataset_id, tissue) |>
-  dplyr::count(tissue, sort = TRUE)
+  dplyr::distinct(dataset_id, tissue_groups) |>
+  dplyr::count(tissue_groups, sort = TRUE)
 
 # Typical quality-control filtering
 metadata_qc <- metadata |>
