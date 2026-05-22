@@ -1,0 +1,46 @@
+---
+title: "cellNexus"
+author: "Mangiola et al."
+package: cellNexus
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+vignette: >
+  %\VignetteIndexEntry{cellNexus}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+<!-- badges: start -->
+[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
+<!-- badges: end -->
+
+# Introduction
+
+Minimal vignette stub for fast README / figure-layout iteration.
+Use `source("vignettes/temp_precompile.R")` from the package root.
+
+<p align="center">
+<img src="../man/figures/logo.png" height="139" width="120" alt="cellNexus logo"/>
+</p>
+
+<p>
+<img src="../man/figures/svcf_logo.jpeg" height="58" width="155" alt=""/>
+<img src="../man/figures/czi_logo.png" height="58" width="129" alt=""/>
+<img src="../man/figures/bioconductor_logo.jpg" height="58" width="202" alt=""/>
+<img src="../man/figures/vca_logo.png" height="58" width="219" alt=""/>
+<img src="../man/figures/nectar_logo.png" height="58" width="180" alt=""/>
+<img src="../man/figures/CSL_Limited_logo.svg.png" height="58" width="120" alt=""/>
+</p>
+
+## Sample plot
+
+
+``` r
+plot(1:10, main = "temp precompile plot")
+```
+
+![](plot-demo-1.png)
