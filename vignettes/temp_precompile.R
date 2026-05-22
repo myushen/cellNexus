@@ -32,7 +32,7 @@ rewrite_readme_paths <- function(readme_path) {
 
 rmarkdown::render(
   "vignettes/temp_cellNexus.Rmd",
-  output_file   = "README.temp.md",
+  output_file   = "README.md",
   output_format = "github_document",
   output_dir    = proj_root,
   knit_root_dir = vig_dir
