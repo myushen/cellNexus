@@ -22,4 +22,4 @@ Minimal vignette stub for fast README / figure-layout iteration. Use
 plot(1:10, main = "temp precompile plot")
 ```
 
-![](vignettes/plot-demo-1.png)
+![](plot-demo-1.png)

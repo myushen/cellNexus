@@ -26,7 +26,8 @@ knitr::opts_knit$set(root.dir = NULL, unnormalized.path = NULL)
 rewrite_readme_paths <- function(readme_path) {
   x <- readLines(readme_path, warn = FALSE, encoding = "UTF-8")
   x <- gsub("../man/figures/", "man/figures/", x, fixed = TRUE)
-  x <- sub("(\\]\\(|src=\")plot-", "\\1vignettes/plot-", x, perl = TRUE)
+  x <- sub("(\\]\\(|src=\")plot-fcn1-tissue-1\\.png", "\\1vignettes/plot-fcn1-tissue-1.png", x, perl = TRUE)
+  x <- sub("(\\]\\(|src=\")plot-fcn1-disease-1\\.png", "\\1vignettes/plot-fcn1-disease-1.png", x, perl = TRUE)
   writeLines(x, readme_path, useBytes = FALSE)
 }
 
@@ -37,4 +38,4 @@ rmarkdown::render(
   output_dir    = proj_root,
   knit_root_dir = vig_dir
 )
-rewrite_readme_paths(file.path(proj_root, "README.temp.md"))
+rewrite_readme_paths(file.path(proj_root, "README.md"))
