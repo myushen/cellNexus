@@ -25,7 +25,7 @@ knitr::opts_knit$set(root.dir = NULL, unnormalized.path = NULL)
 # README.temp.md lives at repo root: rewrite vignette-relative paths after render.
 rewrite_readme_paths <- function(readme_path) {
   x <- readLines(readme_path, warn = FALSE, encoding = "UTF-8")
-  x <- sub("../man/figures/", "man/figures/", x, fixed = TRUE)
+  x <- gsub("../man/figures/", "man/figures/", x, fixed = TRUE)
   x <- sub("(\\]\\(|src=\")plot-", "\\1vignettes/plot-", x, perl = TRUE)
   writeLines(x, readme_path, useBytes = FALSE)
 }

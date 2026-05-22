@@ -16,7 +16,8 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = ""
+  fig.path = "",
+  fig.cap = ""
 )
 find_figure <- function(names) {
   file.path("..", "man", "figures", names)
@@ -38,12 +39,12 @@ Data are hosted on the ARDC Nectar Research Cloud, and most functions access the
 While both cellNexus and CuratedAtlasQueryR rely on precomputed expression layers, cellNexus adopts a more standardised and transparent processing workflow. This includes explicit removal of empty droplets and dead cells, followed by harmonised quality control, normalisation, and multi-layer data generation, ensuring alignment with evolving CELLxGENE releases.
 
 
-```{r fig-logo, echo=FALSE, out.height = c("139px"), out.width = "120x" }
+```{r fig-logo, echo = FALSE, out.height = "139px", out.width = "120px"}
 find_figure("logo.png") |>
   knitr::include_graphics()
 ```
 
-```{r fig-funders, echo=FALSE, out.height = c("58px"), out.width = c("155x", "129px", "202px", "219px", "180px", "120px")}
+```{r fig-funders, echo = FALSE, out.height = "58px", out.width = c("155px", "129px", "202px", "219px", "180px", "120px")}
 c(
   "svcf_logo.jpeg",
   "czi_logo.png",
