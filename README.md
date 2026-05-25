@@ -109,9 +109,19 @@ plot of chunk fig-funders
 # Query interface
 
 ## Installation
+=======
+Minimal vignette stub for fast README / figure-layout iteration. Use
+`source("vignettes/temp_precompile.R")` from the package root.
+
+<img src="man/figures/logo.png" alt="" width="120px" height="139px" />
+
+<img src="man/figures/svcf_logo.jpeg" alt="" width="155px" height="58px" /><img src="man/figures/czi_logo.png" alt="" width="129px" height="58px" /><img src="man/figures/bioconductor_logo.jpg" alt="" width="202px" height="58px" /><img src="man/figures/vca_logo.png" alt="" width="219px" height="58px" /><img src="man/figures/nectar_logo.png" alt="" width="180px" height="58px" /><img src="man/figures/CSL_Limited_logo.svg.png" alt="" width="120px" height="58px" />
+
+## Sample plot
+
 
 ``` r
-devtools::install_github("MangiolaLaboratory/cellNexus")
+plot(1:10, main = "temp precompile plot")
 ```
 
 ## Load the package
@@ -925,3 +935,4 @@ sessionInfo()
 #> [157] Rhdf5lib_1.32.0                 shiny_1.13.0                    SummarizedExperiment_1.40.0     ROCR_1.0-12                    
 #> [161] igraph_2.2.3                    bslib_0.10.0                    bit_4.6.0
 ```
+![](vignettes/plot-fcn1-disease-1.png) ![](vignettes/plot-fcn1-tissue-1.png)
