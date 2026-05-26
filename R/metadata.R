@@ -13,15 +13,15 @@ cache <- rlang::env(
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
-#' get_metadata_url("cellnexus_metadata.2.2.1.parquet")
+#' get_metadata_url("cellnexus_metadata.2.3.0.parquet")
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_metadata_url <- function(databases = c(
-                               "cellnexus_metadata.2.2.1.parquet",
-                               "census_cell_metadata.2.2.1.parquet"
+                               "cellnexus_metadata.2.3.0.parquet",
+                               "census_cell_metadata.2.3.0.parquet"
                              )) {
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}"
@@ -42,11 +42,11 @@ get_metadata_url <- function(databases = c(
 SAMPLE_DATABASE_URL <- c(
   cellnexus = paste0(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
-    "cellNexus-metadata/cellnexus_sample_metadata.2.2.1.parquet"
+    "cellNexus-metadata/cellnexus_sample_metadata.2.3.0.parquet"
   ),
   census = paste0(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
-    "cellNexus-metadata/census_sample_metadata.2.2.1.parquet"
+    "cellNexus-metadata/census_sample_metadata.2.3.0.parquet"
   )
 )
 
@@ -160,7 +160,7 @@ SAMPLE_DATABASE_URL <- c(
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2.2.1.parquet"),
+get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2.3.0.parquet"),
                          local_metadata = NULL,
                          cache_directory = get_default_cache_dir(),
                          use_cache = TRUE) {
@@ -283,7 +283,7 @@ get_cell_communication_strength <- function(
 #' @importFrom dplyr left_join
 #' @export
 join_census_table <- function(tbl,
-                              cloud_metadata = get_metadata_url("census_cell_metadata.2.2.1.parquet"),
+                              cloud_metadata = get_metadata_url("census_cell_metadata.2.3.0.parquet"),
                               cache_directory = get_default_cache_dir(),
                               join_keys = c("sample_id", "dataset_id", "observation_joinid")) {
   # Synchronize remote files
