@@ -185,7 +185,26 @@ get_pseudobulk <- function(data,
     ), names(raw_data))
   )
 
-  validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
+  # Pseudobulk h5ad files are computed from quality-controlled cells only.
+  # Automatically apply keep_quality_cells() when the QC columns are present so
+  # that results are identical regardless of whether the user pre-filters.
+  qc_cols <- c("empty_droplet", "alive", "scDblFinder.class")
+  if (all(qc_cols %in% names(raw_data))) {
+    n_total <- nrow(raw_data)
+    raw_data <- keep_quality_cells(raw_data)
+    n_dropped <- n_total - nrow(raw_data)
+    if (n_dropped > 0) {
+      cli_alert_warning(paste(
+        "cellNexus says: {n_dropped} cells in your metadata did not pass quality",
+        "control (empty droplets, dead cells, or doublets) and have been excluded",
+        "automatically. Pseudobulk counts are computed from quality-controlled cells only.",
+        "To suppress this warning, apply `keep_quality_cells()` to your metadata",
+        "before calling `get_pseudobulk()`."
+      ))
+    }
+  }
+
+  validate_data(raw_data, assays, cell_aggregation, cache_directory, repository, features)
 
   res <- .fetch_experiments(
     raw_data = raw_data,
