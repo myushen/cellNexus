@@ -120,6 +120,7 @@ Suggests:
     basilisk,
     arrow,
     reticulate,
+    cellxgene.census,
     spelling,
     forcats,
     ggplot2,
