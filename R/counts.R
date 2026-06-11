@@ -101,7 +101,26 @@ get_single_cell_experiment <- function(data,
     check_subset(c("cell_id", "file_id_cellNexus_single_cell", "atlas_id"), names(raw_data))
   )
 
-  validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
+  # The SCT assay is precomputed from quality-controlled cells only, so when
+  # SCT is requested we must restrict to QC-passed cells to avoid silent
+  # cell-count mismatches. counts / cpm / rank cover all cells and need no
+  # such guard.
+  if ("sct" %in% assays) {
+    n_total <- nrow(raw_data)
+    raw_data <- keep_quality_cells(raw_data)
+    n_dropped <- n_total - nrow(raw_data)
+      if (n_dropped > 0) {
+        cli_alert_warning(paste(
+          "cellNexus says: {n_dropped} cells in your metadata did not pass quality",
+          "control (empty droplets, dead cells, or doublets) and have been excluded",
+          "automatically. The SCT assay is computed from quality-controlled cells only.",
+          "To suppress this warning, apply `keep_quality_cells()` to your metadata",
+          "before calling `get_single_cell_experiment()`."
+        ))
+      }
+    }
+
+  validate_data(raw_data, assays, cell_aggregation, cache_directory, repository, features)
 
   .fetch_experiments(
     raw_data = raw_data,
