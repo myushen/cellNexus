@@ -259,63 +259,6 @@ get_cell_communication_strength <- function(
   get_metadata(cloud_metadata, local_metadata, cache_directory, use_cache)
 }
 
-#' Retrieve cell-level metadata from CZ CELLxGENE Census
-#'
-#' Fetches cell-level metadata for human primary-data cells directly from the
-#' CZ CELLxGENE Census using the Long-Term Stable (LTS) release. The result is
-#' a plain data frame that can be joined to cellNexus metadata via shared keys
-#' such as `observation_joinid` and `dataset_id`.
-#'
-#' @param census_version A character string specifying the Census LTS version
-#'   to query. For available LTS versions see the
-#'   [Census release changelog](https://chanzuckerberg.github.io/cellxgene-census/cellxgene_census_docsite_data_release_info.html).
-#'   To find the LTS version associated with a specific cellNexus atlas, use
-#'   [get_atlas_versions()].
-#' @return A data frame of human primary-data cell metadata from the Census.
-#' @importFrom cli cli_abort cli_alert_info
-#' @keywords internal
-#' @noRd
-get_census_metadata <- function(census_version) {
-  if (!requireNamespace("cellxgene.census", quietly = TRUE)) {
-    cli_abort(paste(
-      "The {.pkg cellxgene.census} package is required.",
-      "Install it with:",
-      "{.code install.packages('cellxgene.census',",
-      "repos = c('https://chanzuckerberg.r-universe.dev',",
-      "'https://cloud.r-project.org'))}"
-    ))
-  }
-
-  cli_alert_info("Opening Census version {census_version}.")
-  census <- cellxgene.census::open_soma(census_version = census_version)
-  on.exit(census$close(), add = TRUE)
-
-  metadata <- census$get("census_data")$get("homo_sapiens")$get("obs")
-
-  cli_alert_info("Reading Census obs table.")
-  census_metadata <- metadata$read(
-    value_filter = "is_primary_data == 'TRUE'"
-  )$concat()
-
-  census_metadata |>
-    as.data.frame()
-}
-
-#' @rdname get_census_metadata
-#' @param tbl Deprecated. Previously a `tbl_sql` object to join against.
-#' @param ... Deprecated arguments, ignored.
-#' @importFrom cli cli_alert_warning
-#' @keywords internal
-#' @noRd
-join_census_table <- function(tbl, ...) {
-  cli_alert_warning(paste(
-    "{.fun join_census_table} is deprecated.",
-    "Use {.fun get_census_metadata} instead to retrieve a Census data frame",
-    "and join it to your metadata manually."
-  ))
-  get_census_metadata(...)
-}
-
 #' Returns the atlas version changelog as a tibble
 #'
 #' Downloads the `atlas_versions.parquet` registry from the cellNexus metadata
@@ -363,4 +306,60 @@ get_atlas_versions <- function(cache = tempdir()) {
     overwrite = TRUE
   )
   arrow::read_parquet(local_path)
+}
+
+#' @rdname get_census_metadata
+#' @param tbl Deprecated. Previously a `tbl_sql` object to join against.
+#' @param ... Deprecated arguments, ignored.
+#' @importFrom cli cli_alert_warning
+#' @keywords internal
+#' @noRd
+join_census_table <- function(tbl, ...) {
+  cli_alert_warning(paste(
+    "{.fun join_census_table} is deprecated.",
+    "Use {.fun get_census_metadata} instead to retrieve a Census data frame",
+    "and join it to your metadata manually."
+  ))
+  get_census_metadata(...)
+}
+
+#' Retrieve cell-level metadata from CZ CELLxGENE Census
+#'
+#' Fetches cell-level metadata for human primary-data cells directly from the
+#' CZ CELLxGENE Census using the Long-Term Stable (LTS) release. The result is
+#' a standard Arrow Table that can be registered at the same connection 
+#' as `get_metadata()`, and joined via shared keys such as 
+#' `observation_joinid` and `dataset_id`.
+#'
+#' @param census_version A character string specifying the Census LTS version
+#'   to query. For available LTS versions see the
+#'   [Census release changelog](https://chanzuckerberg.github.io/cellxgene-census/cellxgene_census_docsite_data_release_info.html).
+#'   To find the LTS version associated with a specific cellNexus atlas, use
+#'   [get_atlas_versions()].
+#' @return A standard Arrow Table of human primary-data cell metadata from the Census,
+#'   materialized from the lazy SOMA iterator.
+#' @importFrom cli cli_abort cli_alert_info
+#' @keywords internal
+#' @noRd
+get_census_metadata <- function(census_version) {
+  if (!requireNamespace("cellxgene.census", quietly = TRUE)) {
+    cli_abort(paste(
+      "The {.pkg cellxgene.census} package is required.",
+      "Install it with:",
+      "{.code install.packages('cellxgene.census',",
+      "repos = c('https://chanzuckerberg.r-universe.dev',",
+      "'https://cloud.r-project.org'))}"
+    ))
+  }
+  
+  cli_alert_info("Opening Census version {census_version}.")
+  census <- cellxgene.census::open_soma(census_version = census_version)
+  on.exit(census$close(), add = TRUE)
+  
+  metadata <- census$get("census_data")$get("homo_sapiens")$get("obs")
+  
+  cli_alert_info("Reading Census obs table.")
+  census_metadata <- metadata$read(
+    value_filter = "is_primary_data == 'TRUE'"
+  )$concat()
 }
