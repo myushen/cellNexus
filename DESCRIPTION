@@ -121,6 +121,7 @@ Suggests:
     arrow,
     reticulate,
     cellxgene.census,
+    cellxgenedp,
     spelling,
     forcats,
     ggplot2,

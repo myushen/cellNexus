@@ -363,3 +363,52 @@ get_census_metadata <- function(census_version) {
     value_filter = "is_primary_data == 'TRUE'"
   )$concat()
 }
+
+#' Retrieve Metadata from CELLxGENE Data Portal
+#'
+#' @description
+#' Queries the CELLxGENE Data Portal database and returns metadata at the
+#' specified level of granularity. Requires the \pkg{cellxgenedp} package.
+#'
+#' @param level Character string specifying the metadata level to retrieve.
+#' @param overwrite Additional arguments passed to \code{\link[cellxgenedp]{db}},
+#'   such as \code{overwrite = FALSE} to use the cached database.
+#'
+#' @return A \code{\link[tibble]{tibble}} containing metadata from the
+#'   CELLxGENE Data Portal at the requested level. Columns vary by level:
+#'   \describe{
+#'     \item{\code{"dataset"}}{Includes fields such as dataset ID, title,
+#'       organism, tissue, assay, disease, and cell count.}
+#'     \item{\code{"collection"}}{Includes fields such as collection ID, name,
+#'       description, and publisher metadata.}
+#'     \item{\code{"file"}}{Includes fields such as file ID, filename, filetype,
+#'       and download URL.}
+#'   }
+#'
+#' @seealso
+#' \itemize{
+#'   \item \code{\link[cellxgenedp]{datasets}} for the underlying datasets query
+#'   \item \code{\link[cellxgenedp]{collections}} for the underlying collections query
+#'   \item \code{\link[cellxgenedp]{files}} for the underlying files query
+#'   \item \href{https://chanzuckerberg.github.io/cellxgenedp/}{cellxgenedp documentation}
+#' }
+#'
+#' @importFrom cli cli_abort
+#' @noRd
+#' @keywords internal
+get_cellxgene_metadata <- function(level = c("dataset", "collection", "file"),
+                                   overwrite = FALSE) {
+  if (!requireNamespace("cellxgenedp", quietly = TRUE)) {
+    cli::cli_abort(c(
+      "The {.pkg cellxgenedp} package is required.",
+      "i" = "Install it with: {.code BiocManager::install('cellxgenedp')}"
+    ))
+  }
+  level <- match.arg(level)
+  db <- cellxgenedp::db(overwrite)
+  switch(level,
+         collection = cellxgenedp::collections(db),
+         dataset    = cellxgenedp::datasets(db),
+         file       = cellxgenedp::files(db)
+  )
+}
