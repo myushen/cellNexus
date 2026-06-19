@@ -1,8 +1,7 @@
 # Functions that relate to the Seurat conversion
 
 #' @importFrom methods as
-#' @importFrom SeuratObject as.sparse
-#' @exportS3Method as.sparse DelayedMatrix
+#' @exportS3Method SeuratObject::as.sparse DelayedMatrix
 as.sparse.DelayedMatrix <- function(x, ...) {
   # This is glue to ensure the SCE -> Seurat conversion works properly with
   # DelayedArray types
@@ -13,7 +12,6 @@ as.sparse.DelayedMatrix <- function(x, ...) {
 #' the samples in that data frame
 #'
 #' @inheritDotParams get_single_cell_experiment
-#' @importFrom SeuratObject as.Seurat
 #' @export
 #' @return A Seurat object containing the same data as a call to
 #'   [get_single_cell_experiment()]
@@ -27,6 +25,9 @@ as.sparse.DelayedMatrix <- function(x, ...) {
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_seurat <- function(...) {
+
+  rlang::check_installed(c("Seurat", "SeuratObject"))
+
   get_single_cell_experiment(...) |>
-    as.Seurat(data = NULL)
+    SeuratObject::as.Seurat(data = NULL)
 }

@@ -134,7 +134,7 @@ test_that("as.sparse() works on DelayedMatrix", {
   skip_if_not_installed("DelayedArray")
   skip_if_not_installed("Matrix")
   dm <- DelayedArray::DelayedArray(matrix(1:6, nrow = 2))
-  sp <- as.sparse(dm)
+  sp <- SeuratObject::as.sparse(dm)
   expect_s4_class(sp, "dgCMatrix")
   expect_equivalent(as.matrix(sp), as.matrix(dm))
 })

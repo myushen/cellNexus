@@ -2,10 +2,6 @@
 
 # We need to load utils now so it can be used at the top level
 #' @include utils.R
-# This is a hack to force Seurat packages to be loaded, and also to
-# satisfy R CMD check. We don't need to attach them at all.
-#' @importFrom Seurat as.SingleCellExperiment
-NULL
 
 # Maps user provided assay names to their corresponding paths in the repository
 assay_map <- c(
