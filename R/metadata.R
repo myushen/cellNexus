@@ -251,7 +251,7 @@ get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2
 #' )
 #' @export
 get_cell_communication_strength <- function(
-  cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet"),
+  cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength.parquet"),
   local_metadata = NULL,
   cache_directory = get_default_cache_dir(),
   use_cache = TRUE
