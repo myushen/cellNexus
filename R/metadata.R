@@ -13,15 +13,15 @@ cache <- rlang::env(
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
-#' get_metadata_url("cellnexus_metadata.2.3.0.parquet")
+#' get_metadata_url("hca2024_v2.3.0.parquet")
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 get_metadata_url <- function(databases = c(
-                               "cellnexus_metadata.2.3.0.parquet",
-                               "census_cell_metadata.2.3.0.parquet"
+                               "hca2024_v2.3.0.parquet",
+                               "hca2025_v1.0.0.parquet"
                              )) {
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}"
@@ -33,20 +33,16 @@ get_metadata_url <- function(databases = c(
 #' @export
 #' @return Character scalar consisting of the URL/URLs
 #' @examples
-#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"], cache_directory = tempdir())
+#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir())
 #' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
 #'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
 SAMPLE_DATABASE_URL <- c(
-  cellnexus = paste0(
+  paste0(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
-    "cellNexus-metadata/cellnexus_sample_metadata.2.3.0.parquet"
-  ),
-  census = paste0(
-    "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
-    "cellNexus-metadata/census_sample_metadata.2.3.0.parquet"
+    "cellNexus-metadata/sample_hca2024_v2.3.0.parquet"
   )
 )
 
@@ -79,10 +75,9 @@ SAMPLE_DATABASE_URL <- c(
 #' # For fast build purpose only, you do not need to specify anything in cloud_metadata.
 #' filtered_metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
 #'   filter(
-#'     self_reported_ethnicity == "African" &
-#'       assay %LIKE% "%10x%" &
-#'       tissue == "lung parenchyma" &
-#'       cell_type %LIKE% "%CD4%"
+#'     imputed_ethnicity == "African" &
+#'       tissue_groups == "breast" &
+#'       cell_type_unified_ensemble %LIKE% "%cd14%"
 #'   )
 #'
 #' @importFrom DBI dbConnect
@@ -160,7 +155,7 @@ SAMPLE_DATABASE_URL <- c(
 #'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
 #'   doi:10.1101/2023.06.08.542671.
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2.3.0.parquet"),
+get_metadata <- function(cloud_metadata = get_metadata_url("hca2024_v2.3.0.parquet"),
                          local_metadata = NULL,
                          cache_directory = get_default_cache_dir(),
                          use_cache = TRUE) {
@@ -251,7 +246,7 @@ get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2
 #' )
 #' @export
 get_cell_communication_strength <- function(
-  cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet"),
+  cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength.parquet"),
   local_metadata = NULL,
   cache_directory = get_default_cache_dir(),
   use_cache = TRUE
@@ -316,7 +311,7 @@ get_atlas_versions <- function(cache = tempdir()) {
 #' @noRd
 join_census_table <- function(tbl, ...) {
   cli_alert_warning(paste(
-    "{.fun join_census_table} is deprecated.",
+    "{.fun join_census_table} is no longer supported",
     "Use {.fun get_census_metadata} instead to retrieve a Census data frame",
     "and join it to your metadata manually."
   ))

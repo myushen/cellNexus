@@ -6,7 +6,7 @@
 \title{URL pointing to the sample metadata file, which is smaller and for test,
 demonstration, and vignette purposes only}
 \format{
-An object of class \code{character} of length 2.
+An object of class \code{character} of length 1.
 }
 \source{
 \href{https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3}{Mangiola et al.,2023}
@@ -22,7 +22,7 @@ URL pointing to the sample metadata file, which is smaller and for test,
 demonstration, and vignette purposes only
 }
 \examples{
-get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"], cache_directory = tempdir())
+get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir())
 }
 \references{
 Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
