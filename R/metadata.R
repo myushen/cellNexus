@@ -14,11 +14,13 @@ cache <- rlang::env(
 #' @return A character vector of URLs to parquet files to download
 #' @examples
 #' get_metadata_url("cellnexus_metadata.2.3.0.parquet")
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
+#'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
+#'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,
+#'   and S. Mangiola. "cellNexus: Quality control, annotation, aggregation
+#'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
+#'   doi:10.64898/2026.04.14.718336.
+#' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 get_metadata_url <- function(databases = c(
                                "cellnexus_metadata.2.3.0.parquet",
                                "census_cell_metadata.2.3.0.parquet"
@@ -34,11 +36,13 @@ get_metadata_url <- function(databases = c(
 #' @return Character scalar consisting of the URL/URLs
 #' @examples
 #' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"], cache_directory = tempdir())
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
+#'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
+#'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,
+#'   and S. Mangiola. "cellNexus: Quality control, annotation, aggregation
+#'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
+#'   doi:10.64898/2026.04.14.718336.
+#' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 SAMPLE_DATABASE_URL <- c(
   cellnexus = paste0(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
@@ -155,11 +159,13 @@ SAMPLE_DATABASE_URL <- c(
 #' get_metadata(cache_directory = path.expand('~'))
 #' ```
 #'
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
+#'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
+#'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,
+#'   and S. Mangiola. "cellNexus: Quality control, annotation, aggregation
+#'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
+#'   doi:10.64898/2026.04.14.718336.
+#' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2.3.0.parquet"),
                          local_metadata = NULL,
                          cache_directory = get_default_cache_dir(),
@@ -251,7 +257,7 @@ get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2
 #' )
 #' @export
 get_cell_communication_strength <- function(
-  cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength_DEMO.parquet"),
+  cloud_metadata = get_metadata_url("cellNexus_lr_signaling_pathway_strength.parquet"),
   local_metadata = NULL,
   cache_directory = get_default_cache_dir(),
   use_cache = TRUE
@@ -293,11 +299,13 @@ get_cell_communication_strength <- function(
 #' @export
 #' @examples
 #' get_atlas_versions()
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
+#'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
+#'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,
+#'   and S. Mangiola. "cellNexus: Quality control, annotation, aggregation
+#'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
+#'   doi:10.64898/2026.04.14.718336.
+#' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 get_atlas_versions <- function(cache = tempdir()) {
   registry_url <- get_metadata_url("atlas_versions.parquet")
   local_path <- file.path(cache, "atlas_versions.parquet")

@@ -2,10 +2,6 @@
 
 # We need to load utils now so it can be used at the top level
 #' @include utils.R
-# This is a hack to force Seurat packages to be loaded, and also to
-# satisfy R CMD check. We don't need to attach them at all.
-#' @importFrom Seurat as.SingleCellExperiment
-NULL
 
 # Maps user provided assay names to their corresponding paths in the repository
 assay_map <- c(
@@ -28,13 +24,13 @@ COUNTS_URL <- paste0(
 #' @importFrom cli cli_alert_warning
 #' @return A `SingleCellExperiment` object.
 #' @export
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al., 2023](
-#'   https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3
-#' )
+#' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
+#'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
+#'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,
+#'   and S. Mangiola. "cellNexus: Quality control, annotation, aggregation
+#'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
+#'   doi:10.64898/2026.04.14.718336.
+#' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 get_SingleCellExperiment <- function(...) {
   cli_alert_warning(paste(
     "This function name is deprecated.",
@@ -84,11 +80,13 @@ get_SingleCellExperiment <- function(...) {
 #' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
 #' sce <- get_single_cell_experiment(meta)
 #' @export
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
+#'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
+#'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,
+#'   and S. Mangiola. "cellNexus: Quality control, annotation, aggregation
+#'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
+#'   doi:10.64898/2026.04.14.718336.
+#' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 get_single_cell_experiment <- function(data,
                                        assays = "counts",
                                        cell_aggregation = "",
@@ -101,7 +99,26 @@ get_single_cell_experiment <- function(data,
     check_subset(c("cell_id", "file_id_cellNexus_single_cell", "atlas_id"), names(raw_data))
   )
 
-  validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
+  # The SCT assay is precomputed from quality-controlled cells only, so when
+  # SCT is requested we must restrict to QC-passed cells to avoid silent
+  # cell-count mismatches. counts / cpm / rank cover all cells and need no
+  # such guard.
+  if ("sct" %in% assays) {
+    n_total <- nrow(raw_data)
+    raw_data <- keep_quality_cells(raw_data)
+    n_dropped <- n_total - nrow(raw_data)
+    if (n_dropped > 0) {
+       cli_alert_warning(paste(
+         "cellNexus says: {n_dropped} cells in your metadata did not pass quality",
+         "control (empty droplets, dead cells, or doublets) and have been excluded",
+         "automatically. The SCT assay is computed from quality-controlled cells only.",
+         "To suppress this warning, apply `keep_quality_cells()` to your metadata",
+         "before calling `get_single_cell_experiment()`."
+       ))
+     }
+  }
+
+  validate_data(raw_data, assays, cell_aggregation, cache_directory, repository, features)
 
   .fetch_experiments(
     raw_data = raw_data,
@@ -164,11 +181,13 @@ get_single_cell_experiment <- function(data,
 #'   dplyr::filter(cell_type_unified_ensemble == "epithelial")
 #' pseudobulk <- meta |> get_pseudobulk()
 #' @export
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
+#'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
+#'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,
+#'   and S. Mangiola. "cellNexus: Quality control, annotation, aggregation
+#'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
+#'   doi:10.64898/2026.04.14.718336.
+#' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 get_pseudobulk <- function(data,
                            assays = "counts",
                            cell_aggregation = "pseudobulk",
@@ -185,7 +204,26 @@ get_pseudobulk <- function(data,
     ), names(raw_data))
   )
 
-  validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
+  # Pseudobulk h5ad files are computed from quality-controlled cells only.
+  # Automatically apply keep_quality_cells() when the QC columns are present so
+  # that results are identical regardless of whether the user pre-filters.
+  qc_cols <- c("empty_droplet", "alive", "scDblFinder.class")
+  if (all(qc_cols %in% names(raw_data))) {
+    n_total <- nrow(raw_data)
+    raw_data <- keep_quality_cells(raw_data)
+    n_dropped <- n_total - nrow(raw_data)
+    if (n_dropped > 0) {
+      cli_alert_warning(paste(
+        "cellNexus says: {n_dropped} cells in your metadata did not pass quality",
+        "control (empty droplets, dead cells, or doublets) and have been excluded",
+        "automatically. Pseudobulk counts are computed from quality-controlled cells only.",
+        "To suppress this warning, apply `keep_quality_cells()` to your metadata",
+        "before calling `get_pseudobulk()`."
+      ))
+    }
+  }
+
+  validate_data(raw_data, assays, cell_aggregation, cache_directory, repository, features)
 
   res <- .fetch_experiments(
     raw_data = raw_data,
@@ -241,11 +279,13 @@ get_pseudobulk <- function(data,
 #' @importFrom S4Vectors DataFrame
 #' @keywords internal
 #' @noRd
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
+#'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
+#'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,
+#'   and S. Mangiola. "cellNexus: Quality control, annotation, aggregation
+#'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
+#'   doi:10.64898/2026.04.14.718336.
+#' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 get_metacell <- function(data,
                          assays = "counts",
                          cell_aggregation,
@@ -358,6 +398,19 @@ get_metacell <- function(data,
       current_subdir
     }
 
+    # For SCT, accumulate dropped-cell counts so we can emit one consolidated
+    # warning after all files are read. For other assays the per-file warning
+    # fires as normal (dropped_counter = NULL).
+    cell_drop_state <- if (current_assay == "sct") {
+      e <- new.env(parent = emptyenv())
+      e$n_dropped <- 0L
+      e$n_files_affected <- 0L
+      e$sample_ids <- character(0)
+      e
+    } else {
+      NULL
+    }
+
     pb <- cli_progress_bar(glue("Reading {current_assay}"), total = length(groups))
 
     per_group <- map(seq_along(groups), function(i) {
@@ -368,13 +421,27 @@ get_metacell <- function(data,
         dir_prefix = dir_prefix,
         features = features,
         grouping_column = grouping_column,
-        metacell_column = cell_aggregation
+        metacell_column = cell_aggregation,
+        dropped_counter = cell_drop_state
       )
       cli_progress_update(id = pb)
       res
     })
 
     cli_progress_done(id = pb)
+
+    if (!is.null(cell_drop_state) && cell_drop_state$n_dropped > 0L) {
+      affected_ids <- paste(cell_drop_state$sample_ids, collapse = ", ")
+      cli_alert_warning(paste(
+        "cellNexus says: {cell_drop_state$n_dropped} cell(s) from your metadata are",
+        "absent from the SCT assay across {cell_drop_state$n_files_affected} file(s).",
+        "This is expected: SCT normalisation is run per sample and may fail for",
+        "samples with very few cells or extreme count distributions.",
+        "The returned object contains only cells from samples where SCT succeeded.",
+        "Affected sample_id(s): {affected_ids}."
+      ))
+    }
+
     per_group
   })
 
@@ -452,11 +519,13 @@ get_metacell <- function(data,
 #' @importFrom checkmate assert check_true
 #' @importFrom cli cli_alert_info cli_abort
 #' @importFrom rlang .data
-#' @references Mangiola, S., M. Milton, N. Ranathunga, C. S. N. Li-Wai-Suen,
-#'   A. Odainic, E. Yang, W. Hutchison et al. "A multi-organ map of the human
-#'   immune system across age, sex and ethnicity." bioRxiv (2023): 2023-06.
-#'   doi:10.1101/2023.06.08.542671.
-#' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
+#' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
+#'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
+#'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,
+#'   and S. Mangiola. "cellNexus: Quality control, annotation, aggregation
+#'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
+#'   doi:10.64898/2026.04.14.718336.
+#' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 #' @keywords internal
 #' @noRd
 validate_data <- function(
@@ -524,6 +593,11 @@ validate_data <- function(
 #' @param features The list of genes/rows of interest
 #' @param grouping_column A character vector of metadata column for grouping
 #' @param metacell_column A character vector of metacell column (e.g. "metacell_2", "metacell_4") from metadata.
+#' @param dropped_counter An optional environment with integer fields `n_dropped`,
+#'   `n_files_affected`, and a character field `sample_ids`. When provided, missing
+#'   cells are tallied into the environment in addition to the per-file warning,
+#'   allowing the caller to emit a single consolidated summary after all files are
+#'   read. If \code{NULL} (the default), only the per-file warning is issued.
 #' @return A `SummarizedExperiment` object
 #' @importFrom dplyr mutate filter select left_join distinct any_of all_of contains matches
 #' @importFrom SummarizedExperiment colData<-
@@ -535,7 +609,8 @@ validate_data <- function(
 #' @keywords internal
 #' @noRd
 group_to_data_container <- function(i, df, dir_prefix, features, grouping_column,
-                                    metacell_column = NULL) {
+                                    metacell_column = NULL,
+                                    dropped_counter = NULL) {
   experiment_path <- file.path(dir_prefix, df[[grouping_column]][1])
 
   if (!file.exists(experiment_path)) {
@@ -557,13 +632,20 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
       intersect(df$cell_id)
 
     if (length(cells) < nrow(df)) {
-      cli_alert_warning(
-        paste(
-          "The number of cells in the SingleCellExperiment will be less than the number",
-          "of cells you have selected from the metadata.",
-          "Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?"
-        )
-      )
+      cli_alert_warning(paste(
+        "The number of cells in the SingleCellExperiment will be less than the number",
+        "of cells you have selected from the metadata.",
+        "Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?"
+      ))
+      if (!is.null(dropped_counter)) {
+        n_missing <- nrow(df) - length(cells)
+        dropped_counter$n_dropped <- dropped_counter$n_dropped + n_missing
+        dropped_counter$n_files_affected <- dropped_counter$n_files_affected + 1L
+        if ("sample_id" %in% names(df)) {
+          affected <- unique(df$sample_id[!df$cell_id %in% cells])
+          dropped_counter$sample_ids <- unique(c(dropped_counter$sample_ids, affected))
+        }
+      }
       df <- filter(df, .data$cell_id %in% cells)
     } else if (length(cells) > nrow(df)) {
       cli_abort("This should never happen")
