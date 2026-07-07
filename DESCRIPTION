@@ -1,7 +1,7 @@
 Type: Package
 Package: cellNexus
 Title: Queries the Human Cell Atlas
-Version: 0.99.23
+Version: 0.99.26
 Authors@R: c(
     person(
         "Stefano",
@@ -96,8 +96,6 @@ Imports:
     httr,
     curl,
     cli,
-    SeuratObject,
-    Seurat,
     methods,
     rlang,
     S4Vectors,
@@ -131,6 +129,8 @@ Suggests:
     DelayedArray,
     tidybulk,
     BiocParallel,
+    SeuratObject,
+    Seurat,
     preprocessCore
 Biarch: true
 biocViews: 

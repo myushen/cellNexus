@@ -100,10 +100,11 @@ cellNexus metadata applies standardised quality control to filter out empty drop
 metadata <- metadata |>
   keep_quality_cells()
 
-nfeatures_df <- cellNexus:::get_cellxgene_metadata("dataset")
+nfeatures_df <- cellNexus:::get_cellxgene_metadata("dataset") |>
+  dplyr::select(dplyr::where(~ !is.list(.x)))
+  
 metadata <- metadata |>
-  dplyr::left_join(nfeatures_df |>
-           dplyr::select(dplyr::where(~ !is.list(.x))),
+  dplyr::left_join(nfeatures_df,
            by = "dataset_id", copy = TRUE) |>
   dplyr::filter(feature_count >= 5000)
 ```

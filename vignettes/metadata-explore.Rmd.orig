@@ -17,7 +17,7 @@ This page is a standalone metadata guide for `cellNexus` and documents the key f
 
 ```{r load-metadata-example}
 library(cellNexus)
-metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"])
+metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL)
 metadata
 ```
 
