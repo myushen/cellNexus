@@ -330,8 +330,8 @@ join_census_table <- function(tbl, ...) {
 #'
 #' Fetches cell-level metadata for human primary-data cells directly from the
 #' CZ CELLxGENE Census using the Long-Term Stable (LTS) release. The result is
-#' a standard Arrow Table that can be registered at the same connection 
-#' as `get_metadata()`, and joined via shared keys such as 
+#' a standard Arrow Table that can be registered at the same connection
+#' as `get_metadata()`, and joined via shared keys such as
 #' `observation_joinid` and `dataset_id`.
 #'
 #' @param census_version A character string specifying the Census LTS version
@@ -354,13 +354,13 @@ get_census_metadata <- function(census_version) {
       "'https://cloud.r-project.org'))}"
     ))
   }
-  
+
   cli_alert_info("Opening Census version {census_version}.")
   census <- cellxgene.census::open_soma(census_version = census_version)
   on.exit(census$close(), add = TRUE)
-  
+
   metadata <- census$get("census_data")$get("homo_sapiens")$get("obs")
-  
+
   cli_alert_info("Reading Census obs table.")
   census_metadata <- metadata$read(
     value_filter = "is_primary_data == 'TRUE'"
@@ -410,8 +410,8 @@ get_cellxgene_metadata <- function(level = c("dataset", "collection", "file"),
   level <- match.arg(level)
   db <- cellxgenedp::db(overwrite)
   switch(level,
-         collection = cellxgenedp::collections(db),
-         dataset    = cellxgenedp::datasets(db),
-         file       = cellxgenedp::files(db)
+    collection = cellxgenedp::collections(db),
+    dataset    = cellxgenedp::datasets(db),
+    file       = cellxgenedp::files(db)
   )
 }

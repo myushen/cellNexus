@@ -129,7 +129,8 @@ nfeatures_df <- cellNexus:::get_cellxgene_metadata("dataset") |>
   
 metadata <- metadata |>
   dplyr::left_join(nfeatures_df,
-           by = "dataset_id", copy = TRUE) |>
+                   by = "dataset_id",
+                   copy = TRUE) |>
   dplyr::filter(feature_count >= 5000)
 ```
 
@@ -193,11 +194,31 @@ single_cell_counts <-
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Reading files.
-#> Reading counts ■■■■                              10% | ETA: 12sReading counts ■■■■■■■                           20% | ETA:  9sReading counts ■■■■■■■■■■                        30% | ETA:  7sReading counts ■■■■■■■■■■■■■                     40% | ETA:  5sReading counts ■■■■■■■■■■■■■■■■                  50% | ETA:  4sReading counts ■■■■■■■■■■■■■■■■■■■               60% | ETA:  3sReading counts ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2sReading counts ■■■■■■■■■■■■■■■■■■■■■■■■■         80% | ETA:  1sReading counts ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      90% | ETA:  1s                                                                ℹ Compiling Experiment.
+#> 
+Reading counts ■■■■                              10% | ETA: 12s
+
+Reading counts ■■■■■■■                           20% | ETA:  9s
+
+Reading counts ■■■■■■■■■■                        30% | ETA:  7s
+
+Reading counts ■■■■■■■■■■■■■                     40% | ETA:  5s
+
+Reading counts ■■■■■■■■■■■■■■■■                  50% | ETA:  4s
+
+Reading counts ■■■■■■■■■■■■■■■■■■■               60% | ETA:  3s
+
+Reading counts ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2s
+
+Reading counts ■■■■■■■■■■■■■■■■■■■■■■■■■         80% | ETA:  1s
+
+Reading counts ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      90% | ETA:  1s
+
+                                                                
+ℹ Compiling Experiment.
 
 single_cell_counts
 #> # A SingleCellExperiment-tibble abstraction: 2,924 × 59
-#> # [90mFeatures=33145 | Cells=2924 | Assays=counts[0m
+#> # [90mFeatures=33145 | Cells=2924 | Assays=counts[0m
 #>    .cell observation_joinid dataset_id           sample_id sample_ experiment___ run_from_cell_id sample_heuristic age_days tissue_groups nFeature_expressed_i…¹ nCount_RNA
 #>    <chr> <chr>              <chr>                <chr>     <chr>   <chr>         <chr>            <chr>               <int> <chr>                          <int>      <dbl>
 #>  1 76_1  bTlx!HK=oS         842c6f5d-4a94-4eef-… 52ab9222… 52ab92… ""            <NA>             7ce86149-8906-4…    14600 breast                          1671       9.65
@@ -235,11 +256,29 @@ single_cell_cpm <-
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Reading files.
-#> Reading cpm ■■■■■■■                           20% | ETA:  4sReading cpm ■■■■■■■■■■                        30% | ETA:  4sReading cpm ■■■■■■■■■■■■■                     40% | ETA:  3sReading cpm ■■■■■■■■■■■■■■■■                  50% | ETA:  3sReading cpm ■■■■■■■■■■■■■■■■■■■               60% | ETA:  2sReading cpm ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2sReading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■         80% | ETA:  1sReading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      90% | ETA:  1s                                                             ℹ Compiling Experiment.
+#> 
+Reading cpm ■■■■■■■                           20% | ETA:  4s
+
+Reading cpm ■■■■■■■■■■                        30% | ETA:  4s
+
+Reading cpm ■■■■■■■■■■■■■                     40% | ETA:  3s
+
+Reading cpm ■■■■■■■■■■■■■■■■                  50% | ETA:  3s
+
+Reading cpm ■■■■■■■■■■■■■■■■■■■               60% | ETA:  2s
+
+Reading cpm ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2s
+
+Reading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■         80% | ETA:  1s
+
+Reading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      90% | ETA:  1s
+
+                                                             
+ℹ Compiling Experiment.
 
 single_cell_cpm
 #> # A SingleCellExperiment-tibble abstraction: 2,924 × 59
-#> # [90mFeatures=33145 | Cells=2924 | Assays=cpm[0m
+#> # [90mFeatures=33145 | Cells=2924 | Assays=cpm[0m
 #>    .cell observation_joinid dataset_id           sample_id sample_ experiment___ run_from_cell_id sample_heuristic age_days tissue_groups nFeature_expressed_i…¹ nCount_RNA
 #>    <chr> <chr>              <chr>                <chr>     <chr>   <chr>         <chr>            <chr>               <int> <chr>                          <int>      <dbl>
 #>  1 76_1  bTlx!HK=oS         842c6f5d-4a94-4eef-… 52ab9222… 52ab92… ""            <NA>             7ce86149-8906-4…    14600 breast                          1671       9.65
@@ -277,15 +316,42 @@ single_cell_sct <-
 #> ℹ Synchronising files
 #> ℹ Reading files.
 #> ! The number of cells in the SingleCellExperiment will be less than the number of cells you have selected from the metadata. Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
-#> Reading sct ■■■■■■■                           20% | ETA:  5sReading sct ■■■■■■■■■■                        30% | ETA:  5sReading sct ■■■■■■■■■■■■■                     40% | ETA:  4s                                                             ! The number of cells in the SingleCellExperiment will be less than the number of cells you have selected from the metadata. Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
-#> Reading sct ■■■■■■■■■■■■■                     40% | ETA:  4sReading sct ■■■■■■■■■■■■■■■■                  50% | ETA:  3s                                                             ! The number of cells in the SingleCellExperiment will be less than the number of cells you have selected from the metadata. Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
-#> Reading sct ■■■■■■■■■■■■■■■■                  50% | ETA:  3sReading sct ■■■■■■■■■■■■■■■■■■■               60% | ETA:  3sReading sct ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2s                                                             ! The number of cells in the SingleCellExperiment will be less than the number of cells you have selected from the metadata. Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
-#> Reading sct ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2sReading sct ■■■■■■■■■■■■■■■■■■■■■■■■■         80% | ETA:  1sReading sct ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      90% | ETA:  1s                                                             ! cellNexus says: 1680 cell(s) from your metadata are absent from the SCT assay across 4 file(s). This is expected: SCT normalisation is run per sample and may fail for samples with very few cells or extreme count distributions. The returned object contains only cells from samples where SCT succeeded. Affected sample_id(s): 52ab92226337d36c306466eefe67f9c1, 8940e0767e7eca1b72d37b4138be2276, 765554078ca8d1eaf2712000c0df0d6f, a79912cb9aaa8d8c0b1a3cdcc9294f8c, 5e641a2218d1d8b91f638989626c89e0.
+#> 
+Reading sct ■■■■■■■                           20% | ETA:  5s
+
+Reading sct ■■■■■■■■■■                        30% | ETA:  5s
+
+Reading sct ■■■■■■■■■■■■■                     40% | ETA:  4s
+
+                                                             
+! The number of cells in the SingleCellExperiment will be less than the number of cells you have selected from the metadata. Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
+#> Reading sct ■■■■■■■■■■■■■                     40% | ETA:  4s
+
+Reading sct ■■■■■■■■■■■■■■■■                  50% | ETA:  3s
+
+                                                             
+! The number of cells in the SingleCellExperiment will be less than the number of cells you have selected from the metadata. Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
+#> Reading sct ■■■■■■■■■■■■■■■■                  50% | ETA:  3s
+
+Reading sct ■■■■■■■■■■■■■■■■■■■               60% | ETA:  3s
+
+Reading sct ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2s
+
+                                                             
+! The number of cells in the SingleCellExperiment will be less than the number of cells you have selected from the metadata. Are cell IDs duplicated? Or, do cell IDs correspond to the counts file?
+#> Reading sct ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2s
+
+Reading sct ■■■■■■■■■■■■■■■■■■■■■■■■■         80% | ETA:  1s
+
+Reading sct ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      90% | ETA:  1s
+
+                                                             
+! cellNexus says: 1680 cell(s) from your metadata are absent from the SCT assay across 4 file(s). This is expected: SCT normalisation is run per sample and may fail for samples with very few cells or extreme count distributions. The returned object contains only cells from samples where SCT succeeded. Affected sample_id(s): 52ab92226337d36c306466eefe67f9c1, 8940e0767e7eca1b72d37b4138be2276, 765554078ca8d1eaf2712000c0df0d6f, a79912cb9aaa8d8c0b1a3cdcc9294f8c, 5e641a2218d1d8b91f638989626c89e0.
 #> ℹ Compiling Experiment.
 
 single_cell_sct
 #> # A SingleCellExperiment-tibble abstraction: 1,244 × 59
-#> # [90mFeatures=33145 | Cells=1244 | Assays=sct[0m
+#> # [90mFeatures=33145 | Cells=1244 | Assays=sct[0m
 #>    .cell observation_joinid dataset_id           sample_id sample_ experiment___ run_from_cell_id sample_heuristic age_days tissue_groups nFeature_expressed_i…¹ nCount_RNA
 #>    <chr> <chr>              <chr>                <chr>     <chr>   <chr>         <chr>            <chr>               <int> <chr>                          <int>      <dbl>
 #>  1 72_1  8wGs7JgUjj         842c6f5d-4a94-4eef-… 6b194412… 6b1944… ""            <NA>             b3ff1aad-40fd-4…    14600 breast                          2548      13.1 
@@ -321,12 +387,26 @@ pseudobulk_counts <-
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Reading files.
-#> Reading counts ■■■■■                             14% | ETA: 11sReading counts ■■■■■■■■■■                        29% | ETA: 10sReading counts ■■■■■■■■■■■■■■                    43% | ETA:  8sReading counts ■■■■■■■■■■■■■■■■■■                57% | ETA:  7sReading counts ■■■■■■■■■■■■■■■■■■■■■■            71% | ETA:  5sReading counts ■■■■■■■■■■■■■■■■■■■■■■■■■■■       86% | ETA:  2s                                                                ! cellNexus says: Not all genes completely overlap across the provided objects. Counts are generated by genes intersection.
+#> 
+Reading counts ■■■■■                             14% | ETA: 11s
+
+Reading counts ■■■■■■■■■■                        29% | ETA: 10s
+
+Reading counts ■■■■■■■■■■■■■■                    43% | ETA:  8s
+
+Reading counts ■■■■■■■■■■■■■■■■■■                57% | ETA:  7s
+
+Reading counts ■■■■■■■■■■■■■■■■■■■■■■            71% | ETA:  5s
+
+Reading counts ■■■■■■■■■■■■■■■■■■■■■■■■■■■       86% | ETA:  2s
+
+                                                                
+! cellNexus says: Not all genes completely overlap across the provided objects. Counts are generated by genes intersection.
 #> ℹ Compiling Experiment.
 
 pseudobulk_counts
 #> # A SingleCellExperiment-tibble abstraction: 139 × 42
-#> # [90mFeatures=15888 | Cells=139 | Assays=counts[0m
+#> # [90mFeatures=15888 | Cells=139 | Assays=counts[0m
 #>    .cell                 dataset_id sample_id sample_ experiment___ run_from_cell_id sample_heuristic age_days tissue_groups cell_type_unified_en…¹ sample_chunk cell_chunk
 #>    <chr>                 <chr>      <chr>     <chr>   <chr>         <chr>            <chr>               <int> <chr>         <chr>                         <int>      <int>
 #>  1 2e8c9911c9bfbffc0728… 0ba16f4b-… 2e8c9911… 2e8c99… ""            <NA>             HDBR15279,HDBR1…       NA respiratory … cd14 mono                         1          1
@@ -393,11 +473,29 @@ single_cell_cpm <-
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Reading files.
-#> Reading cpm ■■■■■■■                           20% | ETA:  5sReading cpm ■■■■■■■■■■                        30% | ETA:  4sReading cpm ■■■■■■■■■■■■■                     40% | ETA:  4sReading cpm ■■■■■■■■■■■■■■■■                  50% | ETA:  4sReading cpm ■■■■■■■■■■■■■■■■■■■               60% | ETA:  3sReading cpm ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2sReading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■         80% | ETA:  1sReading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      90% | ETA:  1s                                                             ℹ Compiling Experiment.
+#> 
+Reading cpm ■■■■■■■                           20% | ETA:  5s
+
+Reading cpm ■■■■■■■■■■                        30% | ETA:  4s
+
+Reading cpm ■■■■■■■■■■■■■                     40% | ETA:  4s
+
+Reading cpm ■■■■■■■■■■■■■■■■                  50% | ETA:  4s
+
+Reading cpm ■■■■■■■■■■■■■■■■■■■               60% | ETA:  3s
+
+Reading cpm ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2s
+
+Reading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■         80% | ETA:  1s
+
+Reading cpm ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      90% | ETA:  1s
+
+                                                             
+ℹ Compiling Experiment.
 
 single_cell_cpm
 #> # A SingleCellExperiment-tibble abstraction: 2,924 × 59
-#> # [90mFeatures=1 | Cells=2924 | Assays=cpm[0m
+#> # [90mFeatures=1 | Cells=2924 | Assays=cpm[0m
 #>    .cell observation_joinid dataset_id           sample_id sample_ experiment___ run_from_cell_id sample_heuristic age_days tissue_groups nFeature_expressed_i…¹ nCount_RNA
 #>    <chr> <chr>              <chr>                <chr>     <chr>   <chr>         <chr>            <chr>               <int> <chr>                          <int>      <dbl>
 #>  1 76_1  bTlx!HK=oS         842c6f5d-4a94-4eef-… 52ab9222… 52ab92… ""            <NA>             7ce86149-8906-4…    14600 breast                          1671       9.65
@@ -437,7 +535,25 @@ seurat_counts <-
 #> ℹ Realising metadata.
 #> ℹ Synchronising files
 #> ℹ Reading files.
-#> Reading counts ■■■■■■■                           20% | ETA:  6sReading counts ■■■■■■■■■■                        30% | ETA:  6sReading counts ■■■■■■■■■■■■■                     40% | ETA:  5sReading counts ■■■■■■■■■■■■■■■■                  50% | ETA:  4sReading counts ■■■■■■■■■■■■■■■■■■■               60% | ETA:  3sReading counts ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2sReading counts ■■■■■■■■■■■■■■■■■■■■■■■■■         80% | ETA:  1sReading counts ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      90% | ETA:  1s                                                                ℹ Compiling Experiment.
+#> 
+Reading counts ■■■■■■■                           20% | ETA:  6s
+
+Reading counts ■■■■■■■■■■                        30% | ETA:  6s
+
+Reading counts ■■■■■■■■■■■■■                     40% | ETA:  5s
+
+Reading counts ■■■■■■■■■■■■■■■■                  50% | ETA:  4s
+
+Reading counts ■■■■■■■■■■■■■■■■■■■               60% | ETA:  3s
+
+Reading counts ■■■■■■■■■■■■■■■■■■■■■■            70% | ETA:  2s
+
+Reading counts ■■■■■■■■■■■■■■■■■■■■■■■■■         80% | ETA:  1s
+
+Reading counts ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      90% | ETA:  1s
+
+                                                                
+ℹ Compiling Experiment.
 
 seurat_counts
 #> An object of class Seurat 
@@ -653,7 +769,7 @@ get_metadata(
 #> ℹ Reading files.
 #> ℹ Compiling Experiment.
 #> # A SingleCellExperiment-tibble abstraction: 500 × 7
-#> # [90mFeatures=13132 | Cells=500 | Assays=counts[0m
+#> # [90mFeatures=13132 | Cells=500 | Assays=counts[0m
 #>    .cell            sample_id dataset_id cell_type_unified_ensemble atlas_id             file_id_cellNexus_single_cell         original_cell_
 #>    <chr>            <chr>     <chr>      <chr>                      <chr>                <chr>                                 <chr>         
 #>  1 AAACATACAACCAC_1 pbmc3k    pbmc3k     Memory CD4 T               cellxgene/03-10-2025 67e196a3c4e145151fc9e06c200e2f7f.h5ad AAACATACAACCAC

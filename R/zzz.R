@@ -51,7 +51,7 @@
 #' introduction to using the package.
 #'
 #' @source [Mangiola et al.,2023](https://www.biorxiv.org/content/10.1101/2023.06.08.542671v3)
-#' 
+#'
 #' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
 #'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
 #'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,

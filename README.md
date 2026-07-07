@@ -166,7 +166,8 @@ nfeatures_df <- cellNexus:::get_cellxgene_metadata("dataset") |>
   
 metadata <- metadata |>
   dplyr::left_join(nfeatures_df,
-           by = "dataset_id", copy = TRUE) |>
+                   by = "dataset_id",
+                   copy = TRUE) |>
   dplyr::filter(feature_count >= 5000)
 ```
 
@@ -254,7 +255,7 @@ Reading counts ■■■■■■■■■■■■■■■■■■■■■�
 
 single_cell_counts
 #> # A SingleCellExperiment-tibble abstraction: 2,924 × 59
-#> # [90mFeatures=33145 | Cells=2924 | Assays=counts[0m
+#> # [90mFeatures=33145 | Cells=2924 | Assays=counts[0m
 #>    .cell observation_joinid dataset_id           sample_id sample_ experiment___ run_from_cell_id sample_heuristic age_days tissue_groups nFeature_expressed_i…¹ nCount_RNA
 #>    <chr> <chr>              <chr>                <chr>     <chr>   <chr>         <chr>            <chr>               <int> <chr>                          <int>      <dbl>
 #>  1 76_1  bTlx!HK=oS         842c6f5d-4a94-4eef-… 52ab9222… 52ab92… ""            <NA>             7ce86149-8906-4…    14600 breast                          1671       9.65
@@ -313,7 +314,7 @@ Reading cpm ■■■■■■■■■■■■■■■■■■■■■■�
 
 single_cell_cpm
 #> # A SingleCellExperiment-tibble abstraction: 2,924 × 59
-#> # [90mFeatures=33145 | Cells=2924 | Assays=cpm[0m
+#> # [90mFeatures=33145 | Cells=2924 | Assays=cpm[0m
 #>    .cell observation_joinid dataset_id           sample_id sample_ experiment___ run_from_cell_id sample_heuristic age_days tissue_groups nFeature_expressed_i…¹ nCount_RNA
 #>    <chr> <chr>              <chr>                <chr>     <chr>   <chr>         <chr>            <chr>               <int> <chr>                          <int>      <dbl>
 #>  1 76_1  bTlx!HK=oS         842c6f5d-4a94-4eef-… 52ab9222… 52ab92… ""            <NA>             7ce86149-8906-4…    14600 breast                          1671       9.65
@@ -386,7 +387,7 @@ Reading sct ■■■■■■■■■■■■■■■■■■■■■■�
 
 single_cell_sct
 #> # A SingleCellExperiment-tibble abstraction: 1,244 × 59
-#> # [90mFeatures=33145 | Cells=1244 | Assays=sct[0m
+#> # [90mFeatures=33145 | Cells=1244 | Assays=sct[0m
 #>    .cell observation_joinid dataset_id           sample_id sample_ experiment___ run_from_cell_id sample_heuristic age_days tissue_groups nFeature_expressed_i…¹ nCount_RNA
 #>    <chr> <chr>              <chr>                <chr>     <chr>   <chr>         <chr>            <chr>               <int> <chr>                          <int>      <dbl>
 #>  1 72_1  8wGs7JgUjj         842c6f5d-4a94-4eef-… 6b194412… 6b1944… ""            <NA>             b3ff1aad-40fd-4…    14600 breast                          2548      13.1 
@@ -441,7 +442,7 @@ Reading counts ■■■■■■■■■■■■■■■■■■■■■�
 
 pseudobulk_counts
 #> # A SingleCellExperiment-tibble abstraction: 139 × 42
-#> # [90mFeatures=15888 | Cells=139 | Assays=counts[0m
+#> # [90mFeatures=15888 | Cells=139 | Assays=counts[0m
 #>    .cell                 dataset_id sample_id sample_ experiment___ run_from_cell_id sample_heuristic age_days tissue_groups cell_type_unified_en…¹ sample_chunk cell_chunk
 #>    <chr>                 <chr>      <chr>     <chr>   <chr>         <chr>            <chr>               <int> <chr>         <chr>                         <int>      <int>
 #>  1 2e8c9911c9bfbffc0728… 0ba16f4b-… 2e8c9911… 2e8c99… ""            <NA>             HDBR15279,HDBR1…       NA respiratory … cd14 mono                         1          1
@@ -540,7 +541,7 @@ Reading cpm ■■■■■■■■■■■■■■■■■■■■■■�
 
 single_cell_cpm
 #> # A SingleCellExperiment-tibble abstraction: 2,924 × 59
-#> # [90mFeatures=1 | Cells=2924 | Assays=cpm[0m
+#> # [90mFeatures=1 | Cells=2924 | Assays=cpm[0m
 #>    .cell observation_joinid dataset_id           sample_id sample_ experiment___ run_from_cell_id sample_heuristic age_days tissue_groups nFeature_expressed_i…¹ nCount_RNA
 #>    <chr> <chr>              <chr>                <chr>     <chr>   <chr>         <chr>            <chr>               <int> <chr>                          <int>      <dbl>
 #>  1 76_1  bTlx!HK=oS         842c6f5d-4a94-4eef-… 52ab9222… 52ab92… ""            <NA>             7ce86149-8906-4…    14600 breast                          1671       9.65
@@ -838,7 +839,7 @@ get_metadata(
 #> ℹ Reading files.
 #> ℹ Compiling Experiment.
 #> # A SingleCellExperiment-tibble abstraction: 500 × 7
-#> # [90mFeatures=13132 | Cells=500 | Assays=counts[0m
+#> # [90mFeatures=13132 | Cells=500 | Assays=counts[0m
 #>    .cell            sample_id dataset_id cell_type_unified_ensemble atlas_id             file_id_cellNexus_single_cell         original_cell_
 #>    <chr>            <chr>     <chr>      <chr>                      <chr>                <chr>                                 <chr>         
 #>  1 AAACATACAACCAC_1 pbmc3k    pbmc3k     Memory CD4 T               cellxgene/03-10-2025 67e196a3c4e145151fc9e06c200e2f7f.h5ad AAACATACAACCAC

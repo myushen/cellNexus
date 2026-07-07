@@ -105,7 +105,8 @@ nfeatures_df <- cellNexus:::get_cellxgene_metadata("dataset") |>
   
 metadata <- metadata |>
   dplyr::left_join(nfeatures_df,
-           by = "dataset_id", copy = TRUE) |>
+                   by = "dataset_id",
+                   copy = TRUE) |>
   dplyr::filter(feature_count >= 5000)
 ```
 
