@@ -29,15 +29,6 @@ CellxGene Census data releases (LTS): https://chanzuckerberg.github.io/cellxgene
 
 ---
 
-## hta_2025/0.1.0
-
-- **Census version**: 21-10-2025
-- **Change type**: initial
-- **Modified**: 2026-03-26
-- Initial release is linked to the pilot study of lung tumour tissue from the Human Tumour Atlas (HTAN). Version corresponds to the date when the metadata was downloaded from the HTAN portal.
-
----
-
 ## cellxgene_2024/0.2.0
 
 - **Census version**: 01-07-2024
