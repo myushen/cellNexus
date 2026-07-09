@@ -317,13 +317,17 @@ get_atlas_versions <- function(cache = tempdir()) {
 #' @importFrom cli cli_alert_warning
 #' @keywords internal
 #' @noRd
-join_census_table <- function(tbl, ...) {
+join_census_table <- function(tbl,
+                              census_version = "2024-07-01",
+                              ...) {
   cli_alert_warning(paste(
     "{.fun join_census_table} is no longer supported",
     "Use {.fun get_census_metadata} instead to retrieve a Census data frame",
-    "and join it to your metadata manually."
+    "and join it to your metadata manually.",
+    "Falling back to {.fun get_census_metadata} with",
+    "census_version = {.val {census_version}}."
   ))
-  get_census_metadata(...)
+  get_census_metadata(census_version = census_version)
 }
 
 #' Retrieve cell-level metadata from CZ CELLxGENE Census
