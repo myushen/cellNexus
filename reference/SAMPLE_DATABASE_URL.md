@@ -11,7 +11,7 @@ SAMPLE_DATABASE_URL
 
 ## Format
 
-An object of class `character` of length 2.
+An object of class `character` of length 1.
 
 ## Source
 
@@ -33,9 +33,9 @@ Human Cell Atlas data." bioRxiv (2026). doi:10.64898/2026.04.14.718336.
 ## Examples
 
 ``` r
-get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"], cache_directory = tempdir())
+get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir())
 #> ℹ Downloading 1 file, totalling 0 GB
-#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/cellnexus_sample_metadata.2.3.0.parquet to /tmp/RtmpEKSPJu/cellnexus_sample_metadata.2.3.0.parquet
+#> ℹ Downloading https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/sample_hca2024_v2.3.0.parquet to /tmp/RtmpceudIZ/sample_hca2024_v2.3.0.parquet
 #> # A query:  ?? x 58
 #> # Database: DuckDB 1.5.4 [unknown@Linux 6.17.0-1018-azure:R 4.6.1/:memory:]
 #>    cell_id observation_joinid dataset_id         sample_id sample_ experiment___
