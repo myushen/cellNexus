@@ -13,7 +13,7 @@ cache <- rlang::env(
 #' @export
 #' @return A character vector of URLs to parquet files to download
 #' @examples
-#' get_metadata_url("cellnexus_metadata.2.3.0.parquet")
+#' get_metadata_url("hca2024_v2.3.0.parquet")
 #' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
 #'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
 #'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,
@@ -22,8 +22,8 @@ cache <- rlang::env(
 #'   doi:10.64898/2026.04.14.718336.
 #' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 get_metadata_url <- function(databases = c(
-                               "cellnexus_metadata.2.3.0.parquet",
-                               "census_cell_metadata.2.3.0.parquet"
+                               "hca2024_v2.3.0.parquet",
+                               "hca2025_v1.0.0.parquet"
                              )) {
   glue::glue(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/cellNexus-metadata/{databases}"
@@ -35,7 +35,7 @@ get_metadata_url <- function(databases = c(
 #' @export
 #' @return Character scalar consisting of the URL/URLs
 #' @examples
-#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"], cache_directory = tempdir())
+#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL, cache_directory = tempdir())
 #' @references Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
 #'   J. Andrews, E. Yang, C. Zhan, N. Liu, S. Si, J. W. Hutchison,
 #'   M. H. Shakeel, M. Morgan, A. T. Papenfuss, J. Iskander, J. M. Polo,
@@ -44,13 +44,9 @@ get_metadata_url <- function(databases = c(
 #'   doi:10.64898/2026.04.14.718336.
 #' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 SAMPLE_DATABASE_URL <- c(
-  cellnexus = paste0(
+  paste0(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
-    "cellNexus-metadata/cellnexus_sample_metadata.2.3.0.parquet"
-  ),
-  census = paste0(
-    "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
-    "cellNexus-metadata/census_sample_metadata.2.3.0.parquet"
+    "cellNexus-metadata/sample_hca2024_v2.3.0.parquet"
   )
 )
 
@@ -83,10 +79,9 @@ SAMPLE_DATABASE_URL <- c(
 #' # For fast build purpose only, you do not need to specify anything in cloud_metadata.
 #' filtered_metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
 #'   filter(
-#'     self_reported_ethnicity == "African" &
-#'       assay %LIKE% "%10x%" &
-#'       tissue == "lung parenchyma" &
-#'       cell_type %LIKE% "%CD4%"
+#'     imputed_ethnicity == "African" &
+#'       tissue_groups == "breast" &
+#'       cell_type_unified_ensemble %LIKE% "%cd14%"
 #'   )
 #'
 #' @importFrom DBI dbConnect
@@ -166,7 +161,7 @@ SAMPLE_DATABASE_URL <- c(
 #'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
 #'   doi:10.64898/2026.04.14.718336.
 #' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
-get_metadata <- function(cloud_metadata = get_metadata_url("cellnexus_metadata.2.3.0.parquet"),
+get_metadata <- function(cloud_metadata = get_metadata_url("hca2024_v2.3.0.parquet"),
                          local_metadata = NULL,
                          cache_directory = get_default_cache_dir(),
                          use_cache = TRUE) {
@@ -265,58 +260,6 @@ get_cell_communication_strength <- function(
   get_metadata(cloud_metadata, local_metadata, cache_directory, use_cache)
 }
 
-#' Join Census metadata to an existing data frame
-#'
-#' Downloads and joins the Census metadata with cellNexus metadata.
-#' This function creates indexed tables for efficient joining and returns a data frame.
-#'
-#' @param tbl A `tbl_sql` object (from get_metadata) or a database connection.
-#' @param cloud_metadata  HTTP URL/URLs pointing to the census parquet database name and location.
-#' @param cache_directory A character string specifying the local cache
-#'   directory where remote parquet files will be stored. Defaults to
-#'   [get_default_cache_dir()].
-#' @param join_keys A character vector of column names used for the join.
-#'   Defaults to `c("sample_id", "dataset_id", "observation_joinid")`.
-#' @examples
-#' library(dplyr)
-#' get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(2) |>
-#'   # You do not need to specify anything in cloud_metadata
-#'   join_census_table(
-#'     cloud_metadata = SAMPLE_DATABASE_URL,
-#'     cache_directory = tempdir()
-#'   )
-#' @return A lazy SQL table with Census metadata joined to the cellNexus metadata.
-#' @importFrom dplyr left_join
-#' @export
-join_census_table <- function(tbl,
-                              cloud_metadata = get_metadata_url("census_cell_metadata.2.3.0.parquet"),
-                              cache_directory = get_default_cache_dir(),
-                              join_keys = c("sample_id", "dataset_id", "observation_joinid")) {
-  # Synchronize remote files
-  walk(cloud_metadata, function(url) {
-    # Calculate the file path from the URL
-    path <- file.path(cache_directory, url |>
-      basename())
-    if (!file.exists(path)) {
-      report_file_sizes(url)
-      sync_remote_file(
-        url,
-        path,
-        progress(type = "down", con = stderr())
-      )
-    }
-  })
-  parquet_path <- file.path(cache_directory, cloud_metadata |>
-    basename())
-  # Fetch current connection
-  conn <- dbplyr::remote_con(tbl)
-  # Register the census parquet as a lazy table
-  census_tbl <- duckdb_read_parquet(conn, parquet_path)
-  # Join to the incoming tbl_lazy
-  tbl |>
-    left_join(census_tbl, by = join_keys)
-}
-
 #' Returns the atlas version changelog as a tibble
 #'
 #' Downloads the `atlas_versions.parquet` registry from the cellNexus metadata
@@ -366,4 +309,113 @@ get_atlas_versions <- function(cache = tempdir()) {
     overwrite = TRUE
   )
   arrow::read_parquet(local_path)
+}
+
+#' @rdname get_census_metadata
+#' @param tbl Deprecated. Previously a `tbl_sql` object to join against.
+#' @param ... Deprecated arguments, ignored.
+#' @importFrom cli cli_alert_warning
+#' @keywords internal
+#' @noRd
+join_census_table <- function(tbl,
+                              census_version = "2024-07-01",
+                              ...) {
+  cli_alert_warning(paste(
+    "{.fun join_census_table} is no longer supported",
+    "Use {.fun get_census_metadata} instead to retrieve a Census data frame",
+    "and join it to your metadata manually.",
+    "Falling back to {.fun get_census_metadata} with",
+    "census_version = {.val {census_version}}."
+  ))
+  get_census_metadata(census_version = census_version)
+}
+
+#' Retrieve cell-level metadata from CZ CELLxGENE Census
+#'
+#' Fetches cell-level metadata for human primary-data cells directly from the
+#' CZ CELLxGENE Census using the Long-Term Stable (LTS) release. The result is
+#' a standard Arrow Table that can be registered at the same connection
+#' as `get_metadata()`, and joined via shared keys such as
+#' `observation_joinid` and `dataset_id`.
+#'
+#' @param census_version A character string specifying the Census LTS version
+#'   to query. For available LTS versions see the
+#'   [Census release changelog](https://chanzuckerberg.github.io/cellxgene-census/cellxgene_census_docsite_data_release_info.html).
+#'   To find the LTS version associated with a specific cellNexus atlas, use
+#'   [get_atlas_versions()].
+#' @return A standard Arrow Table of human primary-data cell metadata from the Census,
+#'   materialized from the lazy SOMA iterator.
+#' @importFrom cli cli_abort cli_alert_info
+#' @keywords internal
+#' @noRd
+get_census_metadata <- function(census_version) {
+  if (!requireNamespace("cellxgene.census", quietly = TRUE)) {
+    cli_abort(paste(
+      "The {.pkg cellxgene.census} package is required.",
+      "Install it with:",
+      "{.code install.packages('cellxgene.census',",
+      "repos = c('https://chanzuckerberg.r-universe.dev',",
+      "'https://cloud.r-project.org'))}"
+    ))
+  }
+
+  cli_alert_info("Opening Census version {census_version}.")
+  census <- cellxgene.census::open_soma(census_version = census_version)
+  on.exit(census$close(), add = TRUE)
+
+  metadata <- census$get("census_data")$get("homo_sapiens")$get("obs")
+
+  cli_alert_info("Reading Census obs table.")
+  census_metadata <- metadata$read(
+    value_filter = "is_primary_data == 'TRUE'"
+  )$concat()
+}
+
+#' Retrieve Metadata from CELLxGENE Data Portal
+#'
+#' @description
+#' Queries the CELLxGENE Data Portal database and returns metadata at the
+#' specified level of granularity. Requires the \pkg{cellxgenedp} package.
+#'
+#' @param level Character string specifying the metadata level to retrieve.
+#' @param overwrite Additional arguments passed to \code{\link[cellxgenedp]{db}},
+#'   such as \code{overwrite = FALSE} to use the cached database.
+#'
+#' @return A \code{\link[tibble]{tibble}} containing metadata from the
+#'   CELLxGENE Data Portal at the requested level. Columns vary by level:
+#'   \describe{
+#'     \item{\code{"dataset"}}{Includes fields such as dataset ID, title,
+#'       organism, tissue, assay, disease, and cell count.}
+#'     \item{\code{"collection"}}{Includes fields such as collection ID, name,
+#'       description, and publisher metadata.}
+#'     \item{\code{"file"}}{Includes fields such as file ID, filename, filetype,
+#'       and download URL.}
+#'   }
+#'
+#' @seealso
+#' \itemize{
+#'   \item \code{\link[cellxgenedp]{datasets}} for the underlying datasets query
+#'   \item \code{\link[cellxgenedp]{collections}} for the underlying collections query
+#'   \item \code{\link[cellxgenedp]{files}} for the underlying files query
+#'   \item \href{https://chanzuckerberg.github.io/cellxgenedp/}{cellxgenedp documentation}
+#' }
+#'
+#' @importFrom cli cli_abort
+#' @noRd
+#' @keywords internal
+get_cellxgene_metadata <- function(level = c("dataset", "collection", "file"),
+                                   overwrite = FALSE) {
+  if (!requireNamespace("cellxgenedp", quietly = TRUE)) {
+    cli::cli_abort(c(
+      "The {.pkg cellxgenedp} package is required.",
+      "i" = "Install it with: {.code BiocManager::install('cellxgenedp')}"
+    ))
+  }
+  level <- match.arg(level)
+  db <- cellxgenedp::db(overwrite)
+  switch(level,
+    collection = cellxgenedp::collections(db),
+    dataset    = cellxgenedp::datasets(db),
+    file       = cellxgenedp::files(db)
+  )
 }

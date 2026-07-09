@@ -108,14 +108,14 @@ get_single_cell_experiment <- function(data,
     raw_data <- keep_quality_cells(raw_data)
     n_dropped <- n_total - nrow(raw_data)
     if (n_dropped > 0) {
-       cli_alert_warning(paste(
-         "cellNexus says: {n_dropped} cells in your metadata did not pass quality",
-         "control (empty droplets, dead cells, or doublets) and have been excluded",
-         "automatically. The SCT assay is computed from quality-controlled cells only.",
-         "To suppress this warning, apply `keep_quality_cells()` to your metadata",
-         "before calling `get_single_cell_experiment()`."
-       ))
-     }
+      cli_alert_warning(paste(
+        "cellNexus says: {n_dropped} cells in your metadata did not pass quality",
+        "control (empty droplets, dead cells, or doublets) and have been excluded",
+        "automatically. The SCT assay is computed from quality-controlled cells only.",
+        "To suppress this warning, apply `keep_quality_cells()` to your metadata",
+        "before calling `get_single_cell_experiment()`."
+      ))
+    }
   }
 
   validate_data(raw_data, assays, cell_aggregation, cache_directory, repository, features)
@@ -682,7 +682,11 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     new_coldata <- df |>
       select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
       # Remove metacell and single-cell level annotations in pseudobulk
-      dplyr::select(-dplyr::contains("metacell"), -dplyr::matches("azimuth|monaco|blueprint|subsets_|high_")) |>
+      dplyr::select(
+        -dplyr::contains("metacell"),
+        -dplyr::matches("azimuth|monaco|blueprint|subsets_|high_"),
+        -dplyr::matches("raw_|nnz|n_meatured_vars|soma_")
+      ) |>
       distinct() |>
       mutate(
         sample_identifier = paste(

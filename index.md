@@ -23,12 +23,11 @@ The harmonisation pipeline standardises data across datasets so queries are cons
 
 ### Quality control steps 
 
-The QC flags used throughout `cellNexus` are computed using [HPCell](https://github.com/MangiolaLaboratory/HPCell). In brief:
+The QC flags used throughout `cellNexus` are computed on sample-level using [HPCell](https://github.com/MangiolaLaboratory/HPCell). In brief:
 
-  - Empty droplets (`empty_droplet`):
-  - Computed from a `SingleCellExperiment`.
-  - Excludes mitochondrial genes and ribosomal genes before scoring:
-  - Computes, per cell, the number of expressed genes and flags a cell as an empty droplet when \(n_\mathrm{feature} <\) `RNA_feature_threshold` (by default 200, except for targeted panels such as Rhapsody technology).
+- Empty droplets (`empty_droplet`):
+  - Excludes mitochondrial genes and ribosomal genes before scoring.
+  - Computes, per cell, the number of expressed genes and flags a cell as an empty droplet when the number of expressed genes is less than `RNA_feature_threshold` (by default 200, except for targeted panels such as Rhapsody technology).
 
 - Alive cells (`alive`):
   - Filters out empty droplets.
@@ -38,7 +37,7 @@ The QC flags used throughout `cellNexus` are computed using [HPCell](https://git
 
 - Doublets (`scDblFinder.class`):
   - Filters out empty droplets.
-  - `scDblFinder::scDblFinder()` default parameters are used. For cells that cannot be classified by `scDblFinder`, the class is set to `"Unknown"` to avoid dropping cells.
+  - `scDblFinder::scDblFinder()` default parameters are used. For cells that cannot be classified by `scDblFinder`, the label is set to `"Unknown"` to avoid dropping cells.
 
 ### RNA abundance 
 - RNA counts:
@@ -52,8 +51,8 @@ The QC flags used throughout `cellNexus` are computed using [HPCell](https://git
   - Implemented in column chunks (default 1000 cells per slice) to handle very large datasets; slices are written to disk as an `HDF5Array`-backed sparse integer matrix and then column-bound.
 
 - SCT:
+  - All low-quality cells flagged by QC are removed before normalisation.
   - Variance-stabilising normalisation computed with Seurat `SCTransform()` (v2), with regression of cell-level covariates (`subsets_Mito_percent` and `subsets_Ribo_percent`).
-  - QC filtering is applied first.
   - The median common scale across the whole resource is applied (scale_factor=2186)
 
 - Pseudobulk:
@@ -116,11 +115,17 @@ library(cellNexus)
 library(dplyr)
 library(stringr)
 
-metadata <- get_metadata() |>
-  join_census_table()
+metadata <- get_metadata()
 
 metadata <- metadata |>
   keep_quality_cells()
+  
+census_metadata <- cellNexus:::get_census_metadata("2024-07-01")
+con <- dbplyr::remote_con(metadata)
+duckdb::duckdb_register_arrow(con, "census_metadata", census_metadata)
+
+metadata <- metadata |>
+  dplyr::left_join(tbl(con, "census_metadata"))
 
 query <- metadata |>
   filter(

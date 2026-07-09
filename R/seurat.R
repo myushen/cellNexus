@@ -27,7 +27,6 @@ as.sparse.DelayedMatrix <- function(x, ...) {
 #'   doi:10.64898/2026.04.14.718336.
 #' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
 get_seurat <- function(...) {
-
   rlang::check_installed(c("Seurat", "SeuratObject"))
 
   get_single_cell_experiment(...) |>
