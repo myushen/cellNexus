@@ -5,7 +5,7 @@ library(dplyr)
 test_that("get_pseudobulk() syncs appropriate files", {
   temp <- tempfile()
   id <- "a1c68b7b04c6f8c135b15db69c59fb38___1.h5ad"
-  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
+  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL) |>
     keep_quality_cells() |>
     filter(file_id_cellNexus_pseudobulk == id)
 
@@ -20,7 +20,7 @@ test_that("get_pseudobulk() syncs appropriate files", {
 test_that("get_pseudobulk() subsets to requested gene ENSG00000184009", {
   temp <- tempfile()
   id <- "a1c68b7b04c6f8c135b15db69c59fb38___1.h5ad"
-  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
+  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL) |>
     keep_quality_cells() |>
     filter(file_id_cellNexus_pseudobulk == id)
 
@@ -37,7 +37,7 @@ test_that("get_pseudobulk() subsets to requested gene ENSG00000184009", {
 test_that("get_pseudobulk() as_SummarizedExperiment preserves rownames", {
   temp <- tempfile()
   id <- "a1c68b7b04c6f8c135b15db69c59fb38___1.h5ad"
-  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL["cellnexus"]) |>
+  meta <- get_metadata(cache_directory = temp, cloud_metadata = SAMPLE_DATABASE_URL) |>
     keep_quality_cells() |>
     filter(file_id_cellNexus_pseudobulk == id)
 

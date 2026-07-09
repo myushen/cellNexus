@@ -38,6 +38,9 @@ jobs:
           cont: ~
           rspm: ~
     steps:
+    - name: Set Windows env vars
+      if: runner.os == 'Windows'
+      run: echo "_R_CHECK_FORCE_SUGGESTS_=false" >> $env:GITHUB_ENV
     - uses: neurogenomics/rworkflows@master
       with:
         run_bioccheck: ${{ false }}

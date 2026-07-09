@@ -32,8 +32,8 @@ Then filter the metadata to find cells of interest and download the data:
 \preformatted{
 filtered_metadata <- metadata |>
     dplyr::filter(
-        tissue == "lung parenchyma" &
-        cell_type \%LIKE\% "\%CD4\%"
+        tissue_groups == "blood" &
+        cell_type_unified_ensemble \%LIKE\% "\%cd4\%"
     )
 
 sce <- get_single_cell_experiment(filtered_metadata)
