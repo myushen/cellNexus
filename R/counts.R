@@ -163,6 +163,11 @@ get_single_cell_experiment <- function(data,
 #' @param as_SummarizedExperiment If `TRUE`, coerce the result to a
 #'   `SummarizedExperiment`. Note that `as(x, "SummarizedExperiment")` drops
 #'   feature rownames; `get_pseudobulk()` restores them after coercion.
+#' @details
+#' Columns in `data` that are constant within each
+#' `sample_id` × `cell_type_unified_ensemble` combination (including
+#' user-added annotations) are retained in `colData`. Cell-level columns are
+#' dropped via internal `keep_specific_annotation_columns()`.
 #' @return By default, a `SingleCellExperiment` object. If
 #'   `as_SummarizedExperiment` is `TRUE`, a `SummarizedExperiment` object.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute
@@ -669,25 +674,11 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
       `colnames<-`(new_coldata$cell_id) |>
       `colData<-`(value = new_coldata)
   } else if (grouping_column == "file_id_cellNexus_pseudobulk") {
-    # Process specific to Pseudobulk
-    # remove cell-level annotations
-    cell_level_anno <- c(
-      "cell_id", "cell_type", "file_id_cellNexus_single_cell",
-      "cell_type_ontology_term_id",
-      "observation_joinid", "ensemble_joinid", "scaled_nCount_RNA",
-      "nFeature_expressed_in_sample", "nCount_RNA", "data_driven_ensemble", "cell_type_unified",
-      "empty_droplet", "observation_originalid", "alive", "scDblFinder.class", "is_immune"
-    )
-
+    # Keep columns functionally determined by the pseudobulk grain
+    # (sample_id × cell_type_unified_ensemble), including user-added annotations.
+    # Cell-level columns are dropped because they vary within that grain.
     new_coldata <- df |>
-      select(-dplyr::all_of(intersect(names(df), cell_level_anno))) |>
-      # Remove metacell and single-cell level annotations in pseudobulk
-      dplyr::select(
-        -dplyr::contains("metacell"),
-        -dplyr::matches("azimuth|monaco|blueprint|subsets_|high_"),
-        -dplyr::matches("raw_|nnz|n_meatured_vars|soma_")
-      ) |>
-      distinct() |>
+      keep_specific_annotation_columns(c(sample_id, cell_type_unified_ensemble), sample_n = 100000) |>
       mutate(
         sample_identifier = paste(
           .data$sample_id,

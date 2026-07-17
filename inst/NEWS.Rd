@@ -1,6 +1,20 @@
 \name{NEWS}
 \title{News for Package \pkg{cellNexus}}
 
+\section{News in version 0.99.27}{
+\itemize{
+    \item \code{get_pseudobulk()} now retains metadata columns that are constant within each
+    \code{sample_id} \(\times\) \code{cell_type_unified_ensemble} combination, including
+    user-added annotations, when building \code{colData}. Cell-level columns are dropped.
+    \item Added internal helpers \code{get_specific_annotation_columns()} and
+    \code{keep_specific_annotation_columns()} to identify and keep columns functionally
+    determined by selected key column(s). Works on local data frames and lazy DuckDB
+    tables from \code{get_metadata()}.
+    \item Tests. Added coverage for annotation-column detection and for preserving
+    sample-grain user columns through \code{get_pseudobulk()}, using
+    \code{SAMPLE_DATABASE_URL}.
+}}
+
 \section{News in version 0.99.10}{
 \itemize{
     \item \code{get_pseudobulk()} gained \code{as_SummarizedExperiment} to optionally return a \code{SummarizedExperiment}. Coercion restores feature rownames, which are otherwise dropped by \code{as(x, "SummarizedExperiment")}.

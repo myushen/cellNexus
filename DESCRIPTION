@@ -148,7 +148,6 @@ biocViews:
     Transcriptomics,
     ShinyApps
 Encoding: UTF-8
-RoxygenNote: 7.3.3
 URL: https://github.com/MangiolaLaboratory/cellNexus, https://mangiolalaboratory.github.io/cellNexus/
 BugReports: https://github.com/MangiolaLaboratory/cellNexus/issues
 VignetteBuilder: knitr
@@ -166,3 +165,4 @@ Collate:
     'zzz.R'
 Language: en-US
 SystemRequirements: Python
+Config/roxygen2/version: 8.0.0

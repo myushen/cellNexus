@@ -60,6 +60,12 @@ Given a data frame of Curated Atlas metadata obtained from \code{\link[=get_meta
 returns a \code{\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment::SummarizedExperiment}} object
 corresponding to the samples in that data frame
 }
+\details{
+Columns in \code{data} that are constant within each
+\code{sample_id} × \code{cell_type_unified_ensemble} combination (including
+user-added annotations) are retained in \code{colData}. Cell-level columns are
+dropped via internal \code{keep_specific_annotation_columns()}.
+}
 \examples{
 # Use the lightweight sample database URL (for fast checks during development only)
 meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |>
