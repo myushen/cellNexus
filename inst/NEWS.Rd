@@ -6,6 +6,9 @@
     \item \code{get_pseudobulk()} now retains metadata columns that are constant within each
     \code{sample_id} \(\times\) \code{cell_type_unified_ensemble} combination, including
     user-added annotations, when building \code{colData}. Cell-level columns are dropped.
+    \item \code{get_metacell()} uses the same once-per-query column selection for
+    \code{sample_id} \(\times\) metacell-level annotations, so \code{cbind()} across
+    files shares an identical \code{colData} schema.
     \item Added internal helpers \code{get_specific_annotation_columns()} and
     \code{keep_specific_annotation_columns()} to identify and keep columns functionally
     determined by selected key column(s). Works on local data frames and lazy DuckDB

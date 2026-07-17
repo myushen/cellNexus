@@ -230,6 +230,15 @@ get_pseudobulk <- function(data,
 
   validate_data(raw_data, assays, cell_aggregation, cache_directory, repository, features)
 
+  # Compute once on the full query so every file-level SCE shares identical
+  # colData columns before cbind(); per-file FD detection can disagree.
+  pseudobulk_coldata_columns <- get_specific_annotation_columns(
+    raw_data,
+    c(sample_id, cell_type_unified_ensemble),
+    sample_n = 100000L,
+    include_query_columns = TRUE
+  )
+
   res <- .fetch_experiments(
     raw_data = raw_data,
     assays = assays,
@@ -237,7 +246,8 @@ get_pseudobulk <- function(data,
     cache_directory = cache_directory,
     repository = repository,
     grouping_column = "file_id_cellNexus_pseudobulk",
-    features = features
+    features = features,
+    coldata_columns = pseudobulk_coldata_columns
   )
 
   if (as_SummarizedExperiment) {
@@ -310,6 +320,15 @@ get_metacell <- function(data,
 
   validate_data(data, assays, cell_aggregation, cache_directory, repository, features)
 
+  # Compute once on the full query so every file-level SCE shares identical
+  # colData columns before cbind().
+  metacell_coldata_columns <- get_specific_annotation_columns(
+    raw_data,
+    all_of(c("sample_id", cell_aggregation)),
+    sample_n = 100000L,
+    include_query_columns = TRUE
+  )
+
   .fetch_experiments(
     raw_data = raw_data,
     assays = assays,
@@ -318,7 +337,8 @@ get_metacell <- function(data,
     repository = repository,
     grouping_column = "file_id_cellNexus_metacell",
     features = features,
-    metacell_column = cell_aggregation
+    metacell_column = cell_aggregation,
+    coldata_columns = metacell_coldata_columns
   )
 }
 
@@ -336,6 +356,9 @@ get_metacell <- function(data,
 #' @param grouping_column Name of the file-ID column used to group cells.
 #' @param features Optional character vector of requested gene features.
 #' @param metacell_column Optional character of hierarchy.
+#' @param coldata_columns Optional character vector of colData columns to keep
+#'   for pseudobulk or metacell (computed once on the full query). Ignored for
+#'   single-cell aggregation.
 #' @return A \code{SingleCellExperiment} or \code{SummarizedExperiment} object.
 #' @importFrom httr parse_url
 #' @importFrom dplyr transmute distinct mutate
@@ -355,7 +378,8 @@ get_metacell <- function(data,
   repository,
   grouping_column,
   features,
-  metacell_column = NULL
+  metacell_column = NULL,
+  coldata_columns = NULL
 ) {
   subdirs <- assay_map[assays]
 
@@ -427,7 +451,8 @@ get_metacell <- function(data,
         features = features,
         grouping_column = grouping_column,
         metacell_column = cell_aggregation,
-        dropped_counter = cell_drop_state
+        dropped_counter = cell_drop_state,
+        coldata_columns = coldata_columns
       )
       cli_progress_update(id = pb)
       res
@@ -603,6 +628,9 @@ validate_data <- function(
 #'   cells are tallied into the environment in addition to the per-file warning,
 #'   allowing the caller to emit a single consolidated summary after all files are
 #'   read. If \code{NULL} (the default), only the per-file warning is issued.
+#' @param coldata_columns Optional character vector of columns to retain in
+#'   pseudobulk or metacell \code{colData}. Must be identical across files that
+#'   will be \code{cbind()}ed.
 #' @return A `SummarizedExperiment` object
 #' @importFrom dplyr mutate filter select left_join distinct any_of all_of contains matches
 #' @importFrom SummarizedExperiment colData<-
@@ -615,7 +643,8 @@ validate_data <- function(
 #' @noRd
 group_to_data_container <- function(i, df, dir_prefix, features, grouping_column,
                                     metacell_column = NULL,
-                                    dropped_counter = NULL) {
+                                    dropped_counter = NULL,
+                                    coldata_columns = NULL) {
   experiment_path <- file.path(dir_prefix, df[[grouping_column]][1])
 
   if (!file.exists(experiment_path)) {
@@ -674,11 +703,16 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
       `colnames<-`(new_coldata$cell_id) |>
       `colData<-`(value = new_coldata)
   } else if (grouping_column == "file_id_cellNexus_pseudobulk") {
-    # Keep columns functionally determined by the pseudobulk grain
-    # (sample_id × cell_type_unified_ensemble), including user-added annotations.
-    # Cell-level columns are dropped because they vary within that grain.
+    # Use the precomputed column set from the full query (same for every file).
+    if (is.null(coldata_columns)) {
+      cli_abort(c(
+        "cellNexus says: Internal error: {.arg coldata_columns} is required for pseudobulk.",
+        "i" = "Compute columns once via {.fn get_specific_annotation_columns} before fetching."
+      ))
+    }
     new_coldata <- df |>
-      keep_specific_annotation_columns(c(sample_id, cell_type_unified_ensemble), sample_n = 100000) |>
+      select(all_of(coldata_columns)) |>
+      distinct() |>
       mutate(
         sample_identifier = paste(
           .data$sample_id,
@@ -705,19 +739,13 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
     experiment <- experiment |>
       as("SingleCellExperiment")
   } else if (grouping_column == "file_id_cellNexus_metacell") {
-    # Select relevant annotations to remove single-cell level annotations
-    annotations <- metacell_column |>
-      c(
-        "dataset_id", "sample_id", "assay", "assay_ontology_term_id",
-        "development_stage", "development_stage_ontology_term_id", "disease", "disease_ontology_term_id",
-        "donor_id", "experiment___", "explorer_url", "feature_count", "is_primary_data",
-        "organism", "organism_ontology_term_id", "published_at", "raw_data_location",
-        "revised_at", "sample_heuristic", "schema_version", "self_reported_ethnicity",
-        "self_reported_ethnicity_ontology_term_id", "sex", "sex_ontology_term_id", "tissue",
-        "tissue_ontology_term_id", "tissue_type", "title", "tombstone", "url", "age_days",
-        "tissue_groups", "atlas_id", "sample_chunk", "file_id_cellNexus_single_cell",
-        "file_id_cellNexus_metacell", "dir_prefix"
-      )
+    # Use the precomputed column set from the full query (same for every file).
+    if (is.null(coldata_columns)) {
+      cli_abort(c(
+        "cellNexus says: Internal error: {.arg coldata_columns} is required for metacell.",
+        "i" = "Compute columns once via {.fn get_specific_annotation_columns} before fetching."
+      ))
+    }
 
     mapping_tbl <- as.data.frame(SummarizedExperiment::colData(experiment)) |>
       select(all_of(c("sample_id", metacell_column, "metacell_id")))
@@ -727,7 +755,8 @@ group_to_data_container <- function(i, df, dir_prefix, features, grouping_column
         mapping_tbl,
         by = c("sample_id", metacell_column)
       ) |>
-      select(any_of(annotations), all_of("metacell_id")) |>
+      # metacell_id comes from the assay mapping, not the metadata FD set
+      select(all_of(coldata_columns), all_of("metacell_id")) |>
       distinct() |>
       mutate(
         original_metacell_id = .data$metacell_id,

@@ -151,3 +151,22 @@ test_that("get_pseudobulk() preserves sample-grain user columns", {
   sme <- get_pseudobulk(meta, cache_directory = temp)
   expect_true("my_sample_annotation" %in% colnames(colData(sme)))
 })
+
+# Metacell grain is sample_id × metacell_* (same once-per-query selection pattern)
+test_that("get_specific_annotation_columns supports metacell grain keys", {
+  df <- tibble(
+    sample_id = rep(c("s1", "s2"), each = 4),
+    metacell_2 = rep(c("m1", "m1", "m2", "m2"), 2),
+    batch = rep(c("b1", "b1", "b1", "b1", "b2", "b2", "b2", "b2")),
+    metacell_score = c(1, 1, 2, 2, 3, 3, 4, 4),
+    cell_id = paste0("c", 1:8)
+  )
+
+  cols <- get_specific_annotation_columns(
+    df,
+    all_of(c("sample_id", "metacell_2")),
+    include_query_columns = TRUE
+  )
+  expect_true(all(c("sample_id", "metacell_2", "batch", "metacell_score") %in% cols))
+  expect_false("cell_id" %in% cols)
+})
