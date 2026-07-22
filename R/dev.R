@@ -240,13 +240,13 @@ hdf5_to_anndata <- function(input_directory, output_directory) {
 #' @param census_version Character scalar. Census LTS release in date format.
 #' @return NULL
 downsample_metadata <- function(
-  cellnexus_output = "cellnexus_sample_metadata.2.3.0.parquet",
+  cellnexus_output = "sample_hca2024_v2.3.1.parquet",
   census_version = "2024-07-01"
 ) {
-  census_metadata <- get_census_metadata("census_version")
+  census_metadata <- get_census_metadata(census_version)
   metadata <- get_metadata()
   con <- dbplyr::remote_con(metadata)
-  duckdb_register_arrow(con, "census_metadata", census_metadata)
+  duckdb::duckdb_register_arrow(con, "census_metadata", census_metadata)
 
   full_metadata <- metadata |>
     left_join(tbl(con, "census_metadata"))
@@ -283,7 +283,7 @@ downsample_metadata <- function(
     .data$file_id_cellNexus_single_cell == "4414dffc701125c467adad7977adcf21___1.h5ad",
   ) |>
     purrr::map(function(filter) {
-      all_ids <- metadata |>
+      all_ids <- full_metadata |>
         dplyr::filter(!!filter) |>
         dplyr::group_by(.data$file_id_cellNexus_single_cell) |>
         dplyr::pull(.data$file_id_cellNexus_single_cell) |>
@@ -296,18 +296,25 @@ downsample_metadata <- function(
     }) |>
     purrr::reduce(union)
 
-  full_metadata <- full_metadata |>
+  census_cols <- tbl(con, "census_metadata") |>
+    colnames() |>
+    setdiff("dataset_id")
+
+  final_query <- full_metadata |>
     dplyr::filter(.data$file_id_cellNexus_single_cell %in% minimal_file_ids) |>
     dplyr::arrange(.data$file_id_cellNexus_single_cell, .data$sample_id) |>
-    dplyr::collect()
-
-  census_cols <- tbl(con, "census_metadata") |>
-    colnames()
-
-  cellnexus_metadata <- full_metadata |>
     dplyr::select(-dplyr::all_of(census_cols))
 
-  arrow::write_parquet(cellnexus_metadata, cellnexus_output)
+  query_sql <- dbplyr::remote_query(final_query)
+
+  out_path <- normalizePath(cellnexus_output, mustWork = FALSE)
+
+  DBI::dbExecute(
+    con,
+    glue::glue(
+      "COPY ({query_sql}) TO '{out_path}' (FORMAT PARQUET, COMPRESSION ZSTD)"
+    )
+  )
 
   NULL
 }

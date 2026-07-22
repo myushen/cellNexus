@@ -70,7 +70,6 @@ Through harmonisation and curation, `cellNexus` adds columns that are not presen
 | `dataset_id` | Primary dataset identifier in the atlas. |
 | `sample_id` | Harmonised sample identifier. |
 | `sample_` | Internal sample subdivision helper. |
-| `experiment___` | Upstream experiment grouping variable. |
 | `sample_heuristic` | Internal sample subdivision helper. |
 | `age_days` | Donor age in days. |
 | `tissue_groups` | Coarse tissue grouping for analysis. |
