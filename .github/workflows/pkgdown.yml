@@ -26,9 +26,7 @@ jobs:
             any::rmarkdown
             any::knitr
           needs: website
-          repos: |
-            https://chanzuckerberg.r-universe.dev
-            https://cloud.r-project.org
+          extra-repositories: 'https://chanzuckerberg.r-universe.dev'
 
       - name: Install package
         run: R CMD INSTALL .

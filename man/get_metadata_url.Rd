@@ -7,22 +7,22 @@
 \href{https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3}{Shen et al.,2026}
 }
 \usage{
-get_metadata_url(
-  databases = c("hca2024_v2.3.0.parquet", "hca2025_v1.0.0.parquet")
-)
+get_metadata_url(databases = c("hca_2024", "hca_2025"))
 }
 \arguments{
-\item{databases}{A character vector specifying the names of the metadata files.
-Download the specific metadata by defining the metadata version.}
+\item{databases}{A character vector of atlas aliases or raw parquet
+filenames. Recognised aliases are \code{"hca_2024"} and \code{"hca_2025"}.
+Raw filenames (e.g. \code{"atlas_versions.parquet"}) are passed through
+unchanged and are intended for internal package use.}
 }
 \value{
-A character vector of URLs to parquet files to download
+A character vector of URLs to parquet files
 }
 \description{
 Returns the URLs for all metadata files
 }
 \examples{
-get_metadata_url("hca2024_v2.3.0.parquet")
+get_metadata_url("hca_2024")
 }
 \references{
 Shen, M., Y. Gao, N. Liu, D. Bhuva, M. Milton, J. Henao,
