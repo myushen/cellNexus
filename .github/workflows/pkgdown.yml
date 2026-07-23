@@ -19,6 +19,14 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
+      - name: Add CZI r-universe to R repos
+        shell: Rscript {0}
+        run: |
+          cat(
+            'options(repos = c(CZI = "https://chanzuckerberg.r-universe.dev", getOption("repos")))\n',
+            file = "~/.Rprofile", append = TRUE
+          )
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: |
@@ -26,7 +34,6 @@ jobs:
             any::rmarkdown
             any::knitr
           needs: website
-          extra-repositories: 'https://chanzuckerberg.r-universe.dev'
 
       - name: Install package
         run: R CMD INSTALL .
