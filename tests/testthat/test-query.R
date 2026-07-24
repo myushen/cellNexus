@@ -219,6 +219,12 @@ test_that("database_url() expect character ", {
     expect_s3_class("character")
 })
 
+test_that("get_metadata_url() returns a parquet file URL", {
+  url <- get_metadata_url("hca_2024")
+  expect_type(url, "character")
+  expect_match(url, "^https://.*\\.parquet$")
+})
+
 test_that("get_metadata_url() returns URLs for given database names", {
   dbs <- c("metadata.TEST.parquet", "sample_metadata.TEST.parquet")
   urls <- get_metadata_url(dbs)

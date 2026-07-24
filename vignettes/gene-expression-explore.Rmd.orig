@@ -14,7 +14,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 # Overview
 
 The unified pseudobulk AnnData object was generated after quality control and retaining at least 15,000 intersecting genes across samples, 
-and uploaded to Zenodo [10.5281/zenodo.20500176](https://zenodo.org/records/20500176).
+and uploaded to Zenodo [10.5281/zenodo.21388944](https://zenodo.org/records/21388944).
 
 This page focuses on expression-layer retrieval workflows after metadata filtering. 
 

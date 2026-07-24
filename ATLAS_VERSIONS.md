@@ -54,6 +54,14 @@ CellxGene Census data releases (LTS): https://chanzuckerberg.github.io/cellxgene
 - **Modified**: 2026-05-26
 - Updated transform methods for some samples. Involved double_log1p normalisation inverse method. Fixed large expression for edge case samples at https://github.com/MangiolaLaboratory/cellNexus/issues/105.
 
+## hca_2024/0.4.1
+
+- **Census version**: 01-07-2024
+- **Change type**: minor
+- **Modified**: 2026-07-22
+- Updated the SCT and pseudobulk assays following the update of the quality control column (alive). Renamed atlas to hca_2024 for clarity and align with the project naming convention.
+
+
 ---
   
 ## Adding a new entry
