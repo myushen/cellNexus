@@ -296,3 +296,111 @@ keep_quality_cells <- function(data,
       .data[[doublet_col]] != "doublet"
     )
 }
+
+#' Identify annotation columns determined by key column(s)
+#'
+#' Returns names of columns that do not vary within each combination of `.col`
+#' (functionally determined by the keys). Useful for keeping sample- or
+#' pseudobulk-grain annotations and dropping cell-level columns.
+#'
+#' A non-key column `x` is kept when
+#' `n_distinct(.col..., x) == n_distinct(.col...)`.
+#'
+#' Works on local data frames and lazy DuckDB tables from [get_metadata()].
+#'
+#' @param .data A data frame or lazy table (e.g. from [get_metadata()]).
+#' @param .col Tidyselect keys, e.g. `sample_id`,
+#'   `c(sample_id, cell_type_unified_ensemble)`, or `contains("cell_type")`.
+#' @param sample_n Optional positive integer. If set, randomly sample this many
+#'   rows with [dplyr::slice_sample()] before checking (lazy on DuckDB). Faster
+#'   but approximate.
+#' @param include_query_columns Logical. If `TRUE`, include the columns
+#'   selected by `.col` in the result. Default `FALSE`.
+#'
+#' @return A character vector of column names determined by `.col`.
+#'
+#' @examples
+#' meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(1000)
+#' get_specific_annotation_columns(meta, sample_id)
+#' get_specific_annotation_columns(
+#'   meta,
+#'   c(sample_id, cell_type_unified_ensemble),
+#'   sample_n = 5000L
+#' )
+#' get_specific_annotation_columns(meta, contains("cell_type"), sample_n = 5000L)
+#' @keywords internal
+#' @noRd
+#' @importFrom dplyr select summarise collect n_distinct slice_sample
+#' @importFrom rlang syms expr sym
+#' @importFrom cli cli_abort
+get_specific_annotation_columns <- function(.data, .col, sample_n = NULL,
+                                            include_query_columns = TRUE) {
+  if (!is.null(sample_n)) {
+    .data <- slice_sample(.data, n = sample_n)
+  }
+
+  key_names <- .data |>
+    select({{ .col }}) |>
+    colnames()
+  if (!length(key_names)) {
+    cli_abort("No key columns selected by {.arg .col}.")
+  }
+
+  other_cols <- setdiff(colnames(.data), key_names)
+  if (!length(other_cols)) {
+    return(if (include_query_columns) key_names else character())
+  }
+
+  key_exprs <- syms(key_names)
+  dots <- lapply(other_cols, function(col) {
+    expr(n_distinct(!!!key_exprs, !!sym(col)))
+  })
+  names(dots) <- other_cols
+
+  counts <- .data |>
+    summarise(
+      n_key = n_distinct(!!!key_exprs),
+      !!!dots
+    ) |>
+    collect()
+
+  specific_cols <- other_cols[as.numeric(counts[other_cols]) == counts$n_key]
+  if (include_query_columns) 
+    specific_cols = c(key_names, specific_cols)
+
+  return(specific_cols)
+}
+
+#' Keep key columns and annotations determined by them
+#'
+#' Selects `.col` plus columns returned by `get_specific_annotation_columns()`.
+#' Useful for reducing cell-level metadata to sample- or pseudobulk-grain
+#' annotations before building `colData`.
+#'
+#' @param .data A data frame or lazy table (e.g. from [get_metadata()]).
+#' @param .col Tidyselect keys, e.g. `sample_id`,
+#'   `c(sample_id, cell_type_unified_ensemble)`, or `contains("cell_type")`.
+#' @param sample_n Optional positive integer. If set, randomly sample this many
+#'   rows with [dplyr::slice_sample()] before checking (lazy on DuckDB). Faster
+#'   but approximate.
+#' @param include_query_columns Logical. If `TRUE`, include the columns
+#'   selected by `.col` in the result.
+#'
+#' @return `.data` with only the key columns and columns functionally
+#'   determined by them.
+#'
+#' @examples
+#' meta <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |> head(1000)
+#' meta |> keep_specific_annotation_columns(c(sample_id, cell_type_unified_ensemble))
+#' @keywords internal
+#' @noRd
+#' @importFrom dplyr select all_of
+keep_specific_annotation_columns <- function(.data, .col, sample_n = NULL, include_query_columns = TRUE) {
+  cols <- get_specific_annotation_columns(
+    .data,
+    {{ .col }},
+    sample_n = sample_n,
+    include_query_columns = include_query_columns
+  )
+  select(.data, all_of(cols)) |> distinct()
+}
