@@ -53,6 +53,15 @@ CELLxGENE releases.
 
 </div>
 
+# Repositories
+
+### R API: [here](https://github.com/MangiolaLaboratory/cellNexus)
+
+### Python API: [here](https://github.com/MangiolaLaboratory/cellNexusPy/)
+
+### Article code: [here](https://github.com/MangiolaLaboratory/cellNexus_article)
+
+
 # Query interface
 
 ## Installation
