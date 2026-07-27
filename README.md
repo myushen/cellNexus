@@ -38,6 +38,11 @@ CELLxGENE releases.
 <div class="figure">
 
 <img src="man/figures/logo.png" width="120x" height="139px" />
+
+</div>
+
+<div class="figure">
+
 <img src="man/figures/svcf_logo.jpeg" width="155x" height="58px" />
 <img src="man/figures/czi_logo.png" width="129px" height="58px" />
 <img src="man/figures/bioconductor_logo.jpg" width="202px" height="58px" />
@@ -46,6 +51,7 @@ CELLxGENE releases.
 <img src="man/figures/CSL_Limited_logo.svg.png" width="120px" height="58px" />
 
 
+</div>
 
 # Query interface
 
