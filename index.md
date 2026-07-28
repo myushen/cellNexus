@@ -61,7 +61,7 @@ The QC flags used throughout `cellNexus` are computed on sample-level using [HPC
 
 ## Metadata Explore
 
-Through harmonisation and curation, `cellNexus` adds columns that are not present in the original CELLxGENE metadata alone.
+Through harmonisation and curation, `cellNexus` adds columns that are not present in the original CELLxGENE metadata alone. The latest metadata is downloaded automatically when you call `get_metadata()` — no need to supply a download link manually. See the client usage examples for details on the columns available.
 
 | Column | Description |
 |--------|-------------|
