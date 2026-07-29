@@ -87,7 +87,8 @@ get_default_cache_dir <- function() {
 #' @return `NULL`, invisibly
 #' @keywords internal
 #' @noRd
-sync_remote_file <- function(full_url, output_file, overwrite = FALSE, ...) {
+sync_remote_file <- function(full_url, output_file, overwrite = FALSE,
+                             ignore_not_found = FALSE, ...) {
   if (isTRUE(overwrite) && file.exists(output_file)) {
     file.remove(output_file)
   }
@@ -104,8 +105,16 @@ sync_remote_file <- function(full_url, output_file, overwrite = FALSE, ...) {
       GET(full_url, write_disk(output_file), ...) |>
         stop_for_status(),
       error = function(e) {
-        # Clean up if we had an error
-        file.remove(output_file)
+        # Clean up partial download regardless.
+        if (file.exists(output_file)) file.remove(output_file)
+        # For SCT assays the file may legitimately not exist (normalisation
+        # failed for that sample).  When the caller opts in, treat HTTP 404 as
+        # "file not available" rather than a hard error; the file is simply
+        # absent from the cache and downstream logic handles it.
+        if (ignore_not_found &&
+            grepl("Not Found|404", conditionMessage(e), ignore.case = TRUE)) {
+          return(invisible(NULL))
+        }
         cli_abort("File {full_url} could not be downloaded. {e}")
       }
     )
@@ -126,7 +135,8 @@ sync_remote_file <- function(full_url, output_file, overwrite = FALSE, ...) {
 #' @return The output_files vector, invisibly
 #' @keywords internal
 #' @noRd
-sync_remote_files <- function(urls, output_files, progress = TRUE) {
+sync_remote_files <- function(urls, output_files, progress = TRUE,
+                              ignore_not_found = FALSE) {
   if (length(urls) == 0) {
     return(invisible(character(0)))
   }
@@ -173,14 +183,17 @@ sync_remote_files <- function(urls, output_files, progress = TRUE) {
         if (file.exists(f)) file.remove(f)
       }
       cli_alert_warning("{sum(failed)} file{?s} failed to download")
-      if (sum(failed) == length(urls_to_download)) {
+      if (!ignore_not_found && sum(failed) == length(urls_to_download)) {
         cli_abort("All downloads failed. Check your network connection.")
       }
     }
   } else {
     # Sequential fallback
     for (i in seq_along(urls_to_download)) {
-      sync_remote_file(urls_to_download[i], files_to_download[i])
+      sync_remote_file(
+        urls_to_download[i], files_to_download[i],
+        ignore_not_found = ignore_not_found
+      )
     }
   }
 

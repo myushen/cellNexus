@@ -7,11 +7,11 @@
 \href{https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3}{Shen et al.,2026}
 }
 \usage{
-get_metadata_url(databases = c("hca_2024", "hca_2025"))
+get_metadata_url(databases = c("hca_2024"))
 }
 \arguments{
 \item{databases}{A character vector of atlas aliases or raw parquet
-filenames. Recognised aliases are \code{"hca_2024"} and \code{"hca_2025"}.
+filenames. Recognised aliases are \code{"hca_2024"}
 Raw filenames (e.g. \code{"atlas_versions.parquet"}) are passed through
 unchanged and are intended for internal package use.}
 }

@@ -21,7 +21,7 @@ metadata_aliases <- c(
 #' Returns the URLs for all metadata files
 #'
 #' @param databases A character vector of atlas aliases or raw parquet
-#'   filenames. Recognised aliases are `"hca_2024"` and `"hca_2025"`.
+#'   filenames. Recognised aliases are `"hca_2024"`
 #'   Raw filenames (e.g. `"atlas_versions.parquet"`) are passed through
 #'   unchanged and are intended for internal package use.
 #' @export
@@ -35,7 +35,7 @@ metadata_aliases <- c(
 #'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
 #'   doi:10.64898/2026.04.14.718336.
 #' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
-get_metadata_url <- function(databases = c("hca_2024", "hca_2025")) {
+get_metadata_url <- function(databases = c("hca_2024")) {
   dbs <- ifelse(
     databases %in% names(metadata_aliases),
     metadata_aliases[databases],
