@@ -165,7 +165,7 @@ get_single_cell_experiment <- function(data,
 #'   feature rownames; `get_pseudobulk()` restores them after coercion.
 #' @details
 #' Columns in `data` that are constant within each
-#' `sample_id` × `cell_type_unified_ensemble` combination (including
+#' `sample_id` x `cell_type_unified_ensemble` combination (including
 #' user-added annotations) are retained in `colData`. Cell-level columns are
 #' dropped via internal `keep_specific_annotation_columns()`.
 #' @return By default, a `SingleCellExperiment` object. If
@@ -407,7 +407,7 @@ get_metacell <- function(data,
     "cellNexus says: {n_cells_skipped} cell(s) from {n_samples_skipped} sample(s)",
     "are missing their SCT h5ad file and will be skipped.",
     "SCT normalisation can fail for samples with too few cells or extreme count",
-    "distributions — in those cases no SCT file is written to the store.",
+    "distributions -- in those cases no SCT file is written to the store.",
     "After retrieval, identify skipped samples with:",
     "`dplyr::setdiff(unique(your_metadata$sample_id),",
     "unique(SummarizedExperiment::colData(result)$sample_id))`.",
