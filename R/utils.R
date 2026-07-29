@@ -112,7 +112,7 @@ sync_remote_file <- function(full_url, output_file, overwrite = FALSE,
         # "file not available" rather than a hard error; the file is simply
         # absent from the cache and downstream logic handles it.
         if (ignore_not_found &&
-            grepl("Not Found|404", conditionMessage(e), ignore.case = TRUE)) {
+          grepl("Not Found|404", conditionMessage(e), ignore.case = TRUE)) {
           return(invisible(NULL))
         }
         cli_abort("File {full_url} could not be downloaded. {e}")

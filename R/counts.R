@@ -383,10 +383,12 @@ get_metacell <- function(data,
     ))
   })
 
-  if (all(has_file)) return(groups)
+  if (all(has_file)) {
+    return(groups)
+  }
 
-  skipped          <- groups[!has_file]
-  n_cells_skipped  <- sum(vapply(skipped, nrow, integer(1L)))
+  skipped <- groups[!has_file]
+  n_cells_skipped <- sum(vapply(skipped, nrow, integer(1L)))
   skipped_sample_ids <- if (all(map_lgl(skipped, ~ "sample_id" %in% names(.x)))) {
     unique(unlist(map(skipped, ~ unique(.x$sample_id))))
   } else {
@@ -489,9 +491,10 @@ get_metacell <- function(data,
     # for that sample), so HTTP 404 is treated as "not available" rather than
     # an error.  All other assay files are synced strictly.
     all_files <- do.call(rbind, file_lists)
-    sct_subdir  <- assay_map[["sct"]]
+    sct_subdir <- assay_map[["sct"]]
     is_sct_file <- grepl(
-      paste0("/", sct_subdir, "/"), all_files$full_url, fixed = TRUE
+      paste0("/", sct_subdir, "/"), all_files$full_url,
+      fixed = TRUE
     )
     if (any(!is_sct_file)) {
       sync_all_assay_files(all_files[!is_sct_file, , drop = FALSE])
