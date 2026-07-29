@@ -14,10 +14,8 @@ as.sparse.DelayedMatrix <- function(x, ...) {
 #' @inheritDotParams get_single_cell_experiment
 #' @export
 #' @return A Seurat object containing the same data as a call to
-#'   [get_single_cell_experiment()]. When multiple assays are requested (e.g.
-#'   `assays = c("counts", "cpm")`), all assays are present in the returned
-#'   object: the first assay is stored as the `"originalexp"` Seurat assay, and
-#'   every subsequent assay is added under its own name (e.g. `"cpm"`).
+#'   [get_single_cell_experiment()]. All requested assays are present in the
+#'   returned object under their original names (e.g. `"counts"`, `"cpm"`).
 #' @importFrom SummarizedExperiment assayNames assay
 #' @examples
 #' # Use the lightweight sample database URL (for fast checks during development only)
@@ -38,6 +36,11 @@ get_seurat <- function(...) {
   sce_assays <- assayNames(sce)
   first_assay <- sce_assays[1]
   seurat_obj <- SeuratObject::as.Seurat(sce, counts = first_assay, data = NULL)
+  # as.Seurat() always names the first assay "originalexp"; rename it to match
+  # the actual SCE assay name so the Seurat object is not misleading.
+  if (first_assay != "originalexp") {
+    seurat_obj <- SeuratObject::RenameAssays(seurat_obj, originalexp = first_assay)
+  }
   # Attach any additional assays that were not part of the initial conversion.
   if (length(sce_assays) > 1) {
     for (assay_name in sce_assays[-1]) {
