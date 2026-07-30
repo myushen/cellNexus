@@ -36,10 +36,14 @@ get_seurat <- function(...) {
   sce_assays <- assayNames(sce)
   first_assay <- sce_assays[1]
   seurat_obj <- SeuratObject::as.Seurat(sce, counts = first_assay, data = NULL)
-  # as.Seurat() always names the first assay "originalexp"; rename it to match
-  # the actual SCE assay name so the Seurat object is not misleading.
+  # as.Seurat() always names the first assay "originalexp"; replace it with a
+  # copy under the real name to avoid the misleading label.
   if (first_assay != "originalexp") {
-    seurat_obj <- SeuratObject::RenameAssays(seurat_obj, originalexp = first_assay)
+    assay_obj <- seurat_obj[["originalexp"]]
+    SeuratObject::Key(assay_obj) <- paste0(first_assay, "_")
+    seurat_obj[[first_assay]] <- assay_obj
+    SeuratObject::DefaultAssay(seurat_obj) <- first_assay
+    seurat_obj[["originalexp"]] <- NULL
   }
   # Attach any additional assays that were not part of the initial conversion.
   if (length(sce_assays) > 1) {

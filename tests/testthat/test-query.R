@@ -137,9 +137,7 @@ test_that("get_seurat() with multiple assays returns all assays in the Seurat ob
   seurat <- get_seurat(meta, assays = c("counts", "cpm"), features = "ENSG00000010610")
 
   expect_s4_class(seurat, "Seurat")
-  # "originalexp" is the Seurat assay name for the first SCE assay (counts)
-  expect_true("originalexp" %in% SeuratObject::Assays(seurat))
-  # "cpm" should also be present as a named assay
+  expect_true("counts" %in% SeuratObject::Assays(seurat))
   expect_true("cpm" %in% SeuratObject::Assays(seurat))
 })
 
@@ -150,7 +148,7 @@ test_that("get_seurat() with only cpm assay succeeds and returns a Seurat object
   seurat <- get_seurat(meta, assays = "cpm", features = "ENSG00000010610")
 
   expect_s4_class(seurat, "Seurat")
-  expect_true("originalexp" %in% SeuratObject::Assays(seurat))
+  expect_true("cpm" %in% SeuratObject::Assays(seurat))
 })
 
 test_that("as.sparse() works on DelayedMatrix", {
