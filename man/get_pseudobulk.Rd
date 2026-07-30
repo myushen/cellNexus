@@ -62,7 +62,7 @@ corresponding to the samples in that data frame
 }
 \details{
 Columns in \code{data} that are constant within each
-\code{sample_id} × \code{cell_type_unified_ensemble} combination (including
+\code{sample_id} x \code{cell_type_unified_ensemble} combination (including
 user-added annotations) are retained in \code{colData}. Cell-level columns are
 dropped via internal \code{keep_specific_annotation_columns()}.
 }

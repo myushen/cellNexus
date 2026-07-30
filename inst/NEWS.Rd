@@ -1,6 +1,43 @@
 \name{NEWS}
 \title{News for Package \pkg{cellNexus}}
 
+\section{News in version 0.99.30}{
+\itemize{
+    \item \code{get_seurat()} now correctly handles multiple assays and non-default
+    first assays.
+    \itemize{
+        \item When \code{assays = c("counts", "cpm")} (or any multi-assay request),
+        all assays are transferred to the returned Seurat object: the first assay
+        occupies the \code{"originalexp"} slot and every subsequent assay is added
+        under its own name (e.g. \code{"cpm"}).
+        \item When the first requested assay is not \code{"counts"} (e.g.
+        \code{assays = "cpm"}), the conversion no longer errors with
+        \emph{"No data in provided assay - counts"}. The first assay in the SCE is
+        now passed explicitly to \code{SeuratObject::as.Seurat()}.
+    }
+    \item SCT assay: robust handling of samples for which SCT normalisation failed.
+    \itemize{
+        \item HTTP 404 responses for SCT h5ad files are now treated as
+        \emph{"file not available"} rather than a fatal download error. The SCT
+        sync path uses \code{ignore_not_found = TRUE} while all other assay syncs
+        remain strict.
+        \item A new internal helper \code{.skip_groups_missing_sct_file()} detects
+        cached-file absence after sync, emits a \code{cellNexus says:} warning with
+        the affected cell/sample counts and up to three example \code{sample_id}s,
+        and instructs users to identify skipped samples post-retrieval via
+        \code{dplyr::setdiff(unique(your_metadata\$sample_id),
+        unique(SummarizedExperiment::colData(result)\$sample_id))}.
+        \item When \code{assays = "sct"} only and \emph{every} sample is missing its
+        SCT file, \code{get_single_cell_experiment()} aborts with a clear message.
+        \item When \code{assays = c("counts", "sct")} (or any mixed-assay request)
+        and \emph{every} sample is missing its SCT file, the function falls back
+        gracefully to returning the non-SCT assays for all cells with a warning,
+        rather than aborting.
+    }
+    \item Tests. Added coverage for \code{get_seurat()} multi-assay and
+    non-default-assay paths.
+}}
+
 \section{News in version 0.99.27}{
 \itemize{
     \item \code{get_pseudobulk()} now retains metadata columns that are constant within each

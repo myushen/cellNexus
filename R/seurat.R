@@ -14,7 +14,9 @@ as.sparse.DelayedMatrix <- function(x, ...) {
 #' @inheritDotParams get_single_cell_experiment
 #' @export
 #' @return A Seurat object containing the same data as a call to
-#'   [get_single_cell_experiment()]
+#'   [get_single_cell_experiment()]. All requested assays are present in the
+#'   returned object under their original names (e.g. `"counts"`, `"cpm"`).
+#' @importFrom SummarizedExperiment assayNames assay
 #' @examples
 #' # Use the lightweight sample database URL (for fast checks during development only)
 #' meta <- get_metadata(cloud_metadata = cellNexus::SAMPLE_DATABASE_URL) |> head(2)
@@ -29,6 +31,27 @@ as.sparse.DelayedMatrix <- function(x, ...) {
 get_seurat <- function(...) {
   rlang::check_installed(c("Seurat", "SeuratObject"))
 
-  get_single_cell_experiment(...) |>
-    SeuratObject::as.Seurat(data = NULL)
+  sce <- get_single_cell_experiment(...)
+
+  sce_assays <- assayNames(sce)
+  first_assay <- sce_assays[1]
+  seurat_obj <- SeuratObject::as.Seurat(sce, counts = first_assay, data = NULL)
+  # as.Seurat() always names the first assay "originalexp"; replace it with a
+  # copy under the real name to avoid the misleading label.
+  if (first_assay != "originalexp") {
+    assay_obj <- seurat_obj[["originalexp"]]
+    SeuratObject::Key(assay_obj) <- paste0(first_assay, "_")
+    seurat_obj[[first_assay]] <- assay_obj
+    SeuratObject::DefaultAssay(seurat_obj) <- first_assay
+    seurat_obj[["originalexp"]] <- NULL
+  }
+  # Attach any additional assays that were not part of the initial conversion.
+  if (length(sce_assays) > 1) {
+    for (assay_name in sce_assays[-1]) {
+      seurat_obj[[assay_name]] <- SeuratObject::CreateAssayObject(
+        counts = assay(sce, assay_name)
+      )
+    }
+  }
+  seurat_obj
 }

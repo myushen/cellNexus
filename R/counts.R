@@ -165,7 +165,7 @@ get_single_cell_experiment <- function(data,
 #'   feature rownames; `get_pseudobulk()` restores them after coercion.
 #' @details
 #' Columns in `data` that are constant within each
-#' `sample_id` × `cell_type_unified_ensemble` combination (including
+#' `sample_id` x `cell_type_unified_ensemble` combination (including
 #' user-added annotations) are retained in `colData`. Cell-level columns are
 #' dropped via internal `keep_specific_annotation_columns()`.
 #' @return By default, a `SingleCellExperiment` object. If
@@ -342,6 +342,85 @@ get_metacell <- function(data,
   )
 }
 
+#' Skip groups whose SCT h5ad file is absent from the local cache
+#'
+#' SCT normalisation can fail for entire samples (too few cells, extreme count
+#' distributions, etc.), in which case no SCT h5ad file is written to the
+#' store. \code{file_id_cellNexus_single_cell} is always pre-computed and
+#' populated, so missing files are only detectable after sync via
+#' \code{file.exists()}. This helper removes those groups \emph{before} the
+#' per-assay read loop so that all assay experiment lists stay aligned (same
+#' length, same order).
+#'
+#' Because the metadata carries no pre-computed flag for SCT failures, users
+#' cannot identify the affected samples before calling
+#' \code{get_single_cell_experiment()}. The warning therefore instructs them to
+#' compare their input \code{sample_id}s with those in
+#' \code{SummarizedExperiment::colData()} of the returned object.
+#'
+#' @param groups A list of per-file metadata tibbles from
+#'   \code{dplyr::group_split()}.
+#' @param cache_directory Root local cache directory (scalar character).
+#' @param cell_aggregation Aggregation level string (e.g. \code{""} for
+#'   single-cell).
+#' @param grouping_column Name of the file-ID column used to build the path.
+#' @return The filtered \code{groups} list (only entries whose SCT file exists
+#'   in the cache). Calls \code{cli_abort()} when no groups remain.
+#' @importFrom purrr map_lgl map
+#' @importFrom cli cli_alert_warning cli_abort
+#' @keywords internal
+#' @noRd
+.skip_groups_missing_sct_file <- function(groups, cache_directory, cell_aggregation, grouping_column) {
+  sct_base_path <- if (nchar(cell_aggregation) > 0) {
+    file.path(cell_aggregation, assay_map[["sct"]])
+  } else {
+    assay_map[["sct"]]
+  }
+
+  has_file <- map_lgl(groups, function(gr) {
+    file.exists(file.path(
+      cache_directory, gr$atlas_id[1], sct_base_path, gr[[grouping_column]][1]
+    ))
+  })
+
+  if (all(has_file)) {
+    return(groups)
+  }
+
+  skipped <- groups[!has_file]
+  n_cells_skipped <- sum(vapply(skipped, nrow, integer(1L)))
+  skipped_sample_ids <- if (all(map_lgl(skipped, ~ "sample_id" %in% names(.x)))) {
+    unique(unlist(map(skipped, ~ unique(.x$sample_id))))
+  } else {
+    character(0)
+  }
+  n_samples_skipped <- length(skipped_sample_ids)
+
+  example_str <- if (n_samples_skipped > 0L) {
+    paste0(
+      " Example affected sample_id(s): ",
+      paste(head(skipped_sample_ids, 3L), collapse = ", "), "."
+    )
+  } else {
+    ""
+  }
+
+  cli_alert_warning(paste(
+    "cellNexus says: {n_cells_skipped} cell(s) from {n_samples_skipped} sample(s)",
+    "are missing their SCT h5ad file and will be skipped.",
+    "SCT normalisation can fail for samples with too few cells or extreme count",
+    "distributions -- in those cases no SCT file is written to the store.",
+    "After retrieval, identify skipped samples with:",
+    "`dplyr::setdiff(unique(your_metadata$sample_id),",
+    "unique(SummarizedExperiment::colData(result)$sample_id))`.",
+    "{example_str}"
+  ))
+
+  # Return empty list when nothing remains; the caller decides whether to abort
+  # (SCT-only query) or fall back to other assays (mixed-assay query).
+  groups[has_file]
+}
+
 #' Sync, read, filter and compile experiments from cache
 #'
 #' Shared internal implementation used by [get_single_cell_experiment()],
@@ -407,9 +486,25 @@ get_metacell <- function(data,
         )
       })
 
-    # Combine all file lists and download in one parallel batch
+    # Combine all file lists, then sync with assay-appropriate strictness.
+    # SCT files may legitimately be absent from the cloud (normalisation failed
+    # for that sample), so HTTP 404 is treated as "not available" rather than
+    # an error.  All other assay files are synced strictly.
     all_files <- do.call(rbind, file_lists)
-    sync_all_assay_files(all_files)
+    sct_subdir <- assay_map[["sct"]]
+    is_sct_file <- grepl(
+      paste0("/", sct_subdir, "/"), all_files$full_url,
+      fixed = TRUE
+    )
+    if (any(!is_sct_file)) {
+      sync_all_assay_files(all_files[!is_sct_file, , drop = FALSE])
+    }
+    if (any(is_sct_file)) {
+      sync_all_assay_files(
+        all_files[is_sct_file, , drop = FALSE],
+        ignore_not_found = TRUE
+      )
+    }
   }
 
   cli_alert_info("Reading files.")
@@ -417,6 +512,37 @@ get_metacell <- function(data,
   # Group by file only, not by dir_prefix
   groups <- raw_data |>
     group_split(.data[[grouping_column]])
+
+  # For SCT, some samples may have no h5ad file (normalisation failed).
+  # Drop those groups now so all per-assay experiment lists stay aligned.
+  if ("sct" %in% assays) {
+    groups_with_sct <- .skip_groups_missing_sct_file(
+      groups, cache_directory, cell_aggregation, grouping_column
+    )
+
+    if (length(groups_with_sct) == 0L) {
+      # No SCT files at all. When other assays were also requested, fall back to
+      # returning those for ALL groups. When SCT was the only assay, abort.
+      other_assays <- setdiff(assays, "sct")
+      if (length(other_assays) == 0L) {
+        cli_abort(paste(
+          "cellNexus says: No groups remain after removing samples with missing SCT files.",
+          "SCT normalisation appears to have failed for every sample in your query.",
+          "Try a different set of samples or use assays = \"counts\" instead."
+        ))
+      }
+      cli_alert_warning(paste(
+        "cellNexus says: No SCT files were found for any sample in your query.",
+        "Falling back to returning only: {paste(other_assays, collapse = ', ')}.",
+        "The 'sct' assay will not be present in the returned object."
+      ))
+      assays <- other_assays
+      subdirs <- assay_map[assays]
+      # Keep the full unfiltered `groups` so all cells are returned.
+    } else {
+      groups <- groups_with_sct
+    }
+  }
 
   # Outer imap iterates over assays; each assay gets its own labelled progress bar.
   # This also fixes dir_prefix construction: current_subdir is properly scoped here.
@@ -903,7 +1029,7 @@ build_assay_file_list <- function(
 #' @param file_list A data frame with full_url and output_file columns
 #' @importFrom cli cli_alert_info
 #' @noRd
-sync_all_assay_files <- function(file_list) {
+sync_all_assay_files <- function(file_list, ignore_not_found = FALSE) {
   if (nrow(file_list) == 0) {
     return(invisible(character(0)))
   }
@@ -916,7 +1042,8 @@ sync_all_assay_files <- function(file_list) {
     sync_remote_files(
       file_list$full_url[to_download],
       file_list$output_file[to_download],
-      progress = TRUE
+      progress = TRUE,
+      ignore_not_found = ignore_not_found
     )
   }
 

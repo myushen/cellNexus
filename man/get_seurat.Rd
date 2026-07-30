@@ -38,7 +38,8 @@ the counts for. By default counts for all features will be returned.}
 }
 \value{
 A Seurat object containing the same data as a call to
-\code{\link[=get_single_cell_experiment]{get_single_cell_experiment()}}
+\code{\link[=get_single_cell_experiment]{get_single_cell_experiment()}}. All requested assays are present in the
+returned object under their original names (e.g. \code{"counts"}, \code{"cpm"}).
 }
 \description{
 Given a data frame of HCA metadata, returns a Seurat object corresponding to
