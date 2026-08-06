@@ -1,6 +1,17 @@
 \name{NEWS}
 \title{News for Package \pkg{cellNexus}}
 
+\section{News in version 0.99.31}{
+\itemize{
+    \item Added \code{donor_id} to harmonised metadata, enabling direct donor-level
+    queries across datasets.
+    \item Updated metadata parquet versions to \code{hca2024_v2.3.2}
+    \item Expanded and corrected documentation for metadata columns on website.
+    \item Removed internal columns (\code{sample_},
+    \code{sample_heuristic}, \code{sample_chunk}, \code{cell_chunk}, 
+    \code{sample_pseudobulk_chunk}) from documentation.
+}}
+
 \section{News in version 0.99.30}{
 \itemize{
     \item \code{get_seurat()} now correctly handles multiple assays and non-default

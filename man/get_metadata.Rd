@@ -61,8 +61,7 @@ Field definitions for the CELLxGENE schema follow the
 Through harmonisation and curation we introduced custom columns not present
 in the original CELLxGENE metadata:
 
-\code{cell_count}: Number of cells in a dataset.
-\code{feature_count}: Number of genes in a dataset.
+\code{sample_id}: Sample identifier.
 \code{age_days}: Donor age in days.
 \code{tissue_groups}: Coarse tissue grouping for analysis.
 \code{empty_droplet}: Whether a cell is called an empty droplet from expressed-gene count per sample (default threshold 200; targeted panels may differ).
@@ -71,9 +70,15 @@ in the original CELLxGENE metadata:
 \code{cell_type_unified_ensemble}: Consensus immune identity from Azimuth and SingleR (Blueprint, Monaco).
 \code{cell_annotation_azimuth_l2}: Azimuth cell annotation.
 \code{cell_annotation_blueprint_singler}: SingleR annotation (Blueprint).
-\code{cell_annotation_blueprint_monaco}: SingleR annotation (Monaco).
-\code{is_immune}: Whether a cell is an immune cell.
-\code{sample_heuristic}: Internal sample subdivision helper.
+\code{cell_annotation_monaco_singler}: SingleR annotation (Monaco).
+\code{subsets_Mito_percent}: Percent of each cell’s total counts coming from mitochondrial genes in a sample.
+\code{subsets_Ribo_percent}: Percent of each cell’s total counts coming from ribosomal genes in a sample.
+\code{high_mitochondrion}: TRUE if the cell’s mitochondrial percent exceeds the QC cutoff.
+\code{high_ribosome}: TRUE if the cell’s ribosomal percent exceeds the QC cutoff.
+\code{count_upper_bound}: Count capping threshold used in counts transformation.
+\code{inverse_transform}: Transformation method used in pre-processing pipeline.
+\code{nfeature_expressed_thresh}: Threshold of the number of expressed features per cell.
+\code{is_immune}: Curated logical flag for immune-cell context.
 \code{file_id_cellNexus_single_cell}: Internal file id for single-cell layers.
 \code{file_id_cellNexus_pseudobulk}: Internal file id for pseudobulk layers.
 \code{sample_id}: Harmonised sample identifier.
