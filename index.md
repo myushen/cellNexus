@@ -69,8 +69,7 @@ Through harmonisation and curation, `cellNexus` adds columns that are not presen
 | `observation_joinid` | Cell ID join key linking metadata. |
 | `dataset_id` | Primary dataset identifier in the atlas. |
 | `sample_id` | Harmonised sample identifier. |
-| `sample_` | Internal sample subdivision helper. |
-| `sample_heuristic` | Internal sample subdivision helper. |
+| `donor_id` | Donor identifier. |
 | `age_days` | Donor age in days. |
 | `tissue_groups` | Coarse tissue grouping for analysis. |
 | `nFeature_expressed_in_sample` | Number of expressed features per cell. |
@@ -83,9 +82,6 @@ Through harmonisation and curation, `cellNexus` adds columns that are not presen
 | `high_mitochondrion` | TRUE if the cell’s mitochondrial percent exceeds the QC cutoff. |
 | `high_ribosome` | TRUE if the cell’s ribosomal percent exceeds the QC cutoff. |
 | `scDblFinder.class` | Quality-control flag for doublet classification from `scDblFinder`. |
-| `sample_chunk ` | Internal sample subdivision chunks. |
-| `cell_chunk ` | Internal cell subdivision chunks. |
-| `sample_pseudobulk_chunk ` | Internal pseudobulk subdivision chunks. |
 | `file_id_cellNexus_single_cell` | Internal file id for single-cell layers. |
 | `file_id_cellNexus_pseudobulk` | Internal file id for pseudobulk layers. |
 | `count_upper_bound` | Count capping threshold used in transformation. |
