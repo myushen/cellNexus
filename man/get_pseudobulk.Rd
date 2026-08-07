@@ -14,7 +14,8 @@ get_pseudobulk(
   cache_directory = get_default_cache_dir(),
   repository = COUNTS_URL,
   features = NULL,
-  as_SummarizedExperiment = FALSE
+  as_SummarizedExperiment = FALSE,
+  download_only = FALSE
 )
 }
 \arguments{
@@ -49,11 +50,18 @@ A warning is emitted when samples are dropped.}
 
 \item{as_SummarizedExperiment}{If \code{TRUE}, coerce the result to a
 \code{SummarizedExperiment}. Note that \code{as(x, "SummarizedExperiment")} drops
-feature rownames; \code{get_pseudobulk()} restores them after coercion.}
+feature rownames; \code{get_pseudobulk()} restores them after coercion.
+Ignored when \code{download_only = TRUE}.}
+
+\item{download_only}{Logical scalar. When \code{TRUE}, remote files are
+synchronised to \code{cache_directory} but the data is not read or assembled
+into an in-memory object. Returns \code{invisible(NULL)}. Useful for
+pre-fetching datasets only.}
 }
 \value{
 By default, a \code{SingleCellExperiment} object. If
 \code{as_SummarizedExperiment} is \code{TRUE}, a \code{SummarizedExperiment} object.
+Returns \code{invisible(NULL)} when \code{download_only = TRUE}.
 }
 \description{
 Given a data frame of Curated Atlas metadata obtained from \code{\link[=get_metadata]{get_metadata()}},

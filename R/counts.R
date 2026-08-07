@@ -65,8 +65,13 @@ get_SingleCellExperiment <- function(...) {
 #'   an HTTP URL pointing to the location where the single cell data is stored.
 #' @param features An optional character vector of features (ie genes) to return
 #'   the counts for. By default counts for all features will be returned.
+#' @param download_only Logical scalar. When `TRUE`, remote files are
+#'   synchronised to `cache_directory` but the data is not read or assembled
+#'   into an in-memory object. Returns `invisible(NULL)`. Useful for
+#'   pre-fetching datasets only.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute group_split
-#' @return A `SingleCellExperiment` object.
+#' @return A `SingleCellExperiment` object, or `invisible(NULL)` when
+#'   `download_only = TRUE`.
 #' @importFrom tibble column_to_rownames
 #' @importFrom BiocGenerics cbind
 #' @importFrom glue glue
@@ -92,7 +97,8 @@ get_single_cell_experiment <- function(data,
                                        cell_aggregation = "",
                                        cache_directory = get_default_cache_dir(),
                                        repository = COUNTS_URL,
-                                       features = NULL) {
+                                       features = NULL,
+                                       download_only = FALSE) {
   raw_data <- collect(data)
   assert(
     check_true(inherits(raw_data, "tbl")),
@@ -127,7 +133,8 @@ get_single_cell_experiment <- function(data,
     cache_directory = cache_directory,
     repository = repository,
     grouping_column = "file_id_cellNexus_single_cell",
-    features = features
+    features = features,
+    download_only = download_only
   )
 }
 
@@ -163,6 +170,11 @@ get_single_cell_experiment <- function(data,
 #' @param as_SummarizedExperiment If `TRUE`, coerce the result to a
 #'   `SummarizedExperiment`. Note that `as(x, "SummarizedExperiment")` drops
 #'   feature rownames; `get_pseudobulk()` restores them after coercion.
+#'   Ignored when `download_only = TRUE`.
+#' @param download_only Logical scalar. When `TRUE`, remote files are
+#'   synchronised to `cache_directory` but the data is not read or assembled
+#'   into an in-memory object. Returns `invisible(NULL)`. Useful for
+#'   pre-fetching datasets only.
 #' @details
 #' Columns in `data` that are constant within each
 #' `sample_id` x `cell_type_unified_ensemble` combination (including
@@ -170,6 +182,7 @@ get_single_cell_experiment <- function(data,
 #' dropped via internal `keep_specific_annotation_columns()`.
 #' @return By default, a `SingleCellExperiment` object. If
 #'   `as_SummarizedExperiment` is `TRUE`, a `SummarizedExperiment` object.
+#'   Returns `invisible(NULL)` when `download_only = TRUE`.
 #' @importFrom dplyr pull filter as_tibble inner_join collect transmute
 #' @importFrom tibble column_to_rownames
 #' @importFrom BiocGenerics cbind
@@ -199,7 +212,8 @@ get_pseudobulk <- function(data,
                            cache_directory = get_default_cache_dir(),
                            repository = COUNTS_URL,
                            features = NULL,
-                           as_SummarizedExperiment = FALSE) {
+                           as_SummarizedExperiment = FALSE,
+                           download_only = FALSE) {
   raw_data <- collect(data)
   assert(
     check_true(inherits(raw_data, "tbl")),
@@ -230,14 +244,19 @@ get_pseudobulk <- function(data,
 
   validate_data(raw_data, assays, cell_aggregation, cache_directory, repository, features)
 
-  # Compute once on the full query so every file-level SCE shares identical
-  # colData columns before cbind(); per-file FD detection can disagree.
-  pseudobulk_coldata_columns <- get_specific_annotation_columns(
-    raw_data,
-    c(sample_id, cell_type_unified_ensemble),
-    sample_n = 100000L,
-    include_query_columns = TRUE
-  )
+  # colData column detection is only needed for reading, not for download-only.
+  pseudobulk_coldata_columns <- if (!download_only) {
+    # Compute once on the full query so every file-level SCE shares identical
+    # colData columns before cbind(); per-file FD detection can disagree.
+    get_specific_annotation_columns(
+      raw_data,
+      c(sample_id, cell_type_unified_ensemble),
+      sample_n = 100000L,
+      include_query_columns = TRUE
+    )
+  } else {
+    NULL
+  }
 
   res <- .fetch_experiments(
     raw_data = raw_data,
@@ -247,8 +266,13 @@ get_pseudobulk <- function(data,
     repository = repository,
     grouping_column = "file_id_cellNexus_pseudobulk",
     features = features,
-    coldata_columns = pseudobulk_coldata_columns
+    coldata_columns = pseudobulk_coldata_columns,
+    download_only = download_only
   )
+
+  if (download_only) {
+    return(invisible(NULL))
+  }
 
   if (as_SummarizedExperiment) {
     rn <- rownames(res)
@@ -438,7 +462,11 @@ get_metacell <- function(data,
 #' @param coldata_columns Optional character vector of colData columns to keep
 #'   for pseudobulk or metacell (computed once on the full query). Ignored for
 #'   single-cell aggregation.
-#' @return A \code{SingleCellExperiment} or \code{SummarizedExperiment} object.
+#' @param download_only Logical scalar. When \code{TRUE}, the function performs
+#'   only the remote-to-cache synchronisation step and returns
+#'   \code{invisible(NULL)} without reading or assembling any objects.
+#' @return A \code{SingleCellExperiment} or \code{SummarizedExperiment} object,
+#'   or \code{invisible(NULL)} when \code{download_only = TRUE}.
 #' @importFrom httr parse_url
 #' @importFrom dplyr transmute distinct mutate
 #' @importFrom purrr pmap imap map map_lgl map2 reduce
@@ -458,7 +486,8 @@ get_metacell <- function(data,
   grouping_column,
   features,
   metacell_column = NULL,
-  coldata_columns = NULL
+  coldata_columns = NULL,
+  download_only = FALSE
 ) {
   subdirs <- assay_map[assays]
 
@@ -507,29 +536,28 @@ get_metacell <- function(data,
     }
   }
 
-  cli_alert_info("Reading files.")
-
   # Group by file only, not by dir_prefix
   groups <- raw_data |>
     group_split(.data[[grouping_column]])
 
-  # For SCT, some samples may have no h5ad file (normalisation failed).
-  # Drop those groups now so all per-assay experiment lists stay aligned.
+  # For SCT, some samples may have no h5ad file (normalisation failed for that
+  # sample so no SCT file was written to the store).
   if ("sct" %in% assays) {
     groups_with_sct <- .skip_groups_missing_sct_file(
       groups, cache_directory, cell_aggregation, grouping_column
     )
 
     if (length(groups_with_sct) == 0L) {
-      # No SCT files at all. When other assays were also requested, fall back to
-      # returning those for ALL groups. When SCT was the only assay, abort.
+      # No SCT files at all. In download_only mode a warning suffices; in
+      # read mode, fall back to other assays or abort if SCT was the only one.
       other_assays <- setdiff(assays, "sct")
       if (length(other_assays) == 0L) {
-        cli_abort(paste(
-          "cellNexus says: No groups remain after removing samples with missing SCT files.",
-          "SCT normalisation appears to have failed for every sample in your query.",
+        cli_alert_warning(paste(
+          "cellNexus says: No SCT files were found for any sample in your query.",
+          "SCT normalisation appears to have failed for every sample.",
           "Try a different set of samples or use assays = \"counts\" instead."
         ))
+        return(NULL)
       }
       cli_alert_warning(paste(
         "cellNexus says: No SCT files were found for any sample in your query.",
@@ -543,6 +571,12 @@ get_metacell <- function(data,
       groups <- groups_with_sct
     }
   }
+
+  if (download_only) {
+    return(invisible(NULL))
+  }
+
+  cli_alert_info("Reading files.")
 
   # Outer imap iterates over assays; each assay gets its own labelled progress bar.
   # This also fixes dir_prefix construction: current_subdir is properly scoped here.

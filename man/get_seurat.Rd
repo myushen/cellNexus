@@ -8,7 +8,7 @@ the samples in that data frame}
 \href{https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3}{Shen et al.,2026}
 }
 \usage{
-get_seurat(...)
+get_seurat(..., download_only = FALSE)
 }
 \arguments{
 \item{...}{
@@ -35,10 +35,15 @@ an HTTP URL pointing to the location where the single cell data is stored.}
     \item{\code{features}}{An optional character vector of features (ie genes) to return
 the counts for. By default counts for all features will be returned.}
   }}
+
+\item{download_only}{Logical scalar. When \code{TRUE}, remote files are
+synchronised to \code{cache_directory} but not read or assembled. Returns
+\code{invisible(NULL)}. See \code{\link[=get_single_cell_experiment]{get_single_cell_experiment()}} for details.}
 }
 \value{
 A Seurat object containing the same data as a call to
-\code{\link[=get_single_cell_experiment]{get_single_cell_experiment()}}. All requested assays are present in the
+\code{\link[=get_single_cell_experiment]{get_single_cell_experiment()}}, or \code{invisible(NULL)} when
+\code{download_only = TRUE}. All requested assays are present in the
 returned object under their original names (e.g. \code{"counts"}, \code{"cpm"}).
 }
 \description{

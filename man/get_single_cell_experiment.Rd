@@ -13,7 +13,8 @@ get_single_cell_experiment(
   cell_aggregation = "",
   cache_directory = get_default_cache_dir(),
   repository = COUNTS_URL,
-  features = NULL
+  features = NULL,
+  download_only = FALSE
 )
 }
 \arguments{
@@ -42,9 +43,15 @@ an HTTP URL pointing to the location where the single cell data is stored.}
 
 \item{features}{An optional character vector of features (ie genes) to return
 the counts for. By default counts for all features will be returned.}
+
+\item{download_only}{Logical scalar. When \code{TRUE}, remote files are
+synchronised to \code{cache_directory} but the data is not read or assembled
+into an in-memory object. Returns \code{invisible(NULL)}. Useful for
+pre-fetching datasets only.}
 }
 \value{
-A \code{SingleCellExperiment} object.
+A \code{SingleCellExperiment} object, or \code{invisible(NULL)} when
+\code{download_only = TRUE}.
 }
 \description{
 Given a data frame of Curated Atlas metadata obtained from \code{\link[=get_metadata]{get_metadata()}},
