@@ -12,9 +12,13 @@ as.sparse.DelayedMatrix <- function(x, ...) {
 #' the samples in that data frame
 #'
 #' @inheritDotParams get_single_cell_experiment
+#' @param download_only Logical scalar. When `TRUE`, remote files are
+#'   synchronised to `cache_directory` but not read or assembled. Returns
+#'   `invisible(NULL)`. See [get_single_cell_experiment()] for details.
 #' @export
 #' @return A Seurat object containing the same data as a call to
-#'   [get_single_cell_experiment()]. All requested assays are present in the
+#'   [get_single_cell_experiment()], or `invisible(NULL)` when
+#'   `download_only = TRUE`. All requested assays are present in the
 #'   returned object under their original names (e.g. `"counts"`, `"cpm"`).
 #' @importFrom SummarizedExperiment assayNames assay
 #' @examples
@@ -28,10 +32,14 @@ as.sparse.DelayedMatrix <- function(x, ...) {
 #'   and analytical layers for the Human Cell Atlas data." bioRxiv (2026).
 #'   doi:10.64898/2026.04.14.718336.
 #' @source [Shen et al.,2026](https://www.biorxiv.org/content/10.64898/2026.04.14.718336v3)
-get_seurat <- function(...) {
+get_seurat <- function(..., download_only = FALSE) {
   rlang::check_installed(c("Seurat", "SeuratObject"))
 
-  sce <- get_single_cell_experiment(...)
+  sce <- get_single_cell_experiment(..., download_only = download_only)
+
+  if (download_only) {
+    return(invisible(NULL))
+  }
 
   sce_assays <- assayNames(sce)
   first_assay <- sce_assays[1]

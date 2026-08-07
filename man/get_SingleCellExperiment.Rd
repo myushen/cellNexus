@@ -33,6 +33,10 @@ files should be copied.}
 an HTTP URL pointing to the location where the single cell data is stored.}
     \item{\code{features}}{An optional character vector of features (ie genes) to return
 the counts for. By default counts for all features will be returned.}
+    \item{\code{download_only}}{Logical scalar. When \code{TRUE}, remote files are
+synchronised to \code{cache_directory} but the data is not read or assembled
+into an in-memory object. Returns \code{invisible(NULL)}. Useful for
+pre-fetching datasets only.}
   }}
 }
 \value{

@@ -1,6 +1,30 @@
 \name{NEWS}
 \title{News for Package \pkg{cellNexus}}
 
+\section{News in version 0.99.32}{
+\itemize{
+    \item Added \code{download_only} argument (default \code{FALSE}) to
+    \code{get_single_cell_experiment()}, \code{get_seurat()}, and
+    \code{get_pseudobulk()}.
+    \itemize{
+        \item When \code{TRUE}, remote files are synchronised to
+        \code{cache_directory} but are not read or assembled into an
+        in-memory object.
+        \item Quality-control filtering (\code{keep_quality_cells()}) is
+        applied automatically in both modes, so only the files required for
+        quality-controlled cells are downloaded. A warning is emitted when
+        cells are excluded so users are informed even if they omit
+        \code{keep_quality_cells()} explicitly.
+        \item For the \code{sct} assay, the post-sync missing-file check
+        (\code{.skip_groups_missing_sct_file()}) now runs before the
+        \code{download_only} early return, so warnings about samples whose
+        SCT normalisation failed are emitted regardless of mode.
+        \item When \code{assays = "sct"} only and every sample is missing
+        its SCT file, the function emits a warning and returns
+        \code{invisible(NULL)} instead of aborting.
+    }
+}}
+
 \section{News in version 0.99.31}{
 \itemize{
     \item Added \code{donor_id} to harmonised metadata, enabling direct donor-level
@@ -52,10 +76,10 @@
 \section{News in version 0.99.27}{
 \itemize{
     \item \code{get_pseudobulk()} now retains metadata columns that are constant within each
-    \code{sample_id} \(\times\) \code{cell_type_unified_ensemble} combination, including
+    \code{sample_id} x \code{cell_type_unified_ensemble} combination, including
     user-added annotations, when building \code{colData}. Cell-level columns are dropped.
     \item \code{get_metacell()} uses the same once-per-query column selection for
-    \code{sample_id} \(\times\) metacell-level annotations, so \code{cbind()} across
+    \code{sample_id} x metacell-level annotations, so \code{cbind()} across
     files shares an identical \code{colData} schema.
     \item Added internal helpers \code{get_specific_annotation_columns()} and
     \code{keep_specific_annotation_columns()} to identify and keep columns functionally
