@@ -22,6 +22,8 @@ navbar:
       href: https://mangiolalaboratory-cellnexus.share.connect.posit.cloud/
     - text: "gene expression explore"
       href: articles/gene-expression-explore.html
+    - text: "Immune body map"
+      href: immune/index.html
 
 articles:
   - title: "Documentation"
