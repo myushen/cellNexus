@@ -138,7 +138,7 @@ test_that("keep_specific_annotation_columns preserves sample-grain user columns"
 
 test_that("get_pseudobulk() preserves sample-grain user columns", {
   temp <- tempfile()
-  id <- "91acbf94110b95b1e994fdb1e1322fd1___1.h5ad"
+  id <- "11d9b242ad2fc637e43a23a6b7389fde___1.h5ad"
   meta <- get_metadata(
     cloud_metadata = SAMPLE_DATABASE_URL,
     cache_directory = temp
