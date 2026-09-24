@@ -33,7 +33,6 @@ query_metadata <- metadata |>
   dplyr::filter(
     age_days >= 40*365,
     cell_type_unified_ensemble == "cd16 mono",
-    tissue |> stringr::str_detect("breast"),
     imputed_ethnicity == "African American"
   )
 query_metadata  
