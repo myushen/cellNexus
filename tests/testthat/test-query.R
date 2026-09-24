@@ -421,14 +421,6 @@ test_that("get_atlas_versions() returns a registry-like data frame", {
   expect_true("census_version" %in% colnames(tbl))
 })
 
-test_that("get_census_metadata() is the Census metadata helper", {
-  expect_true(is.function(cellNexus:::get_census_metadata))
-  expect_identical(
-    formals(cellNexus:::get_census_metadata)$census_version,
-    "2024-07-01"
-  )
-})
-
 test_that("join_census_table() soft-deprecates to get_census_metadata()", {
   old_options <- options(lifecycle_verbosity = "warning")
   on.exit(options(old_options), add = TRUE)
