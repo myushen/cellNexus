@@ -55,7 +55,7 @@ A \code{SingleCellExperiment} object, or \code{invisible(NULL)} when
 }
 \description{
 Given a data frame of Curated Atlas metadata obtained from \code{\link[=get_metadata]{get_metadata()}},
-returns a \code{\link[SingleCellExperiment:SingleCellExperiment]{SingleCellExperiment::SingleCellExperiment}} object
+returns a \code{\link[SingleCellExperiment:SingleCellExperiment-class]{SingleCellExperiment::SingleCellExperiment}} object
 corresponding to the samples in that data frame
 }
 \examples{

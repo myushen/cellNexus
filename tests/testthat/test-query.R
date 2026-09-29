@@ -200,7 +200,7 @@ test_that("get_SingleCellExperiment() assigns the right cell ID to each cell", {
   # Load the SCE from cache directly
   assay_1 <- cellNexus:::get_default_cache_dir() |>
     file.path(atlas_id, "counts", file_id_cellNexus_single_cell) |>
-    zellkonverter::readH5AD(reader = "R", use_hdf5 = TRUE) |>
+    anndataR::read_h5ad(as = "SingleCellExperiment", x_mapping = "counts") |>
     assay("counts") |>
     as.matrix()
 

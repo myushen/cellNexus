@@ -107,8 +107,7 @@ Imports:
     checkmate,
     shiny,
     shinyWidgets,
-    zellkonverter,
-    anndataR,
+    anndataR (>= 1.3.1),
     stringr,
     Matrix,
     rclipboard
@@ -117,7 +116,6 @@ Suggests:
     knitr,
     rmarkdown,
     testthat,
-    basilisk,
     arrow,
     reticulate,
     cellxgenedp,
@@ -164,6 +162,4 @@ Collate:
     'unharmonised.R'
     'zzz.R'
 Language: en-US
-SystemRequirements: Python
-Config/roxygen2/version: 8.0.0
-RoxygenNote: 7.3.3
+Config/roxygen2/version: 8.1.0

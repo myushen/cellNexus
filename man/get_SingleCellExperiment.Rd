@@ -11,7 +11,7 @@ get_SingleCellExperiment(...)
 }
 \arguments{
 \item{...}{
-  Arguments passed on to \code{\link[=get_single_cell_experiment]{get_single_cell_experiment}}
+  Arguments passed on to \code{\link{get_single_cell_experiment}}
   \describe{
     \item{\code{data}}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus_single_cell}
 and \code{atlas_id} columns, which correspond to a single cell ID, file subdivision for internal use,
@@ -44,7 +44,7 @@ A \code{SingleCellExperiment} object.
 }
 \description{
 Given a data frame of Curated Atlas metadata obtained from \code{\link[=get_metadata]{get_metadata()}},
-returns a \code{\link[SingleCellExperiment:SingleCellExperiment]{SingleCellExperiment::SingleCellExperiment}} object
+returns a \code{\link[SingleCellExperiment:SingleCellExperiment-class]{SingleCellExperiment::SingleCellExperiment}} object
 corresponding to the samples in that data frame
 }
 \examples{

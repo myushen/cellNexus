@@ -12,7 +12,7 @@ get_seurat(..., download_only = FALSE)
 }
 \arguments{
 \item{...}{
-  Arguments passed on to \code{\link[=get_single_cell_experiment]{get_single_cell_experiment}}
+  Arguments passed on to \code{\link{get_single_cell_experiment}}
   \describe{
     \item{\code{data}}{A data frame containing, at minimum, \code{cell_id}, \code{file_id_cellNexus_single_cell}
 and \code{atlas_id} columns, which correspond to a single cell ID, file subdivision for internal use,

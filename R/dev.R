@@ -195,41 +195,22 @@ update_unharmonised <- function(unharmonised_parquet_dir, ...) {
 #' }
 hdf5_to_anndata <- function(input_directory, output_directory) {
   dir.create(output_directory, showWarnings = FALSE)
-  # This is a quick utility script to convert the SCE files into AnnData format for use in Pythonlist.files("/vast/projects/RCP/human_cell_atlas/splitted_DB2_data", full.names = FALSE) |>  purrr::walk(function(dir){
-  basilisk::basiliskRun(fun = function(sce) {
-    list.dirs(input_directory)[-1] |>
-      purrr::map_chr(function(sce_dir) {
-        cli::cli_alert_info("Processing {sce_dir}.")
-        prefix <- basename(sce_dir)
-        out_path <- glue::glue("{prefix}.h5ad") |>
-          file.path(output_directory, name = _)
+  # This is a quick utility script to convert the SCE files into AnnData format for use in Python
+  list.dirs(input_directory)[-1] |>
+    purrr::map_chr(function(sce_dir) {
+      cli::cli_alert_info("Processing {sce_dir}.")
+      prefix <- basename(sce_dir)
+      out_path <- glue::glue("{prefix}.h5ad") |>
+        file.path(output_directory, name = _)
 
-        if (file.exists(out_path)) {
-          cli::cli_alert_info("{out_path} already exists. Skipping")
-        } else {
-          sce <- HDF5Array::loadHDF5SummarizedExperiment(sce_dir)
-          single_column <- length(colnames(sce)) == 1
-          if (single_column) {
-            # Hack, so that single-column SCEs will convert
-            # correctly
-            cli::cli_alert_info(
-              "{sce_dir} has only 1 column. Duplicating column."
-            )
-            sce <- cbind(sce, sce)
-            single_column <- TRUE
-          }
-          ad <- zellkonverter::SCE2AnnData(sce)
-          if (single_column) {
-            # Remove the duplicate column
-            sce$X <- sce$X[1]
-          }
-          # TODO: customize chunking here, when anndata supports it
-          # (see https://github.com/scverse/anndata/issues/961)
-          ad$write_h5ad(out_path)
-        }
-        out_path
-      }, .progress = "Converting files")
-  }, env = zellkonverter::zellkonverterAnnDataEnv())
+      if (file.exists(out_path)) {
+        cli::cli_alert_info("{out_path} already exists. Skipping")
+      } else {
+        HDF5Array::loadHDF5SummarizedExperiment(sce_dir) |>
+          write_sce_as_h5ad(out_path)
+      }
+      out_path
+    }, .progress = "Converting files")
 }
 
 #' Makes "downsampled" metadata files that only contains the minimal data
@@ -442,10 +423,10 @@ duckdb_write_parquet <- function(.tbl_sql,
 #'
 #' @param sce A `SingleCellExperiment` object.
 #' @param path Output file path for the `.h5ad` file.
-#' @param ... Additional arguments passed to [zellkonverter::writeH5AD()].
+#' @param ... Additional arguments passed to [anndataR::write_h5ad()].
 #'
 #' @return Called for its side effect of writing an `.h5ad` file.
-#' @inheritDotParams zellkonverter::writeH5AD
+#' @inheritDotParams anndataR::write_h5ad
 #' @keywords internal
 #' @noRd
 save_sce_as_h5ad <- function(sce, path, ...) {
@@ -460,9 +441,31 @@ save_sce_as_h5ad <- function(sce, path, ...) {
       duplicate_single_column_assay()
   }
 
-  # anndataR does not support writing DelayedArray yet. Issue: https://github.com/scverse/anndataR/pull/387
   sce |>
-    zellkonverter::writeH5AD(path, compression = "gzip", ...)
+    write_sce_as_h5ad(path, compression = "gzip", ...)
+}
+
+#' Write a SingleCellExperiment to H5AD in the cellNexus layout
+#'
+#' The first assay is written to `X` and its name is recorded in `uns$X_name`,
+#' matching the layout read back by `read_h5ad_as_sce()`. Remaining assays are
+#' written as layers.
+#'
+#' @param sce A `SingleCellExperiment` object.
+#' @param path Output file path for the `.h5ad` file.
+#' @param ... Additional arguments passed to [anndataR::write_h5ad()].
+#' @return Called for its side effect of writing an `.h5ad` file.
+#' @importFrom anndataR write_h5ad
+#' @importFrom SummarizedExperiment assayNames
+#' @importFrom S4Vectors metadata<-
+#' @keywords internal
+#' @noRd
+write_sce_as_h5ad <- function(sce, path, ...) {
+  x_name <- assayNames(sce)[[1L]]
+  metadata(sce)$X_name <- x_name
+
+  sce |>
+    write_h5ad(path, x_mapping = x_name, ...)
 }
 
 #' Synchronize metadata assay files with remote repository

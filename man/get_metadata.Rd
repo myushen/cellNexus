@@ -41,7 +41,7 @@ columns, as \code{stringr::str_match} will not work.
 Downloads a parquet database of the Human Cell Atlas metadata to a local
 cache, and then opens it as a data frame. It can then be filtered and passed
 into \code{\link[=get_single_cell_experiment]{get_single_cell_experiment()}} to obtain a
-\code{\link[SingleCellExperiment:SingleCellExperiment]{SingleCellExperiment::SingleCellExperiment}}
+\code{\link[SingleCellExperiment:SingleCellExperiment-class]{SingleCellExperiment::SingleCellExperiment}}
 }
 \details{
 The metadata was collected from the Bioconductor package \code{cellxgenedp}.

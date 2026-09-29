@@ -424,6 +424,36 @@ clean_and_report_NA_columns <- function(df) {
   df
 }
 
+#' Read an H5AD file as a SingleCellExperiment
+#'
+#' cellNexus H5AD files store their matrix in `X` and record the assay name
+#' (e.g. `"counts"`, `"cpm"`) in `uns$X_name`. By default anndataR names the
+#' `X` assay `"X"`, places it after any layers and copies `uns` into
+#' `metadata()`, so the `"X"` assay is renamed from `X_name` and moved first.
+#' `X_name` is then dropped from `metadata()` so it does not accumulate when
+#' experiments are `cbind()`ed. Files without `uns$X_name` are returned as read.
+#'
+#' @param path A character scalar. Path to the `.h5ad` file.
+#' @param backed A logical scalar. If `TRUE`, assays are HDF5-backed
+#'   `DelayedMatrix` objects rather than being loaded into memory.
+#' @return A `SingleCellExperiment` object.
+#' @importFrom anndataR read_h5ad
+#' @importFrom SummarizedExperiment assays assays<- assayNames assayNames<-
+#' @importFrom S4Vectors metadata metadata<-
+#' @keywords internal
+#' @noRd
+read_h5ad_as_sce <- function(path, backed = TRUE) {
+  sce <- read_h5ad(path, as = "SingleCellExperiment", backed = backed)
+
+  x_name <- metadata(sce)[["X_name"]]
+  if (!is.null(x_name) && "X" %in% assayNames(sce)) {
+    assays(sce) <- assays(sce)[c("X", setdiff(assayNames(sce), "X"))]
+    assayNames(sce)[1L] <- as.character(x_name)
+    metadata(sce)[["X_name"]] <- NULL
+  }
+  sce
+}
+
 #' Duplicate Single-Column Assay in SingleCellExperiment Object
 #'
 #' This function handles SingleCellExperiment (SCE) objects where a specified assay

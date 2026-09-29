@@ -16,124 +16,164 @@ export(get_single_cell_experiment)
 export(keep_quality_cells)
 export(organize_inputs)
 importFrom(BiocGenerics,cbind)
-importFrom(DBI,dbConnect)
-importFrom(DBI,dbExecute)
-importFrom(S4Vectors,DataFrame)
+importFrom(DBI,
+  dbConnect,
+  dbExecute
+)
+importFrom(S4Vectors,
+  "metadata<-",
+  DataFrame,
+  metadata
+)
 importFrom(SingleCellExperiment,SingleCellExperiment)
-importFrom(SummarizedExperiment,"assay<-")
-importFrom(SummarizedExperiment,"assayNames<-")
-importFrom(SummarizedExperiment,"assays<-")
-importFrom(SummarizedExperiment,"colData<-")
-importFrom(SummarizedExperiment,assay)
-importFrom(SummarizedExperiment,assayNames)
-importFrom(SummarizedExperiment,assays)
-importFrom(SummarizedExperiment,colData)
-importFrom(anndataR,write_h5ad)
-importFrom(checkmate,assert)
-importFrom(checkmate,check_subset)
-importFrom(checkmate,check_true)
-importFrom(cli,cli_abort)
-importFrom(cli,cli_alert_info)
-importFrom(cli,cli_alert_success)
-importFrom(cli,cli_alert_warning)
-importFrom(cli,cli_progress_bar)
-importFrom(cli,cli_progress_done)
-importFrom(cli,cli_progress_update)
-importFrom(cli,hash_sha256)
-importFrom(curl,curl_fetch_memory)
-importFrom(curl,curl_fetch_multi)
-importFrom(curl,multi_download)
-importFrom(curl,multi_run)
-importFrom(curl,new_handle)
-importFrom(curl,new_pool)
-importFrom(curl,parse_headers_list)
-importFrom(dbplyr,remote_con)
-importFrom(dbplyr,sql)
-importFrom(dplyr,all_of)
-importFrom(dplyr,any_of)
-importFrom(dplyr,as_tibble)
-importFrom(dplyr,collect)
-importFrom(dplyr,contains)
-importFrom(dplyr,distinct)
-importFrom(dplyr,filter)
-importFrom(dplyr,group_by)
-importFrom(dplyr,group_split)
-importFrom(dplyr,inner_join)
-importFrom(dplyr,left_join)
-importFrom(dplyr,matches)
-importFrom(dplyr,mutate)
-importFrom(dplyr,n_distinct)
-importFrom(dplyr,pull)
-importFrom(dplyr,select)
-importFrom(dplyr,slice_sample)
-importFrom(dplyr,summarise)
-importFrom(dplyr,tbl)
-importFrom(dplyr,transmute)
+importFrom(SummarizedExperiment,
+  "assay<-",
+  "assayNames<-",
+  "assays<-",
+  "colData<-",
+  assay,
+  assayNames,
+  assays,
+  colData
+)
+importFrom(anndataR,
+  read_h5ad,
+  write_h5ad
+)
+importFrom(checkmate,
+  assert,
+  check_subset,
+  check_true
+)
+importFrom(cli,
+  cli_abort,
+  cli_alert_info,
+  cli_alert_success,
+  cli_alert_warning,
+  cli_progress_bar,
+  cli_progress_done,
+  cli_progress_update,
+  hash_sha256
+)
+importFrom(curl,
+  curl_fetch_memory,
+  curl_fetch_multi,
+  multi_download,
+  multi_run,
+  new_handle,
+  new_pool,
+  parse_headers_list
+)
+importFrom(dbplyr,
+  remote_con,
+  sql
+)
+importFrom(dplyr,
+  all_of,
+  any_of,
+  as_tibble,
+  collect,
+  contains,
+  distinct,
+  filter,
+  group_by,
+  group_split,
+  inner_join,
+  left_join,
+  matches,
+  mutate,
+  n_distinct,
+  pull,
+  select,
+  slice_sample,
+  summarise,
+  tbl,
+  transmute
+)
 importFrom(duckdb,duckdb)
-importFrom(glue,glue)
-importFrom(glue,glue_sql)
-importFrom(httr,GET)
-importFrom(httr,modify_url)
-importFrom(httr,parse_url)
-importFrom(httr,progress)
-importFrom(httr,stop_for_status)
-importFrom(httr,write_disk)
+importFrom(glue,
+  glue,
+  glue_sql
+)
+importFrom(httr,
+  GET,
+  modify_url,
+  parse_url,
+  progress,
+  stop_for_status,
+  write_disk
+)
 importFrom(lifecycle,deprecate_soft)
-importFrom(methods,as)
-importFrom(methods,is)
-importFrom(purrr,imap)
-importFrom(purrr,map)
-importFrom(purrr,map2)
-importFrom(purrr,map_chr)
-importFrom(purrr,map_dbl)
-importFrom(purrr,map_lgl)
-importFrom(purrr,pmap)
-importFrom(purrr,reduce)
-importFrom(purrr,set_names)
-importFrom(purrr,walk)
-importFrom(rclipboard,rclipButton)
-importFrom(rclipboard,rclipboardSetup)
-importFrom(rlang,.data)
-importFrom(rlang,expr)
-importFrom(rlang,set_names)
-importFrom(rlang,sym)
-importFrom(rlang,syms)
-importFrom(shiny,a)
-importFrom(shiny,actionButton)
-importFrom(shiny,column)
-importFrom(shiny,conditionalPanel)
-importFrom(shiny,fluidPage)
-importFrom(shiny,fluidRow)
-importFrom(shiny,h3)
-importFrom(shiny,h4)
-importFrom(shiny,hr)
-importFrom(shiny,icon)
-importFrom(shiny,isolate)
-importFrom(shiny,mainPanel)
-importFrom(shiny,observeEvent)
-importFrom(shiny,p)
-importFrom(shiny,reactive)
-importFrom(shiny,reactiveValues)
-importFrom(shiny,renderText)
-importFrom(shiny,renderUI)
-importFrom(shiny,selectInput)
-importFrom(shiny,shinyApp)
-importFrom(shiny,sidebarLayout)
-importFrom(shiny,sidebarPanel)
-importFrom(shiny,tabPanel)
-importFrom(shiny,tabsetPanel)
-importFrom(shiny,tagList)
-importFrom(shiny,tags)
-importFrom(shiny,textAreaInput)
-importFrom(shiny,titlePanel)
-importFrom(shiny,uiOutput)
-importFrom(shiny,updateSelectInput)
-importFrom(shiny,verbatimTextOutput)
-importFrom(shinyWidgets,pickerInput)
-importFrom(shinyWidgets,pickerOptions)
+importFrom(methods,
+  as,
+  is
+)
+importFrom(purrr,
+  imap,
+  map,
+  map2,
+  map_chr,
+  map_dbl,
+  map_lgl,
+  pmap,
+  reduce,
+  set_names,
+  walk
+)
+importFrom(rclipboard,
+  rclipButton,
+  rclipboardSetup
+)
+importFrom(rlang,
+  .data,
+  expr,
+  set_names,
+  sym,
+  syms
+)
+importFrom(shiny,
+  a,
+  actionButton,
+  column,
+  conditionalPanel,
+  fluidPage,
+  fluidRow,
+  h3,
+  h4,
+  hr,
+  icon,
+  isolate,
+  mainPanel,
+  observeEvent,
+  p,
+  reactive,
+  reactiveValues,
+  renderText,
+  renderUI,
+  selectInput,
+  shinyApp,
+  sidebarLayout,
+  sidebarPanel,
+  tabPanel,
+  tabsetPanel,
+  tagList,
+  tags,
+  textAreaInput,
+  titlePanel,
+  uiOutput,
+  updateSelectInput,
+  verbatimTextOutput
+)
+importFrom(shinyWidgets,
+  pickerInput,
+  pickerOptions
+)
 importFrom(tibble,column_to_rownames)
-importFrom(tools,R_user_dir)
-importFrom(tools,md5sum)
-importFrom(utils,head)
-importFrom(utils,packageName)
-importFrom(zellkonverter,readH5AD)
+importFrom(tools,
+  R_user_dir,
+  md5sum
+)
+importFrom(utils,
+  head,
+  packageName
+)
