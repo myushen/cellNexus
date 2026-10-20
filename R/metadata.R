@@ -14,8 +14,8 @@ cache <- rlang::env(
 #' @keywords internal
 #' @noRd
 metadata_aliases <- c(
-  hca_2024 = "hca2024_v2.3.2.parquet",
-  hca_2025 = "hca2025_v0.1.1.parquet"
+  hca_2024 = "hca2024_v2.4.0.parquet",
+  hca_2025 = "hca2025_v0.2.0.parquet"
 )
 
 #' Returns the URLs for all metadata files
@@ -62,7 +62,7 @@ get_metadata_url <- function(databases = c("hca_2024")) {
 SAMPLE_DATABASE_URL <- c(
   paste0(
     "https://object-store.rc.nectar.org.au/v1/AUTH_06d6e008e3e642da99d806ba3ea629c5/",
-    "cellNexus-metadata/sample_hca2024_v2.3.2.parquet"
+    "cellNexus-metadata/sample_hca2024_v2.4.0.parquet"
   )
 )
 
@@ -96,7 +96,6 @@ SAMPLE_DATABASE_URL <- c(
 #' filtered_metadata <- get_metadata(cloud_metadata = SAMPLE_DATABASE_URL) |>
 #'   filter(
 #'     imputed_ethnicity == "African" &
-#'       tissue_groups == "breast" &
 #'       cell_type_unified_ensemble %LIKE% "%cd14%"
 #'   )
 #'
@@ -130,7 +129,6 @@ SAMPLE_DATABASE_URL <- c(
 #'
 #' `sample_id`: Sample identifier.
 #' `age_days`: Donor age in days.
-#' `tissue_groups`: Coarse tissue grouping for analysis.
 #' `empty_droplet`: Whether a cell is called an empty droplet from expressed-gene count per sample (default threshold 200; targeted panels may differ).
 #' `alive`: Whether a cell passes viability / mitochondrial QC.
 #' `scDblFinder.class`: Doublet, singlet, or unknown (`scDblFinder` default parameters).
@@ -143,7 +141,7 @@ SAMPLE_DATABASE_URL <- c(
 #' `high_mitochondrion`: TRUE if the cell’s mitochondrial percent exceeds the QC cutoff.
 #' `high_ribosome`: TRUE if the cell’s ribosomal percent exceeds the QC cutoff.
 #' `count_upper_bound`: Count capping threshold used in counts transformation.
-#' `inverse_transform`: Transformation method used in pre-processing pipeline.
+#' `inversed_inferred_distribution`: Transformation method used in pre-processing pipeline.
 #' `nfeature_expressed_thresh`: Threshold of the number of expressed features per cell.
 #' `is_immune`: Curated logical flag for immune-cell context.
 #' `file_id_cellNexus_single_cell`: Internal file id for single-cell layers.
@@ -335,19 +333,17 @@ get_atlas_versions <- function(cache = tempdir()) {
 #' @rdname get_census_metadata
 #' @param tbl Deprecated. Previously a `tbl_sql` object to join against.
 #' @param ... Deprecated arguments, ignored.
-#' @importFrom cli cli_alert_warning
+#' @importFrom lifecycle deprecate_soft
 #' @keywords internal
 #' @noRd
 join_census_table <- function(tbl,
                               census_version = "2024-07-01",
                               ...) {
-  cli_alert_warning(paste(
-    "{.fun join_census_table} is no longer supported",
-    "Use {.fun get_census_metadata} instead to retrieve a Census data frame",
-    "and join it to your metadata manually.",
-    "Falling back to {.fun get_census_metadata} with",
-    "census_version = {.val {census_version}}."
-  ))
+  deprecate_soft(
+    when = "0.99.27",
+    what = "join_census_table()",
+    with = "get_census_metadata()"
+  )
   get_census_metadata(census_version = census_version)
 }
 
@@ -370,22 +366,24 @@ join_census_table <- function(tbl,
 #' @keywords internal
 #' @noRd
 get_census_metadata <- function(census_version) {
-  if (!requireNamespace("cellxgene.census", quietly = TRUE)) {
-    cli_abort(paste(
+  if (!nzchar(system.file(package = "cellxgene.census"))) {
+    cli_abort(c(
       "The {.pkg cellxgene.census} package is required.",
-      "Install it with:",
-      "{.code install.packages('cellxgene.census',",
-      "repos = c('https://chanzuckerberg.r-universe.dev',",
-      "'https://cloud.r-project.org'))}"
+      "i" = paste0(
+        "Install it with: {.code install.packages('cellxgene.census', ",
+        "repos = c('https://chanzuckerberg.r-universe.dev', ",
+        "'https://cloud.r-project.org'))}"
+      )
     ))
   }
-
+  
   cli_alert_info("Opening Census version {census_version}.")
-  census <- cellxgene.census::open_soma(census_version = census_version)
+  open_soma <- getExportedValue("cellxgene.census", "open_soma")
+  census <- open_soma(census_version = census_version)
   on.exit(census$close(), add = TRUE)
-
+  
   metadata <- census$get("census_data")$get("homo_sapiens")$get("obs")
-
+  
   cli_alert_info("Reading Census obs table.")
   census_metadata <- metadata$read(
     value_filter = "is_primary_data == 'TRUE'"

@@ -16,7 +16,7 @@ test_that("sync_assay_files() syncs appropriate files", {
   temp <- tempfile()
 
   test_file <- "72fd05df1f26137b07fd4f4fc799d61c___1.h5ad"
-  atlas_name <- "cellxgene_2024/0.2.0"
+  atlas_name <- "hca_2024/0.5.0"
 
   sync_assay_files(
     atlas_name = atlas_name,
@@ -419,4 +419,23 @@ test_that("get_atlas_versions() returns a registry-like data frame", {
   expect_true(ncol(tbl) >= 1L)
   expect_true("atlas_id" %in% colnames(tbl))
   expect_true("census_version" %in% colnames(tbl))
+})
+
+test_that("join_census_table() soft-deprecates to get_census_metadata()", {
+  old_options <- options(lifecycle_verbosity = "warning")
+  on.exit(options(old_options), add = TRUE)
+
+  local_mocked_bindings(
+    get_census_metadata = function(census_version = "2024-07-01") census_version,
+    .package = "cellNexus"
+  )
+
+  result <- expect_warning(
+    cellNexus:::join_census_table(
+      tbl = "unused table",
+      census_version = "2023-07-01"
+    ),
+    class = "lifecycle_warning_deprecated"
+  )
+  expect_identical(result, "2023-07-01")
 })
