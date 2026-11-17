@@ -139,33 +139,35 @@ schema](https://github.com/chanzuckerberg/cellxgene-census/blob/main/docs/cellxg
 
 ### R client (`cellNexus`)
 
-\
-[`library`](https://rdrr.io/r/base/library.html)`(`[`cellNexus`](https://github.com/MangiolaLaboratory/cellNexus)`)`\
-[`library`](https://rdrr.io/r/base/library.html)`(`[`dplyr`](https://dplyr.tidyverse.org)`)`\
-[`library`](https://rdrr.io/r/base/library.html)`(`[`stringr`](https://stringr.tidyverse.org)`)`\
-\
-`metadata`` ``<-`` `[`get_metadata`](https://mangiolalaboratory.github.io/cellNexus/reference/get_metadata.md)`(``)`\
-\
-`metadata`` ``<-`` ``metadata`` ``|>`\
-`  `[`keep_quality_cells`](https://mangiolalaboratory.github.io/cellNexus/reference/keep_quality_cells.md)`(``)`\
-`  `\
-`census_metadata`` ``<-`` ``cellNexus``:::``get_census_metadata``(``"2024-07-01"``)`\
-`con`` ``<-`` ``dbplyr``::`[`remote_con`](https://dbplyr.tidyverse.org/reference/remote_name.html)`(``metadata``)`\
-`duckdb``::`[`duckdb_register_arrow`](https://r.duckdb.org/reference/duckdb_register_arrow.html)`(``con``, ``"census_metadata"``, ``census_metadata``)`\
-\
-`metadata`` ``<-`` ``metadata`` ``|>`\
-`  ``dplyr``::`[`left_join`](https://dplyr.tidyverse.org/reference/mutate-joins.html)`(`[`tbl`](https://dplyr.tidyverse.org/reference/tbl.html)`(``con``, ``"census_metadata"``)``)`\
-\
-`query`` ``<-`` ``metadata`` ``|>`\
-`  `[`filter`](https://dplyr.tidyverse.org/reference/filter.html)`(`\
-`    ``self_reported_ethnicity`` ``==`` ``"African"``,`\
-`    `[`str_like`](https://stringr.tidyverse.org/reference/str_like.html)`(``assay``, ``"%10x%"``)``,`\
-`    ``tissue`` ``==`` ``"lung parenchyma"``,`\
-`    `[`str_like`](https://stringr.tidyverse.org/reference/str_like.html)`(``cell_type``, ``"%CD4%"``)`\
-`  ``)`\
-\
-`sce`` ``<-`` `[`get_single_cell_experiment`](https://mangiolalaboratory.github.io/cellNexus/reference/get_single_cell_experiment.md)`(``query``, assays ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"counts"``, ``"cpm"``)``)`\
-`pb`` ``<-`` `[`get_pseudobulk`](https://mangiolalaboratory.github.io/cellNexus/reference/get_pseudobulk.md)`(``query``)`
+``` r
+
+library(cellNexus)
+library(dplyr)
+library(stringr)
+
+metadata <- get_metadata()
+
+metadata <- metadata |>
+  keep_quality_cells()
+  
+census_metadata <- cellNexus:::get_census_metadata("2024-07-01")
+con <- dbplyr::remote_con(metadata)
+duckdb::duckdb_register_arrow(con, "census_metadata", census_metadata)
+
+metadata <- metadata |>
+  dplyr::left_join(tbl(con, "census_metadata"))
+
+query <- metadata |>
+  filter(
+    self_reported_ethnicity == "African",
+    str_like(assay, "%10x%"),
+    tissue == "lung parenchyma",
+    str_like(cell_type, "%CD4%")
+  )
+
+sce <- get_single_cell_experiment(query, assays = c("counts", "cpm"))
+pb <- get_pseudobulk(query)
+```
 
 ### Python client (`cellNexusPy`)
 
@@ -173,20 +175,23 @@ Python support is available in the companion repository:
 [`MangiolaLaboratory/cellNexusPy`](https://github.com/MangiolaLaboratory/cellNexusPy).
 
 ``` python
-from cellnexuspy import get_metadata, join_census_table, keep_quality_cells, get_anndata, get_pseudobulk
+from cellnexuspy import get_metadata, keep_quality_cells, get_census_metadata, get_anndata, get_pseudobulk
 
-conn, table = get_metadata()
-metadata = join_census_table(conn, table)
+conn, metadata = get_metadata()
 metadata = keep_quality_cells(metadata)
 
+census_metadata = get_census_metadata("2024-07-01")
+census_rel = conn.from_df(census_metadata)
+metadata = metadata.join(census_rel, ["dataset_id", "observation_joinid"], how="left")
+
 query = metadata.filter("""
-                     self_reported_ethnicity == 'African' AND
-                     assay LIKE '%10x%' AND
-                     tissue == 'lung parenchyma' AND
-                     cell_type LIKE '%CD4%'
+                     self_reported_ethnicity == 'African American' AND
+                     assay == '10x 3'' v3' AND
+                     tissue == 'breast' AND
+                     cell_type == 'T cell'
                      """)
 
-sce = get_anndata(query, assays=["counts","cpm"])
+sc = get_anndata(query, ["counts","cpm"])
 pb = get_pseudobulk(query)
 
 conn.close()
